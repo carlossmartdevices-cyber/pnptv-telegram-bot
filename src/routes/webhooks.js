@@ -101,7 +101,8 @@ router.post('/bold', async (req, res) => {
         processedOk: true
       });
     } else {
-      await updateOrderStatus({ orderId, status: mappedStatus, processed: mappedStatus === ORDER_STATUS.APPROVED });
+      const nextProcessed = order.processed || mappedStatus === ORDER_STATUS.APPROVED;
+      await updateOrderStatus({ orderId, status: mappedStatus, processed: nextProcessed });
       await logWebhookEvent({
         eventType: payload?.event || 'payment.status',
         orderId,
