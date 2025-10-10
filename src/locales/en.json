@@ -1,0 +1,20 @@
+{
+  "welcome": "**PNPtv! Telegram Bot**\nWelcome to a new social experience!",
+  "ageVerification": "Age Verification\nPlease confirm you are 18+ years old.",
+  "terms": "Terms & Conditions\nPlease read and accept our terms: https://pnp.tv/terms-en",
+  "privacy": "Privacy Policy\nPlease read and accept our privacy policy: https://pnp.tv/privacy-en",
+  "profileCreated": "Your profile has been created successfully!",
+  "error": "An error occurred. Please try again.",
+  "profileInfo": "*Profile Info*\nID: {userId}\nUsername: {username}\nXP: {xp}\nBadges: {badges}\nTier: {tier}\nLocation: {location}\nBio: {bio}",
+  "mapInfo": "Interactive map of nearby users",
+  "liveInfo": "Available live streams",
+  "helpInfo": "Available commands:\n\n/profile - View your profile\n/map - View map\n/live - View live streams\n/help - Show this help\n/subscribe - Upgrade your subscription",
+  "silverFeatures": "- No ads\n- 20 swipes per day\n- Basic verification badge",
+  "goldenFeatures": "- All Silver features\n- VIP channels access\n- Exclusive badges\n- Priority support",
+  "confirmAge": "I'm 18+ years old",
+  "accept": "Accept",
+  "continue": "Continue",
+  "editBio": "📝 Edit Bio",
+  "editLocation": "📍 Edit Location",
+  "subscribePrime": "Subscribe to PRIME"
+}
