@@ -1,0 +1,474 @@
+require("dotenv").config();
+const { Telegraf } = require("telegraf");
+const { db } = require("../config/firebase");
+const bold = require("../config/bold");
+const plans = require("../config/plans");
+const cron = require("node-cron");
+const { formatMessage } = require("../utils/formatters");
+
+const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
+
+// Middleware de sesión
+const sessions = {};
+bot.use((ctx, next) => {
+  ctx.session = sessions[ctx.from.id] || {
+    language: "en",
+    onboardingStep: "start",
+    xp: 0,
+    badges: [],
+    ageVerified: false,
+    termsAccepted: false,
+    privacyAccepted: false
+  };
+  return next();
+});
+
+// Middleware de idioma
+bot.use((ctx, next) => {
+  ctx.i18n = {
+    t: (key) => {
+      const language = ctx.session.language || "en";
+      const messages = {
+        en: {
+          welcome: "**PNPtv! Telegram Bot**\nWelcome to a new social experience!",
+          ageVerification: "Age Verification\nPlease confirm you are 18+ years old.",
+          terms: "Terms & Conditions\nPlease read and accept our terms: https://pnp.tv/terms-en",
+          privacy: "Privacy Policy\nPlease read and accept our privacy policy: https://pnp.tv/privacy-en",
+          profileCreated: "Your profile has been created successfully!",
+          error: "An error occurred. Please try again.",
+          profileInfo: (userData) =>
+            `*Profile Info*
+ID: ${userData.userId}
+Username: ${userData.username || "Not set"}
+XP: ${userData.xp || 0}
+Badges: ${userData.badges?.join(", ") || "None"}
+Tier: ${userData.tier || "Free"}
+Location: ${userData.location || "Not set"}
+Bio: ${userData.bio || "Not set"}
+`,
+          mapInfo: "Interactive map of nearby users",
+          liveInfo: "Available live streams",
+          helpInfo: "Available commands:\n\n/profile - View your profile\n/map - View map\n/live - View live streams\n/help - Show this help\n/subscribe - Upgrade your subscription",
+          silverFeatures: "- No ads\n- 20 swipes per day\n- Basic verification badge",
+          goldenFeatures: "- All Silver features\n- VIP channels access\n- Exclusive badges\n- Priority support"
+        },
+        es: {
+          welcome: "**PNPtv! Bot de Telegram**\nBienvenido a una nueva experiencia social.",
+          ageVerification: "Verificacion de Edad\nPor favor confirma que tienes 18+ anos.",
+          terms: "Terminos y Condiciones\nPor favor lee y acepta nuestros terminos: https://pnp.tv/terms-es",
+          privacy: "Politica de Privacidad\nPor favor lee y acepta nuestra politica de privacidad: https://pnp.tv/privacy-es",
+          profileCreated: "Tu perfil ha sido creado exitosamente.",
+          error: "Ocurrio un error. Por favor intentalo de nuevo.",
+          profileInfo: (userData) =>
+            `*Informacion del Perfil*
+ID: ${userData.userId}
+Usuario: ${userData.username || "No establecido"}
+XP: ${userData.xp || 0}
+Insignias: ${userData.badges?.join(", ") || "Ninguna"}
+Nivel: ${userData.tier || "Free"}
+Ubicacion: ${userData.location || "No establecida"}
+Bio: ${userData.bio || "No establecida"}
+`,
+          mapInfo: "Mapa interactivo de usuarios cercanos",
+          liveInfo: "Transmisiones en vivo disponibles",
+          helpInfo: "Comandos disponibles:\n\n/profile - Ver tu perfil\n/map - Ver mapa\n/live - Ver transmisiones en vivo\n/help - Mostrar esta ayuda\n/subscribe - Actualizar tu suscripcion",
+          silverFeatures: "- Sin anuncios\n- 20 swipes por dia\n- Insignia de verificacion basica",
+          goldenFeatures: "- Todas las caracteristicas Silver\n- Acceso a canales VIP\n- Insignias exclusivas\n- Soporte prioritario"
+        }
+      };
+
+      return typeof messages[language][key] === 'function'
+        ? messages[language][key](ctx.userData)
+        : messages[language][key];
+    }
+  };
+  return next();
+});
+
+// Comando /start - Onboarding completo
+bot.start(async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const userRef = db.collection("users").doc(userId);
+  const doc = await userRef.get();
+
+  if (doc.exists && doc.data().onboardingComplete) {
+    return ctx.reply(ctx.i18n.t("welcome"), {
+      reply_markup: {
+        keyboard: [
+          ["/profile", "/map"],
+          ["/live", "/help"]
+        ],
+        resize_keyboard: true
+      }
+    });
+  }
+
+  await ctx.replyWithPhoto(
+    { source: 'https://t.me/PNPtv/welcome_image' },
+    {
+      caption: ctx.i18n.t("welcome"),
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "English", callback_data: "language_en" },
+            { text: "Espanol", callback_data: "language_es" }
+          ]
+        ]
+      }
+    }
+  );
+});
+
+// Manejo de idioma
+bot.action("language_en", async (ctx) => {
+  ctx.session.language = "en";
+  ctx.session.onboardingStep = "ageVerification";
+  await ctx.editMessageCaption(ctx.i18n.t("ageVerification"), {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "I'm 18+ years old", callback_data: "confirm_age" }]
+      ]
+    }
+  });
+});
+
+bot.action("language_es", async (ctx) => {
+  ctx.session.language = "es";
+  ctx.session.onboardingStep = "ageVerification";
+  await ctx.editMessageCaption(ctx.i18n.t("ageVerification"), {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "Tengo 18+ años", callback_data: "confirm_age" }]
+      ]
+    }
+  });
+});
+
+// Verificación de edad
+bot.action("confirm_age", async (ctx) => {
+  ctx.session.ageVerified = true;
+  ctx.session.onboardingStep = "terms";
+  await ctx.editMessageCaption(ctx.i18n.t("terms"), {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "Accept Terms", callback_data: "accept_terms" }]
+      ]
+    }
+  });
+});
+
+// Aceptación de términos
+bot.action("accept_terms", async (ctx) => {
+  ctx.session.termsAccepted = true;
+  ctx.session.onboardingStep = "privacy";
+  await ctx.editMessageCaption(ctx.i18n.t("privacy"), {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "Accept Privacy Policy", callback_data: "accept_privacy" }]
+      ]
+    }
+  });
+});
+
+// Aceptación de privacidad y creación de perfil
+bot.action("accept_privacy", async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const userRef = db.collection("users").doc(userId);
+
+  try {
+    await userRef.set({
+      userId,
+      username: ctx.from.username || "Anonymous",
+      createdAt: new Date(),
+      onboardingComplete: true,
+      tier: "free",
+      xp: 0,
+      badges: [],
+      ageVerified: true,
+      termsAccepted: new Date(),
+      privacyAccepted: new Date()
+    });
+
+    ctx.session.onboardingStep = "complete";
+    await ctx.editMessageCaption(ctx.i18n.t("profileCreated"), {
+      reply_markup: {
+        keyboard: [
+          ["/profile", "/map"],
+          ["/live", "/help"]
+        ],
+        resize_keyboard: true
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    await ctx.reply(ctx.i18n.t("error"));
+  }
+});
+
+// Comando /profile
+bot.command("profile", async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const userRef = db.collection("users").doc(userId);
+  const doc = await userRef.get();
+
+  if (!doc.exists || !doc.data().onboardingComplete) {
+    return ctx.reply("Please complete the onboarding first. Use /start");
+  }
+
+  const userData = doc.data();
+  ctx.userData = userData;
+  const formattedMessage = formatMessage("Profile", ctx.i18n.t("profileInfo"), ctx.session.language);
+
+  await ctx.reply(formattedMessage, {
+    parse_mode: "Markdown",
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "📝 Edit Bio", callback_data: "edit_bio" },
+         { text: "📍 Edit Location", callback_data: "edit_location" }],
+        [{ text: "⬆️ Upgrade Tier", callback_data: "upgrade_tier" }],
+        [{ text: "🌐 View Map", callback_data: "view_map" }]
+      ]
+    }
+  });
+});
+
+// Comando /map
+bot.command("map", async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const userRef = db.collection("users").doc(userId);
+  const doc = await userRef.get();
+
+  if (!doc.exists || !doc.data().onboardingComplete) {
+    return ctx.reply("Please complete the onboarding first. Use /start");
+  }
+
+  const message = formatMessage("Map", ctx.i18n.t("mapInfo"), ctx.session.language);
+  await ctx.reply(message, {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "🔍 Search Nearby", callback_data: "search_nearby" }],
+        [{ text: "🎯 Enable Geolocation", callback_data: "enable_geo" }]
+      ]
+    }
+  });
+});
+
+// Comando /live
+bot.command("live", async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const userRef = db.collection("users").doc(userId);
+  const doc = await userRef.get();
+
+  if (!doc.exists || !doc.data().onboardingComplete) {
+    return ctx.reply("Please complete the onboarding first. Use /start");
+  }
+
+  const message = formatMessage("Live", ctx.i18n.t("liveInfo"), ctx.session.language);
+  await ctx.reply(message, {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "🔴 Start Live", callback_data: "start_live" }],
+        [{ text: "📺 View Lives", callback_data: "view_lives" }]
+      ]
+    }
+  });
+});
+
+// Comando /help
+bot.command("help", async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const userRef = db.collection("users").doc(userId);
+  const doc = await userRef.get();
+
+  if (!doc.exists || !doc.data().onboardingComplete) {
+    return ctx.reply("Please complete the onboarding first. Use /start");
+  }
+
+  const message = formatMessage("Help", ctx.i18n.t("helpInfo"), ctx.session.language);
+  await ctx.reply(message, { parse_mode: "Markdown" });
+});
+
+// Comando /subscribe
+bot.command("subscribe", async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const userRef = db.collection("users").doc(userId);
+  const doc = await userRef.get();
+
+  if (!doc.exists || !doc.data().onboardingComplete) {
+    return ctx.reply("Please complete the onboarding first. Use /start");
+  }
+
+  const message = formatMessage("Subscribe",
+    ctx.session.language === "en"
+      ? "Choose your subscription plan:\n\nSilver: $15/month\nGolden: $25/month + 5 USDT"
+      : "Elige tu plan de suscripción:\n\nSilver: $15/mes\nGolden: $25/mes + 5 USDT",
+    ctx.session.language);
+
+  await ctx.reply(message, {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "🥈 Silver", callback_data: "subscribe_silver" }],
+        [{ text: "🏆 Golden", callback_data: "subscribe_golden" }]
+      ]
+    }
+  });
+});
+
+// Procesamiento de suscripciones
+bot.action("subscribe_silver", async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const message = formatMessage("Subscribe",
+    ctx.session.language === "en"
+      ? `Silver Tier Features:\n${ctx.i18n.t("silverFeatures")}\n\nPrice: $15/month`
+      : `Características del Nivel Silver:\n${ctx.i18n.t("silverFeatures")}\n\nPrecio: $15/mes`,
+    ctx.session.language);
+
+  await ctx.reply(message, {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "Confirm Purchase", callback_data: "confirm_silver" }]
+      ]
+    }
+  });
+});
+
+bot.action("subscribe_golden", async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const message = formatMessage("Subscribe",
+    ctx.session.language === "en"
+      ? `Golden Tier Features:\n${ctx.i18n.t("goldenFeatures")}\n\nPrice: $25/month + 5 USDT`
+      : `Características del Nivel Golden:\n${ctx.i18n.t("goldenFeatures")}\n\nPrecio: $25/mes + 5 USDT`,
+    ctx.session.language);
+
+  await ctx.reply(message, {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "Confirm Purchase", callback_data: "confirm_golden" }]
+      ]
+    }
+  });
+});
+
+// Confirmación de compra
+bot.action("confirm_silver", async (ctx) => {
+  const userId = ctx.from.id.toString();
+  try {
+    const response = await bold.createPaymentLink({
+      totalAmountCents: 1500,
+      currency: "USD",
+      description: "PNPtv Silver subscription",
+      referenceId: `PNPtv_SILVER_${userId}`,
+      customerEmail: `user${userId}@pnp.tv`,
+      redirectUrl: `https://t.me/PNPtv?start=success_${userId}`,
+      metadata: {
+        tier: "silver",
+        telegram_user_id: userId,
+        cancel_deeplink: `https://t.me/PNPtv?start=cancel_${userId}`,
+      },
+    });
+
+    const paymentLinkUrl =
+      response?.short_url ||
+      response?.payment_link_url ||
+      response?.url ||
+      response?.payment_link;
+
+    if (!paymentLinkUrl) {
+      throw new Error("No payment link URL returned by Bold.");
+    }
+
+    await ctx.reply(`Complete your payment: ${paymentLinkUrl}`);
+  } catch (error) {
+    console.error(error);
+    await ctx.reply(ctx.i18n.t("error"));
+  }
+});
+
+bot.action("confirm_golden", async (ctx) => {
+  const userId = ctx.from.id.toString();
+  try {
+    const response = await bold.createPaymentLink({
+      totalAmountCents: 2500,
+      currency: "USD",
+      description: "PNPtv Golden subscription",
+      referenceId: `PNPtv_GOLDEN_${userId}`,
+      customerEmail: `user${userId}@pnp.tv`,
+      redirectUrl: `https://t.me/PNPtv?start=success_${userId}`,
+      metadata: {
+        tier: "golden",
+        telegram_user_id: userId,
+        cancel_deeplink: `https://t.me/PNPtv?start=cancel_${userId}`,
+      },
+    });
+
+    const paymentLinkUrl =
+      response?.short_url ||
+      response?.payment_link_url ||
+      response?.url ||
+      response?.payment_link;
+
+    if (!paymentLinkUrl) {
+      throw new Error("No payment link URL returned by Bold.");
+    }
+
+    await ctx.reply(`Complete your payment: ${paymentLinkUrl}`);
+  } catch (error) {
+    console.error(error);
+    await ctx.reply(ctx.i18n.t("error"));
+  }
+});
+
+// Editar perfil
+bot.action("edit_bio", async (ctx) => {
+  ctx.session.waitingFor = "bio";
+  await ctx.reply(ctx.session.language === "es"
+    ? "Por favor, envía tu nueva bio:"
+    : "Please send your new bio:");
+});
+
+bot.action("edit_location", async (ctx) => {
+  ctx.session.waitingFor = "location";
+  await ctx.reply(ctx.session.language === "es"
+    ? "Por favor, envía tu nueva ubicación:"
+    : "Please send your new location:");
+});
+
+// Manejar mensajes
+bot.on("message", async (ctx) => {
+  if (ctx.session.waitingFor === "bio") {
+    try {
+      const userId = ctx.from.id.toString();
+      await db.collection("users").doc(userId).update({ bio: ctx.message.text });
+      await ctx.reply(ctx.session.language === "es"
+        ? "Tu bio ha sido actualizada."
+        : "Your bio has been updated.");
+    } catch (error) {
+      console.error(error);
+      await ctx.reply(ctx.i18n.t("error"));
+    }
+    ctx.session.waitingFor = null;
+  } else if (ctx.session.waitingFor === "location") {
+    try {
+      const userId = ctx.from.id.toString();
+      await db.collection("users").doc(userId).update({ location: ctx.message.text });
+      await ctx.reply(ctx.session.language === "es"
+        ? "Tu ubicación ha sido actualizada."
+        : "Your location has been updated.");
+    } catch (error) {
+      console.error(error);
+      await ctx.reply(ctx.i18n.t("error"));
+    }
+    ctx.session.waitingFor = null;
+  }
+});
+
+// Iniciar bot
+bot.launch({
+  webhook: false,
+  domain: null
+})
+.then(() => console.log("Bot started with complete onboarding and all features"))
+.catch(console.error);
+
+process.once("SIGINT", () => bot.stop("SIGINT"));
+process.once("SIGTERM", () => bot.stop("SIGTERM"));

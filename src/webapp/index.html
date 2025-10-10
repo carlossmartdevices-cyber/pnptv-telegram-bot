@@ -1,0 +1,12 @@
+require('dotenv').config(); const { Telegraf } = require('telegraf'); const
+admin = require('firebase-admin'); const serviceAccount =
+require(process.env.FIREBASE_CREDENTIALS_PATH); // Inicializar Firebase solo una
+vez if (!admin.apps.length) { admin.initializeApp({ credential:
+admin.credential.cert(serviceAccount) }); } const db = admin.firestore(); const
+bot = new Telegraf(process.env.TELEGRAM_TOKEN); // Importa los manejadores de
+perfil const { viewProfile, editProfile } = require('./handlers/profile'); //
+Configura los comandos del bot bot.start((ctx) => ctx.reply('¡Bienvenido a
+PNPtv!')); bot.command('profile', viewProfile); bot.command('editprofile',
+editProfile); // Inicia el bot bot.launch().then(() => { console.log('Bot is
+running...'); }); // Manejo de errores bot.catch((err, ctx) => {
+console.error(`Error for ${ctx.updateType}:`, err); }); module.exports = bot;
