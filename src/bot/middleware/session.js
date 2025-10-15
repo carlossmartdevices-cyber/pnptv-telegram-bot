@@ -12,6 +12,7 @@ const session = new LocalSession({
   state: {
     language: "en",
     onboardingStep: "start",
+    onboardingComplete: false,
     xp: 0,
     badges: [],
     ageVerified: false,

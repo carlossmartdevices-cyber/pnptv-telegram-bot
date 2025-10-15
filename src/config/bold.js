@@ -14,6 +14,10 @@ const http = axios.create({
   timeout: 10000,
 });
 
+if (BOLD_API_KEY) {
+  http.defaults.headers.common["x-api-key"] = BOLD_API_KEY;
+}
+
 const sumAmounts = (items = []) =>
   items.reduce((total, item) => total + (Number(item?.amount) || 0), 0);
 
@@ -77,12 +81,15 @@ async function createPaymentLink({
   }
 
   try {
-    const response = await http.post("/online/link/v1/payment_link", payload, {
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": BOLD_API_KEY,
-      },
-    });
+    const response = await http.post(
+      "/online/link/v1/payment_link",
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     const details = error.response ? error.response.data : error.message;
@@ -101,11 +108,7 @@ async function getPaymentLink(paymentLinkId) {
   }
 
   try {
-    const response = await http.get(`/online/link/v1/${paymentLinkId}`, {
-      headers: {
-        "x-api-key": BOLD_API_KEY,
-      },
-    });
+    const response = await http.get(`/online/link/v1/${paymentLinkId}`);
     return response.data;
   } catch (error) {
     const details = error.response ? error.response.data : error.message;
@@ -120,11 +123,7 @@ async function getPaymentMethods() {
   }
 
   try {
-    const response = await http.get("/online/link/v1/payment_methods", {
-      headers: {
-        "x-api-key": BOLD_API_KEY,
-      },
-    });
+    const response = await http.get("/online/link/v1/payment_methods");
     return response.data;
   } catch (error) {
     const details = error.response ? error.response.data : error.message;
