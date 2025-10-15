@@ -1,0 +1,123 @@
+{
+  "language": "en",
+  "onboardingStep": "start",
+  "xp": 0,
+  "badges": [],
+  "ageVerified": false,
+  "termsAccepted": false,
+  "privacyAccepted": false,
+  "sessions": [
+    {
+      "id": "8365312597:8365312597",
+      "data": {
+        "editingField": null,
+        "language": "en",
+        "onboardingComplete": true,
+        "xp": 50,
+        "badges": [
+          {
+            "id": "earlybird",
+            "name": "Early Bird",
+            "emoji": "🐦",
+            "description": "Early adopter",
+            "awardedAt": "2025-10-10T12:28:03.121Z"
+          }
+        ],
+        "tier": "free",
+        "waitingFor": "profile_photo"
+      }
+    },
+    {
+      "id": "7246621722:7246621722",
+      "data": {
+        "language": "es",
+        "onboardingComplete": true,
+        "xp": 50,
+        "badges": [
+          {
+            "id": "welcome",
+            "name": "Welcome",
+            "emoji": "👋",
+            "description": "Joined PNPtv",
+            "awardedAt": "2025-10-10T12:59:38.843Z"
+          },
+          {
+            "id": "earlybird",
+            "name": "Early Bird",
+            "emoji": "🐦",
+            "description": "Early adopter",
+            "awardedAt": "2025-10-10T13:07:12.942Z"
+          }
+        ],
+        "tier": "free",
+        "waitingFor": null
+      }
+    },
+    {
+      "id": "8195464838:8195464838",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "en",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free",
+        "waitingFor": null
+      }
+    },
+    {
+      "id": "8493551723:8493551723",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "en",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free"
+      }
+    },
+    {
+      "id": "6218516061:6218516061",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "en",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free"
+      }
+    },
+    {
+      "id": "6091427813:6091427813",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "es",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free"
+      }
+    }
+  ],
+  "onboardingComplete": false
+}

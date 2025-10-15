@@ -1,6 +1,11 @@
 const { formatMessage } = require("../../utils/formatters");
+const { ensureOnboarding } = require("../../utils/guards");
 
 module.exports = async (ctx) => {
+  if (!ensureOnboarding(ctx)) {
+    return;
+  }
+
   const language = ctx.session.language || "en";
   const message = formatMessage(
     "Help",

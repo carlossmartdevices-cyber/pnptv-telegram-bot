@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PNPtv Mini App - Demo Mode</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .demo-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-banner">
+        🎭 Demo Mode - No Telegram Required
+    </div>
+
+    <div id="app">
+        <!-- Loading Screen -->
+        <div id="loading" class="screen active">
+            <div class="loader"></div>
+            <p>Loading PNPtv Demo...</p>
+        </div>
+
+        <!-- Main Navigation -->
+        <nav id="main-nav" class="hidden">
+            <button class="nav-btn active" data-page="profile">
+                <span class="icon">👤</span>
+                <span>Profile</span>
+            </button>
+            <button class="nav-btn" data-page="map">
+                <span class="icon">🗺️</span>
+                <span>Map</span>
+            </button>
+            <button class="nav-btn" data-page="live">
+                <span class="icon">📺</span>
+                <span>Live</span>
+            </button>
+            <button class="nav-btn" data-page="premium">
+                <span class="icon">⭐</span>
+                <span>Premium</span>
+            </button>
+        </nav>
+
+        <!-- Profile Page -->
+        <div id="profile-page" class="page hidden">
+            <div class="page-header">
+                <h1>My Profile</h1>
+            </div>
+            <div class="profile-content">
+                <div class="profile-photo-wrapper">
+                    <div id="profile-photo" class="profile-photo">
+                        <span class="photo-placeholder">👤</span>
+                    </div>
+                </div>
+                <div class="profile-info">
+                    <h2 id="profile-username">@demo_user</h2>
+                    <div class="profile-tier free" id="profile-tier">Free</div>
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <span class="stat-label">XP</span>
+                            <span class="stat-value" id="profile-xp">150</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Badges</span>
+                            <span class="stat-value" id="profile-badges">2</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-bio">
+                    <h3>Bio</h3>
+                    <p id="profile-bio-text">Welcome to PNPtv! This is a demo profile.</p>
+                    <button id="edit-bio-btn" class="btn btn-secondary">Edit Bio</button>
+                </div>
+                <div class="profile-location">
+                    <h3>Location</h3>
+                    <p id="profile-location-text">San Francisco, CA</p>
+                    <button id="edit-location-btn" class="btn btn-secondary">Update Location</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Page -->
+        <div id="map-page" class="page hidden">
+            <div class="page-header">
+                <h1>Nearby Users</h1>
+                <div class="radius-selector">
+                    <button class="radius-btn active" data-radius="5">5km</button>
+                    <button class="radius-btn" data-radius="10">10km</button>
+                    <button class="radius-btn" data-radius="25">25km</button>
+                    <button class="radius-btn" data-radius="50">50km</button>
+                </div>
+            </div>
+            <div class="map-content">
+                <button id="share-location-btn" class="btn btn-primary">
+                    📍 Load Demo Users
+                </button>
+                <div id="users-list" class="users-list">
+                    <!-- Demo users will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Streams Page -->
+        <div id="live-page" class="page hidden">
+            <div class="page-header">
+                <h1>Live Streams</h1>
+            </div>
+            <div class="live-content">
+                <div class="coming-soon">
+                    <span class="icon-large">📺</span>
+                    <h2>Live Streaming</h2>
+                    <p>Coming Soon!</p>
+                    <p class="description">Watch and stream live content with the PNPtv community</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium Page -->
+        <div id="premium-page" class="page hidden">
+            <div class="page-header">
+                <h1>Premium Plans</h1>
+            </div>
+            <div class="premium-content">
+                <div id="plans-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Bio Modal -->
+    <div id="bio-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Edit Bio</h2>
+            <textarea id="bio-input" placeholder="Tell us about yourself..." maxlength="200"></textarea>
+            <div class="modal-actions">
+                <button id="cancel-bio-btn" class="btn btn-secondary">Cancel</button>
+                <button id="save-bio-btn" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock Telegram WebApp API for demo
+        window.Telegram = {
+            WebApp: {
+                initDataUnsafe: { user: { id: "demo123" } },
+                themeParams: {},
+                expand: () => console.log("Demo: expand called"),
+                showAlert: (msg) => alert(msg),
+                showConfirm: (msg, callback) => callback(confirm(msg)),
+                close: () => console.log("Demo: close called"),
+                BackButton: {
+                    show: () => console.log("Demo: BackButton show"),
+                    hide: () => console.log("Demo: BackButton hide"),
+                    onClick: () => {}
+                },
+                onEvent: () => {}
+            }
+        };
+
+        // Load demo data
+        const demoUsers = [
+            { username: "alice_wonder", distance: 0.8, distanceFormatted: "800m", tier: "Golden", bio: "Coffee enthusiast ☕" },
+            { username: "bob_builder", distance: 2.3, distanceFormatted: "2.3 km", tier: "Silver", bio: "Tech lover 💻" },
+            { username: "charlie_cool", distance: 5.1, distanceFormatted: "5.1 km", tier: "Free", bio: "Music & art 🎨" },
+            { username: "diana_dev", distance: 8.7, distanceFormatted: "8.7 km", tier: "Silver", bio: "Full-stack developer" },
+            { username: "eve_explore", distance: 12.4, distanceFormatted: "12.4 km", tier: "Free", bio: "Travel blogger ✈️" }
+        ];
+
+        // Display demo users
+        document.getElementById("share-location-btn").addEventListener("click", () => {
+            const usersList = document.getElementById("users-list");
+            usersList.innerHTML = "";
+
+            demoUsers.forEach((user) => {
+                const tierBadge = user.tier === "Golden" ? "🥇" : user.tier === "Silver" ? "🥈" : "⚪";
+
+                const userCard = document.createElement("div");
+                userCard.className = "user-card";
+                userCard.innerHTML = `
+                    <div class="user-photo">👤</div>
+                    <div class="user-info">
+                        <h3>
+                            @${user.username}
+                            <span class="tier-badge">${tierBadge}</span>
+                        </h3>
+                        <div class="distance">📍 ${user.distanceFormatted}</div>
+                        <div class="bio">${user.bio}</div>
+                    </div>
+                `;
+                usersList.appendChild(userCard);
+            });
+        });
+
+        // Load demo plans
+        const demoPlans = {
+            Free: {
+                price: 0,
+                icon: "⚪",
+                features: ["Basic profile", "View nearby users (5km)", "Standard support"]
+            },
+            Silver: {
+                price: 15,
+                icon: "🥈",
+                features: ["Enhanced profile", "View nearby users (50km)", "Priority support", "Ad-free experience"]
+            },
+            Golden: {
+                price: 40,
+                icon: "🥇",
+                features: ["Premium profile", "Unlimited radius", "VIP support", "Ad-free", "Live streaming", "Analytics"]
+            }
+        };
+
+        function displayDemoPlans() {
+            const container = document.getElementById("plans-container");
+            container.innerHTML = "";
+
+            Object.entries(demoPlans).forEach(([tier, plan]) => {
+                const planCard = document.createElement("div");
+                planCard.className = `plan-card ${tier === "Silver" ? "recommended" : ""}`;
+
+                const features = plan.features.map((f) => `<li>${f}</li>`).join("");
+
+                planCard.innerHTML = `
+                    <div class="plan-header">
+                        <div class="plan-name">${tier}</div>
+                        <div class="plan-icon">${plan.icon}</div>
+                    </div>
+                    <div class="plan-price">$${plan.price}/month</div>
+                    <ul class="plan-features">${features}</ul>
+                    <button class="btn ${tier === "Free" ? "btn-secondary" : "btn-premium"}"
+                            onclick="alert('Demo: Subscribe to ${tier}')">
+                        ${tier === "Free" ? "Current Plan" : "Subscribe"}
+                    </button>
+                `;
+
+                container.appendChild(planCard);
+            });
+        }
+    </script>
+    <script src="app.js"></script>
+    <script>
+        // Override loadPremiumPlans for demo
+        setTimeout(() => {
+            displayDemoPlans();
+        }, 500);
+    </script>
+</body>
+</html>

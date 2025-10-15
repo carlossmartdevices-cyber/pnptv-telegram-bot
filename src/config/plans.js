@@ -1,13 +1,23 @@
 const plans = {
-  prime: {
-    name: "PNPtv! PRIME",
-    price: 999, // Precio en centavos (ejemplo: $9.99)
-    currency: "COP",
-    duration: 30, // Duración en días
-    description:
-      "Acceso a contenido exclusivo, sin publicidad, y más beneficios.",
+  "silver": {
+    "name": "PNPtv Silver",
+    "displayName": "Silver",
+    "price": 1500,
+    "currency": "USD",
+    "durationDays": 30,
+    "description": "Ad-free experience with daily swipe allowance and verification badge.",
+    "tier": "Silver"
   },
-  // Puedes agregar más planes aquí si lo necesitas
+  "golden": {
+    "name": "PNPtv Golden",
+    "displayName": "Golden",
+    "price": 2500,
+    "currency": "USD",
+    "durationDays": 30,
+    "description": "All Silver perks plus VIP channels, exclusive badges, priority support, and crypto bonus.",
+    "tier": "Golden",
+    "cryptoBonus": "5 USDT"
+  }
 };
 
 module.exports = plans;

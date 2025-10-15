@@ -1,18 +1,32 @@
-# PNPtv Telegram Bot
+# 🤖 PNPtv Telegram Bot & Mini App
 
-A feature-rich Telegram bot for social networking with integrated payment processing via Bold API.
+A full-featured Telegram bot with an integrated Mini App for social networking, live streaming, and premium subscriptions.
 
-## 🚀 Features
+[![Telegram Bot](https://img.shields.io/badge/Telegram-Bot-blue?logo=telegram)](https://t.me/PNPtvbot)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green?logo=node.js)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-- **Multi-language Support**: English & Spanish
-- **User Onboarding**: Age verification, terms acceptance, privacy policy
-- **User Profiles**: Bio, location, XP system, badges, tiers
-- **Payment Integration**: Bold payment gateway for subscriptions
-- **Session Persistence**: Local file-based session storage
-- **Rate Limiting**: Prevents spam and abuse
-- **Comprehensive Logging**: Winston logger with file and console outputs
-- **Input Validation**: Sanitizes and validates all user inputs
-- **Error Handling**: Graceful error handling throughout
+## ✨ Features
+
+### 🤖 Telegram Bot
+- **Multi-language Support** (English & Spanish)
+- **User Onboarding** with age verification and terms acceptance
+- **Profile Management** with photo uploads
+- **Geolocation** - Find nearby users with real-time distance calculation
+- **Premium Subscriptions** (Silver & Golden tiers)
+- **Admin Panel** for user management and broadcasting
+- **Rate Limiting** and security features
+- **Session Persistence** with local file-based storage
+- **Comprehensive Logging** with Winston
+- **Input Validation** and sanitization
+
+### 🌐 Telegram Mini App (NEW!)
+- **Interactive Profile** - View and edit profile in a web interface
+- **Live Map** - See nearby users on an interactive map
+- **Live Streams** - Watch live content (coming soon)
+- **Premium Marketplace** - Browse and subscribe to plans
+- **Responsive Design** - Optimized for mobile devices
+- **Telegram Theme Integration** - Matches user's Telegram theme
 
 ## 📋 Prerequisites
 
@@ -36,17 +50,20 @@ A feature-rich Telegram bot for social networking with integrated payment proces
 
 3. **Configure environment variables**
 
-   Create a `.env` file in the root directory:
+   Create a `.env` file from the example:
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit `.env` and fill in your credentials:
    ```env
    TELEGRAM_TOKEN=your_telegram_bot_token
-   BOLD_API_KEY=your_bold_api_key
-   BOLD_SECRET_KEY=your_bold_secret_key
-   CHANNEL_ID=your_channel_id
-   BOLD_CALLBACK_URL=https://yourdomain.com/api/webhooks/bold
-   BOLD_REDIRECT_URL=https://yourdomain.com/payment/return
-   BOLD_API_BASE=https://integrations.api.bold.co
-   NODE_ENV=development
-   LOG_LEVEL=info
+   FIREBASE_PROJECT_ID=your_firebase_project_id
+   ADMIN_IDS=your_telegram_user_id
+   BOLD_PUBLIC_KEY=pk_live_your_public_key
+   BOLD_SECRET_KEY=sk_live_your_secret_key
+   WEB_PORT=3000
+   WEB_APP_URL=http://localhost:3000
    ```
 
 4. **Configure Firebase**
@@ -84,41 +101,51 @@ npm test
 ## 📁 Project Structure
 
 ```
-Bots/
+pnptv-bot/
 ├── src/
 │   ├── bot/
-│   │   ├── handlers/          # Command handlers
+│   │   ├── handlers/             # Command handlers
 │   │   │   ├── start.js
 │   │   │   ├── help.js
 │   │   │   ├── map.js
 │   │   │   ├── profile.js
-│   │   │   └── subscribe.js
-│   │   ├── middleware/        # Bot middleware
+│   │   │   ├── subscribe.js
+│   │   │   ├── live.js
+│   │   │   └── admin.js
+│   │   ├── middleware/           # Bot middleware
 │   │   │   ├── session.js
 │   │   │   ├── rateLimit.js
 │   │   │   └── errorHandler.js
-│   │   └── index.js          # Main bot file
-│   ├── config/               # Configuration files
+│   │   └── index.js             # Main bot file
+│   ├── web/                     # Mini App (NEW!)
+│   │   ├── server.js            # Express web server + API
+│   │   └── public/              # Frontend files
+│   │       ├── index.html       # Mini App main page
+│   │       ├── styles.css       # Telegram-themed styles
+│   │       ├── app.js           # Client-side JavaScript
+│   │       └── demo.html        # Demo mode (no Telegram)
+│   ├── config/                  # Configuration files
 │   │   ├── firebase.js
 │   │   ├── bold.js
-│   │   ├── i18n.js
-│   │   └── plans.js
-│   ├── locales/              # Translation files
+│   │   ├── plans.js
+│   │   ├── admin.js
+│   │   └── menus.js
+│   ├── locales/                 # Translation files
 │   │   ├── en.json
 │   │   └── es.json
-│   ├── utils/                # Utility functions
-│   │   ├── formatters.js
-│   │   ├── validation.js
-│   │   ├── i18n.js
-│   │   ├── logger.js
-│   │   └── __tests__/        # Unit tests
-│   └── webapp/               # Web app files
-├── logs/                     # Log files
-├── .env                      # Environment variables
-├── .gitignore
-├── jest.config.js
+│   └── utils/                   # Utility functions
+│       ├── logger.js
+│       ├── i18n.js
+│       ├── validation.js
+│       ├── geolocation.js
+│       └── guards.js
+├── logs/                        # Log files
+├── start-bot.js                 # Bot launcher
+├── .env.example                 # Environment template
+├── .env                         # Environment variables
 ├── package.json
-└── README.md
+├── README.md
+└── MINI_APP_SETUP.md           # Mini App guide
 ```
 
 ## 🔐 Security Best Practices
@@ -145,15 +172,71 @@ Bots/
    - Ensure `firebase_credentials.json` is listed
    - Never commit sensitive files
 
+## 📱 Testing the Mini App Locally
+
+To test the Mini App in Telegram during development:
+
+1. **Install ngrok**
+```bash
+# Windows
+choco install ngrok
+
+# Or download from https://ngrok.com/download
+```
+
+2. **Start ngrok**
+```bash
+ngrok http 3000
+```
+
+3. **Update .env with ngrok URL**
+```env
+WEB_APP_URL=https://abc123.ngrok.io
+```
+
+4. **Restart the bot and test in Telegram**
+
+For more details, see [MINI_APP_SETUP.md](MINI_APP_SETUP.md)
+
+## 🎨 Demo Mode
+
+To test the web interface without Telegram:
+```
+http://localhost:3000/demo.html
+```
+
+## 🚂 Deploy to Railway (Recommended for Testing)
+
+Deploy your bot with HTTPS in 5 minutes!
+
+**Quick Deploy:**
+1. Push to GitHub
+2. Connect to Railway: https://railway.app/new
+3. Add environment variables
+4. Get free HTTPS domain
+5. Mini App works in Telegram!
+
+See complete guide: **[RAILWAY_QUICKSTART.md](RAILWAY_QUICKSTART.md)**
+
+**Full documentation:** [DEPLOY_RAILWAY.md](DEPLOY_RAILWAY.md)
+
+**What you get:**
+- ✅ Free HTTPS domain
+- ✅ $5/month free credit
+- ✅ Automatic deployments
+- ✅ Mini App working in Telegram
+
 ## 🛠️ Available Commands
 
 ### Bot Commands
 
-- `/start` - Start the bot and begin onboarding
-- `/help` - Display available commands
+- `/start` - Start the bot and complete onboarding
 - `/profile` - View and edit your profile
-- `/map` - View community map (placeholder)
-- `/subscribe` - Subscribe to PRIME plan
+- `/map` - Find nearby users with geolocation
+- `/live` - Browse live streams
+- `/subscribe` - View premium subscription plans
+- `/help` - Get help and support
+- `/admin` - Admin panel (admin only)
 
 ### Callback Actions
 
