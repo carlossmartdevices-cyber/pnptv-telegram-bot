@@ -19,6 +19,7 @@ const PORT = process.env.PORT || process.env.WEB_PORT || 3000;
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // For form data
 app.use(express.static(path.join(__dirname, "public")));
 
 // CORS for Telegram Mini Apps
@@ -167,6 +168,12 @@ app.get("/api/plans", (req, res) => {
   const plans = require("../config/plans");
   res.json({ success: true, plans });
 });
+
+/**
+ * ePayco Webhook Routes
+ */
+const epaycoWebhook = require("./epaycoWebhook");
+app.use("/epayco", epaycoWebhook);
 
 /**
  * Serve Mini App main page

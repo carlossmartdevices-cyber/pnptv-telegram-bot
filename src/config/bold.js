@@ -15,7 +15,7 @@ const http = axios.create({
 });
 
 if (BOLD_API_KEY) {
-  http.defaults.headers.common["x-api-key"] = BOLD_API_KEY;
+  http.defaults.headers.common["Authorization"] = `Bearer ${BOLD_API_KEY}`;
 }
 
 const sumAmounts = (items = []) =>

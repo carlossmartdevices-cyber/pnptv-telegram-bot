@@ -24,7 +24,8 @@
           }
         ],
         "tier": "free",
-        "waitingFor": "profile_photo"
+        "waitingFor": null,
+        "activationUserId": null
       }
     },
     {
@@ -116,6 +117,326 @@
           "Trailblazer"
         ],
         "tier": "Free"
+      }
+    },
+    {
+      "id": "5830119032:5830119032",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "en",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free",
+        "waitingFor": null
+      }
+    },
+    {
+      "id": "7488115788:7488115788",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "en",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free",
+        "waitingFor": "location"
+      }
+    },
+    {
+      "id": "8020802390:8020802390",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "en",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free"
+      }
+    },
+    {
+      "id": "8482272306:8482272306",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "es",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free"
+      }
+    },
+    {
+      "id": "6459293917:6459293917",
+      "data": {
+        "onboardingStep": "language",
+        "onboardingComplete": false,
+        "language": "en",
+        "ageVerified": false,
+        "termsAccepted": false,
+        "privacyAccepted": false
+      }
+    },
+    {
+      "id": "8490904340:8490904340",
+      "data": {
+        "onboardingStep": "language",
+        "onboardingComplete": false,
+        "language": "en",
+        "ageVerified": false,
+        "termsAccepted": false,
+        "privacyAccepted": false
+      }
+    },
+    {
+      "id": "6512908422:6512908422",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "en",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free",
+        "waitingFor": null
+      }
+    },
+    {
+      "id": "6381844084:6381844084",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "es",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free"
+      }
+    },
+    {
+      "id": "8470764091:8470764091",
+      "data": {
+        "onboardingStep": "terms",
+        "onboardingComplete": false,
+        "language": "es",
+        "ageVerified": true,
+        "termsAccepted": false,
+        "privacyAccepted": false
+      }
+    },
+    {
+      "id": "8109409476:8109409476",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "es",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free"
+      }
+    },
+    {
+      "id": "5958416495:5958416495",
+      "data": {
+        "onboardingStep": "language",
+        "onboardingComplete": false,
+        "language": "en",
+        "ageVerified": false,
+        "termsAccepted": false,
+        "privacyAccepted": false
+      }
+    },
+    {
+      "id": "7664471211:7664471211",
+      "data": {
+        "onboardingStep": "language",
+        "onboardingComplete": false,
+        "language": "en",
+        "ageVerified": false,
+        "termsAccepted": false,
+        "privacyAccepted": false
+      }
+    },
+    {
+      "id": "6025431055:6025431055",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "es",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free",
+        "waitingFor": null
+      }
+    },
+    {
+      "id": "1368640424:1368640424",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "es",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free",
+        "waitingFor": null
+      }
+    },
+    {
+      "id": "1684976172:1684976172",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "es",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free",
+        "waitingFor": "location"
+      }
+    },
+    {
+      "id": "7166356500:7166356500",
+      "data": {
+        "onboardingStep": "language",
+        "onboardingComplete": false,
+        "language": "en",
+        "ageVerified": false,
+        "termsAccepted": false,
+        "privacyAccepted": false
+      }
+    },
+    {
+      "id": "7679106398:7679106398",
+      "data": {
+        "onboardingStep": "language",
+        "onboardingComplete": false,
+        "language": "en",
+        "ageVerified": false,
+        "termsAccepted": false,
+        "privacyAccepted": false
+      }
+    },
+    {
+      "id": "7216485226:7216485226",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "es",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free",
+        "waitingFor": null
+      }
+    },
+    {
+      "id": "5519461158:5519461158",
+      "data": {
+        "onboardingStep": "privacy",
+        "onboardingComplete": true,
+        "language": "en",
+        "ageVerified": true,
+        "termsAccepted": true,
+        "privacyAccepted": true,
+        "xp": 100,
+        "badges": [
+          "Trailblazer"
+        ],
+        "tier": "Free"
+      }
+    },
+    {
+      "id": "8406583875:8406583875",
+      "data": {
+        "onboardingStep": "language",
+        "onboardingComplete": false,
+        "language": "en",
+        "ageVerified": false,
+        "termsAccepted": false,
+        "privacyAccepted": false
+      }
+    },
+    {
+      "id": "2077767307:2077767307",
+      "data": {
+        "onboardingStep": "language",
+        "onboardingComplete": false,
+        "language": "en",
+        "ageVerified": false,
+        "termsAccepted": false,
+        "privacyAccepted": false
+      }
+    },
+    {
+      "id": "8330392894:8330392894",
+      "data": {
+        "onboardingStep": "language",
+        "onboardingComplete": false,
+        "language": "en",
+        "ageVerified": false,
+        "termsAccepted": false,
+        "privacyAccepted": false
+      }
+    },
+    {
+      "id": "5754038448:5754038448",
+      "data": {
+        "onboardingStep": "language",
+        "onboardingComplete": false,
+        "language": "en",
+        "ageVerified": false,
+        "termsAccepted": false,
+        "privacyAccepted": false
       }
     }
   ],

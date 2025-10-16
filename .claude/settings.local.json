@@ -14,7 +14,11 @@
       "Bash(Remove-Item -Recurse -Force node_modules)",
       "Bash(Remove-Item -Force package-lock.json -ErrorAction SilentlyContinue)",
       "Bash(rm:*)",
-      "Bash(npm cache clean:*)"
+      "Bash(npm cache clean:*)",
+      "Read(//c/Users/carlo/Downloads/**)",
+      "Bash(copy:*)",
+      "Bash(dir srcconfigfirebase_credentials.json)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

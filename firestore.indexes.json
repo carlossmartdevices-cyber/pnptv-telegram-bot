@@ -9,8 +9,8 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "xp",
-          "order": "DESCENDING"
+          "fieldPath": "membershipExpiresAt",
+          "order": "ASCENDING"
         }
       ]
     },
@@ -19,19 +19,19 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "users",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "onboardingComplete",
+          "fieldPath": "tier",
           "order": "ASCENDING"
         },
+        {
+          "fieldPath": "tierUpdatedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
         {
           "fieldPath": "createdAt",
           "order": "DESCENDING"

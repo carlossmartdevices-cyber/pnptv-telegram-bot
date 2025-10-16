@@ -38,6 +38,17 @@ async function launchBotWithRetry(retryCount = 0) {
       console.log("⚠️  Mini App server could not start. Bot will continue running.");
     }
 
+    // Initialize scheduler for membership expiration
+    try {
+      const { initializeScheduler } = require("./src/services/scheduler");
+      initializeScheduler(bot);
+      logger.info("Scheduler initialized successfully");
+      console.log("⏰ Membership expiration scheduler started");
+    } catch (error) {
+      logger.warn("Failed to initialize scheduler:", error.message);
+      console.log("⚠️  Scheduler could not start. Manual expiration checks required.");
+    }
+
     console.log("\nPress Ctrl+C to stop the bot.\n");
 
     // Setup graceful shutdown

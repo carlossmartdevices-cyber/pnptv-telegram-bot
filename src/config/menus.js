@@ -40,13 +40,24 @@ const menus = {
     inline_keyboard: [
       [
         { text: "👥 User Management", callback_data: "admin_users" },
-        { text: "💰 Plan Management", callback_data: "admin_plans" },
+        { text: "📊 Statistics", callback_data: "admin_stats" },
       ],
       [
-        { text: "📋 Menu Config", callback_data: "admin_menus" },
-        { text: "📢 Broadcast", callback_data: "admin_broadcast" },
+        { text: "✨ Activate Membership", callback_data: "admin_activate_membership" },
       ],
-      [{ text: "📊 Statistics", callback_data: "admin_stats" }],
+      [
+        { text: "📝 Update Member", callback_data: "admin_update_member" },
+        { text: "🔄 Extend Membership", callback_data: "admin_extend_membership" },
+      ],
+      [
+        { text: "⏰ Expiring Soon", callback_data: "admin_expiring" },
+        { text: "🔄 Expire Check", callback_data: "admin_expire_check" },
+      ],
+      [
+        { text: "📢 Broadcast", callback_data: "admin_broadcast" },
+        { text: "💰 Plan Management", callback_data: "admin_plans" },
+      ],
+      [{ text: "📋 Menu Config", callback_data: "admin_menus" }],
     ],
   },
 

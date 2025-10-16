@@ -4,6 +4,7 @@ const { db } = require("../config/firebase");
 const { t } = require("../utils/i18n");
 const logger = require("../utils/logger");
 const bold = require("../config/bold");
+const epayco = require("../config/epayco");
 const plans = require("../config/plans");
 const { ensureOnboarding } = require("../utils/guards");
 const { isAdmin, adminMiddleware } = require("../config/admin");
@@ -25,7 +26,20 @@ const mapHandler = require("./handlers/map");
 const liveHandler = require("./handlers/live");
 const { viewProfile, handleEditPhoto, handlePhotoMessage } = require("./handlers/profile");
 const subscribeHandler = require("./handlers/subscribe");
-const { adminPanel, handleAdminCallback, sendBroadcast, executeSearch } = require("./handlers/admin");
+const {
+  adminPanel,
+  handleAdminCallback,
+  sendBroadcast,
+  executeSearch,
+  executeGiveXP,
+  executeSendMessage,
+  processActivationUserId,
+  processUpdateMemberUserId,
+  processExtendUserId,
+  executeCustomExtension,
+  executeModifyExpiration,
+  executePlanEdit
+} = require("./handlers/admin");
 const { handleMapCallback, handleLocation } = require("./handlers/map");
 const { handleLiveCallback } = require("./handlers/live");
 
@@ -216,71 +230,112 @@ async function handleSubscription(ctx, planKey) {
 
   try {
     const lang = ctx.session.language || "en";
-    const plan = plans[planKey];
+    const planLookup = planKey.toUpperCase();
+    const plan = plans[planLookup] || plans[planKey];
 
     if (!plan) {
-      logger.warn(`Plan ${planKey} not found`);
+      logger.warn(`Plan ${planKey} not found in plans config`);
       await ctx.answerCbQuery(t("error", lang), { show_alert: true });
       return;
     }
 
     const userId = ctx.from.id.toString();
 
-    logger.info(`User ${userId} initiated ${planKey} subscription`);
+    logger.info(`User ${userId} initiated ${planKey} subscription - Plan: ${plan.name}, Price: ${plan.priceInCOP} COP`);
 
-    const paymentData = await bold.createPaymentLink({
-      totalAmountCents: plan.price,
-      currency: plan.currency,
-      description: `${plan.name} - ${userId}`,
-      referenceId: `${planKey}_${userId}_${Date.now()}`,
-      customerEmail: ctx.from.username
+    // Validate required environment variables
+    if (!process.env.EPAYCO_PUBLIC_KEY) {
+      logger.error("EPAYCO_PUBLIC_KEY not configured");
+      throw new Error("Payment gateway not configured");
+    }
+
+    // Use ePayco for payment processing
+    const paymentData = await epayco.createPaymentLink({
+      name: plan.name,
+      description: plan.description || `${plan.name} subscription - ${plan.duration} days`,
+      amount: plan.priceInCOP, // ePayco works with Colombian Pesos
+      currency: "COP",
+      userId: userId,
+      userEmail: ctx.from.username
         ? `${ctx.from.username}@telegram.user`
-        : undefined,
-      metadata: {
-        userId,
-        plan: planKey,
-        username: ctx.from.username,
-      },
+        : `user${userId}@telegram.bot`,
+      userName: ctx.from.first_name || ctx.from.username || "User",
+      plan: planKey,
     });
 
-    const linkUrl =
-      paymentData?.data?.link_url ||
-      paymentData?.payment_link_url ||
-      paymentData?.url ||
-      paymentData?.payment_link;
-
-    if (!linkUrl) {
+    if (!paymentData.success || !paymentData.paymentUrl) {
+      logger.error("Payment link creation failed:", paymentData);
       throw new Error("Payment link creation failed");
     }
+
+    const linkUrl = paymentData.paymentUrl;
+
+    logger.info(`Payment link created successfully for user ${userId}: ${linkUrl.substring(0, 50)}...`);
 
     const featuresKey =
       planKey === "golden" ? "goldenFeatures" : "silverFeatures";
     const features = t(featuresKey, lang);
 
+    const message = lang === "es"
+      ? `${features}\n\n💳 **Detalles del Pago:**\n• Plan: ${plan.displayName || plan.name}\n• Precio: $${plan.price} USD / ${plan.priceInCOP.toLocaleString()} COP\n• Duración: ${plan.duration} días\n\nHaz clic en el botón para continuar con el pago:`
+      : `${features}\n\n💳 **Payment Details:**\n• Plan: ${plan.displayName || plan.name}\n• Price: $${plan.price} USD / ${plan.priceInCOP.toLocaleString()} COP\n• Duration: ${plan.duration} days\n\nClick the button to proceed with payment:`;
+
     await ctx.answerCbQuery();
-    await ctx.editMessageText(
-      `${features}\n\n${t("paymentRedirect", lang)}`,
-      {
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: t("paymentButton", lang),
-                url: linkUrl,
-              },
-            ],
+    await ctx.editMessageText(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "💳 Ir a Pagar" : "💳 Go to Payment",
+              url: linkUrl,
+            },
           ],
-        },
-      }
-    );
+          [
+            {
+              text: lang === "es" ? "« Volver" : "« Back",
+              callback_data: "back_to_main",
+            },
+          ],
+        ],
+      },
+    });
   } catch (error) {
     logger.error(`Error creating ${planKey} payment link:`, error);
+    logger.error("Error stack:", error.stack);
+
     const lang = ctx.session.language || "en";
+    const errorMessage = lang === "es"
+      ? `❌ Error al crear el link de pago.\n\nPor favor intenta de nuevo o contacta a soporte.\n\nError: ${error.message}`
+      : `❌ Error creating payment link.\n\nPlease try again or contact support.\n\nError: ${error.message}`;
+
     if (ctx.updateType === "callback_query") {
-      await ctx.answerCbQuery(t("error", lang), { show_alert: true });
+      await ctx.answerCbQuery();
+      try {
+        await ctx.editMessageText(errorMessage, {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: lang === "es" ? "🔄 Reintentar" : "🔄 Retry",
+                  callback_data: `subscribe_${planKey}`,
+                },
+              ],
+              [
+                {
+                  text: lang === "es" ? "« Volver" : "« Back",
+                  callback_data: "back_to_main",
+                },
+              ],
+            ],
+          },
+        });
+      } catch (editError) {
+        await ctx.reply(errorMessage, { parse_mode: "Markdown" });
+      }
     } else {
-      await ctx.reply(t("error", lang));
+      await ctx.reply(errorMessage, { parse_mode: "Markdown" });
     }
   }
 }
@@ -436,6 +491,55 @@ bot.on("text", async (ctx) => {
       // Admin user search
       if (isAdmin(ctx.from.id)) {
         await executeSearch(ctx, ctx.message.text);
+      }
+    } else if (ctx.session.waitingFor && ctx.session.waitingFor.startsWith("admin_give_xp_")) {
+      // Admin give XP
+      if (isAdmin(ctx.from.id)) {
+        const userId = ctx.session.waitingFor.replace("admin_give_xp_", "");
+        await executeGiveXP(ctx, userId, ctx.message.text);
+      }
+    } else if (ctx.session.waitingFor && ctx.session.waitingFor.startsWith("admin_message_")) {
+      // Admin send message to user
+      if (isAdmin(ctx.from.id)) {
+        const userId = ctx.session.waitingFor.replace("admin_message_", "");
+        await executeSendMessage(ctx, userId, ctx.message.text);
+      }
+    } else if (ctx.session.waitingFor === "admin_activate_userid") {
+      // Admin manual membership activation - user ID input
+      if (isAdmin(ctx.from.id)) {
+        await processActivationUserId(ctx, ctx.message.text);
+      }
+    } else if (ctx.session.waitingFor === "admin_update_member_userid") {
+      // Admin update member - user ID input
+      if (isAdmin(ctx.from.id)) {
+        await processUpdateMemberUserId(ctx, ctx.message.text);
+      }
+    } else if (ctx.session.waitingFor === "admin_extend_userid") {
+      // Admin extend membership - user ID input
+      if (isAdmin(ctx.from.id)) {
+        await processExtendUserId(ctx, ctx.message.text);
+      }
+    } else if (ctx.session.waitingFor && ctx.session.waitingFor.startsWith("admin_extend_custom_days_")) {
+      // Admin custom extension - days input
+      if (isAdmin(ctx.from.id)) {
+        const userId = ctx.session.waitingFor.replace("admin_extend_custom_days_", "");
+        await executeCustomExtension(ctx, userId, ctx.message.text);
+      }
+    } else if (ctx.session.waitingFor && ctx.session.waitingFor.startsWith("admin_modify_expiration_")) {
+      // Admin modify expiration - date input
+      if (isAdmin(ctx.from.id)) {
+        const userId = ctx.session.waitingFor.replace("admin_modify_expiration_", "");
+        await executeModifyExpiration(ctx, userId, ctx.message.text);
+      }
+    } else if (ctx.session.waitingFor && ctx.session.waitingFor.startsWith("admin_plan_edit_")) {
+      // Admin plan edit - field input
+      if (isAdmin(ctx.from.id)) {
+        // Extract field and plan name from waitingFor
+        // Format: admin_plan_edit_<field>_<planName>
+        const parts = ctx.session.waitingFor.replace("admin_plan_edit_", "").split("_");
+        const field = parts[0];
+        const planName = parts[1];
+        await executePlanEdit(ctx, planName, field, ctx.message.text);
       }
     } else {
       // Handle keyboard button texts

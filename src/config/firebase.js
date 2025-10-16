@@ -6,9 +6,25 @@ console.log("Iniciando Firebase...");
 let serviceAccount;
 
 // Check if Firebase credentials are in environment variable (Railway/Production)
-if (process.env.FIREBASE_CREDENTIALS) {
+const rawFirebaseCredentials = process.env.FIREBASE_CREDENTIALS;
+
+if (rawFirebaseCredentials) {
   try {
-    serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+    let normalizedCredentials = rawFirebaseCredentials.trim();
+
+    normalizedCredentials = normalizedCredentials.replace(/^['"]+|['"]+$/g, "");
+
+    try {
+      serviceAccount = JSON.parse(normalizedCredentials);
+    } catch (parseError) {
+      const newlineNormalized = normalizedCredentials.replace(/\r?\n/g, "\\n");
+      serviceAccount = JSON.parse(newlineNormalized);
+    }
+
+    if (serviceAccount && typeof serviceAccount.private_key === "string") {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
+    }
+
     console.log("Using Firebase credentials from environment variable");
   } catch (error) {
     console.error("Error parsing FIREBASE_CREDENTIALS:", error.message);

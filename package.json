@@ -13,9 +13,11 @@
   "dependencies": {
     "axios": "^1.6.7",
     "dotenv": "^17.2.3",
+    "epayco-sdk-node": "^1.4.4",
     "express": "^5.1.0",
     "firebase-admin": "^13.5.0",
     "lodash-id": "^0.14.1",
+    "node-cron": "^4.2.1",
     "telegraf": "^3.40.0",
     "telegraf-session-local": "^2.1.0",
     "winston": "^3.18.3"
