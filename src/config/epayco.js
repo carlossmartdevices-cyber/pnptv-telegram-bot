@@ -55,19 +55,31 @@ async function createPaymentLink({
 
     const testMode = process.env.EPAYCO_TEST_MODE === "true";
 
-    // Create payment using ePayco Bank/PSE for hosted checkout
-    // This creates a payment page where user enters card details
-    const paymentData = {
-      // Basic info
+    // Create payment using ePayco's Standard Checkout
+    // Build payment URL manually as the SDK doesn't support hosted checkout properly
+    const baseUrl = testMode
+      ? "https://checkout.epayco.co/checkout.php"
+      : "https://checkout.epayco.co/checkout.php";
+
+    const paymentParams = new URLSearchParams({
+      // Authentication
+      public_key: process.env.EPAYCO_PUBLIC_KEY,
+      p_cust_id_cliente: process.env.EPAYCO_P_CUST_ID,
+      p_key: process.env.EPAYCO_P_KEY,
+
+      // Transaction info
       name: name,
       description: description,
       invoice: invoiceId,
-      currency: currency,
       amount: amount.toString(),
       tax_base: "0",
       tax: "0",
+      currency: currency,
       country: "CO",
       lang: "ES",
+
+      // Test mode
+      test: testMode ? "true" : "false",
 
       // Customer info
       name_billing: userName,
@@ -75,35 +87,44 @@ async function createPaymentLink({
       type_doc_billing: "CC",
       number_doc_billing: userId.substring(0, 10).padStart(10, '0'),
       email_billing: userEmail,
-      cell_phone_billing: "3000000000",
       mobilephone_billing: "3000000000",
 
       // URLs
-      url_response: responseUrl,
-      url_confirmation: confirmationUrl,
       response: responseUrl,
       confirmation: confirmationUrl,
+      url_response: responseUrl,
+      url_confirmation: confirmationUrl,
+      method_confirmation: "POST",
 
       // Extra data
       extra1: userId,
       extra2: plan,
       extra3: Date.now().toString(),
 
-      // Method
-      methodsDisable: ["CASH"], // Disable cash, enable cards
-      method_confirmation: "POST",
-    };
+      // Enable credit cards and debit cards
+      methodsDisable: "",
+    });
 
-    logger.info("Creating ePayco payment with SDK:", {
+    const paymentUrl = `${baseUrl}?${paymentParams.toString()}`;
+
+    logger.info("Creating ePayco payment with Standard Checkout:", {
       invoice: invoiceId,
       amount: amount,
       email: userEmail,
       test: testMode,
-      method: "bank.create"
+      method: "standard_checkout",
+      urlLength: paymentUrl.length
     });
 
-    // Use bank.create which returns a hosted payment page URL
-    const response = await epayco.bank.create(paymentData);
+    // Return response in expected format
+    const response = {
+      success: true,
+      data: {
+        urlbanco: paymentUrl,
+        url: paymentUrl,
+        ref_payco: invoiceId,
+      }
+    };
 
     logger.info("ePayco SDK response:", {
       success: response?.success,
