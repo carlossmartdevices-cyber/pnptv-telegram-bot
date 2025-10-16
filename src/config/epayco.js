@@ -55,8 +55,8 @@ async function createPaymentLink({
 
     const testMode = process.env.EPAYCO_TEST_MODE === "true";
 
-    // Create payment using ePayco Payment API
-    // This creates a charge that returns a payment URL
+    // Create payment using ePayco Bank/PSE for hosted checkout
+    // This creates a payment page where user enters card details
     const paymentData = {
       // Basic info
       name: name,
@@ -69,17 +69,20 @@ async function createPaymentLink({
       country: "CO",
       lang: "ES",
 
-      // Customer info - all fields are required for ePayco
+      // Customer info
       name_billing: userName,
-      address_billing: "N/A", // Required field
-      type_doc_billing: "CC", // CC = Cedula de Ciudadania
-      number_doc_billing: userId.substring(0, 10).padStart(10, '0'), // Use telegram ID as doc number
+      address_billing: "N/A",
+      type_doc_billing: "CC",
+      number_doc_billing: userId.substring(0, 10).padStart(10, '0'),
       email_billing: userEmail,
-      mobilephone_billing: "3000000000", // Required field
+      cell_phone_billing: "3000000000",
+      mobilephone_billing: "3000000000",
 
       // URLs
       url_response: responseUrl,
       url_confirmation: confirmationUrl,
+      response: responseUrl,
+      confirmation: confirmationUrl,
 
       // Extra data
       extra1: userId,
@@ -87,6 +90,7 @@ async function createPaymentLink({
       extra3: Date.now().toString(),
 
       // Method
+      methodsDisable: ["CASH"], // Disable cash, enable cards
       method_confirmation: "POST",
     };
 
@@ -94,11 +98,12 @@ async function createPaymentLink({
       invoice: invoiceId,
       amount: amount,
       email: userEmail,
-      test: testMode
+      test: testMode,
+      method: "bank.create"
     });
 
-    // Use charge.create which returns a payment URL
-    const response = await epayco.charge.create(paymentData);
+    // Use bank.create which returns a hosted payment page URL
+    const response = await epayco.bank.create(paymentData);
 
     logger.info("ePayco SDK response:", {
       success: response?.success,
