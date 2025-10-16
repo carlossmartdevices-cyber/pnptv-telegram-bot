@@ -1,5 +1,5 @@
+require("./env");
 const admin = require("firebase-admin");
-require("dotenv").config();
 
 console.log("Iniciando Firebase...");
 

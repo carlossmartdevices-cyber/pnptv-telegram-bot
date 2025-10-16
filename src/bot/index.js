@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("../config/env");
 const { Telegraf } = require("telegraf");
 const { db } = require("../config/firebase");
 const { t } = require("../utils/i18n");
@@ -600,28 +600,5 @@ bot.on("text", async (ctx) => {
 
 bot.on("location", handleLocation);
 
-// ===== LAUNCH BOT =====
-
-bot
-  .launch()
-  .then(() => {
-    logger.info("Bot started successfully");
-    console.log("🤖 PNPtv Bot is running...");
-  })
-  .catch((error) => {
-    logger.error("Failed to start bot:", error);
-    process.exit(1);
-  });
-
-// Enable graceful stop
-process.once("SIGINT", () => {
-  logger.info("Received SIGINT, stopping bot...");
-  bot.stop("SIGINT");
-});
-
-process.once("SIGTERM", () => {
-  logger.info("Received SIGTERM, stopping bot...");
-  bot.stop("SIGTERM");
-});
-
 module.exports = bot;
+

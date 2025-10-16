@@ -212,6 +212,46 @@ function simpleGeohash(lat, lon, precision = 3) {
 }
 
 /**
+ * Get all geohash neighbors for expanded search
+ * This helps find users near the edges of geohash cells
+ *
+ * @param {string} geohash - Center geohash
+ * @param {number} precision - Hash precision
+ * @returns {string[]} Array of geohashes (center + 8 neighbors)
+ */
+function getGeohashNeighbors(geohash, precision = 3) {
+  const [latGrid, lonGrid] = geohash.split('_').map(Number);
+
+  const neighbors = [
+    geohash, // center
+    `${latGrid - 1}_${lonGrid - 1}`, // top-left
+    `${latGrid - 1}_${lonGrid}`,     // top
+    `${latGrid - 1}_${lonGrid + 1}`, // top-right
+    `${latGrid}_${lonGrid - 1}`,     // left
+    `${latGrid}_${lonGrid + 1}`,     // right
+    `${latGrid + 1}_${lonGrid - 1}`, // bottom-left
+    `${latGrid + 1}_${lonGrid}`,     // bottom
+    `${latGrid + 1}_${lonGrid + 1}`, // bottom-right
+  ];
+
+  return neighbors;
+}
+
+/**
+ * Get geohash precision for a given radius
+ * Larger radius = lower precision (larger grid cells)
+ *
+ * @param {number} radiusKm - Search radius in km
+ * @returns {number} Appropriate precision level
+ */
+function getGeohashPrecision(radiusKm) {
+  if (radiusKm <= 5) return 4;   // ~12.5km grid cells
+  if (radiusKm <= 25) return 3;  // ~125km grid cells
+  if (radiusKm <= 50) return 2;  // ~1250km grid cells
+  return 1;                       // ~12500km grid cells
+}
+
+/**
  * Get readable location name from coordinates (approximate)
  * This is a very basic approximation - for production, use Google Maps Geocoding API
  *
@@ -237,6 +277,45 @@ function approximateLocation(lat, lon) {
   return "Unknown Region";
 }
 
+/**
+ * Optimized nearby user search using geohashing
+ * This reduces database queries by filtering users based on geohash first
+ *
+ * @param {object} db - Firestore database instance
+ * @param {number} lat - User latitude
+ * @param {number} lon - User longitude
+ * @param {number} radiusKm - Search radius
+ * @param {number} limit - Maximum results
+ * @returns {Promise<Array>} Users within radius with distance
+ */
+async function findNearbyUsersOptimized(db, lat, lon, radiusKm = 25, limit = 100) {
+  const precision = getGeohashPrecision(radiusKm);
+  const centerHash = simpleGeohash(lat, lon, precision);
+  const searchHashes = getGeohashNeighbors(centerHash, precision);
+
+  // Query users with matching geohashes
+  const usersSnapshot = await db
+    .collection('users')
+    .where('locationGeohash', 'in', searchHashes.slice(0, 10)) // Firestore 'in' limit is 10
+    .limit(limit * 2) // Get more for filtering
+    .get();
+
+  const users = [];
+  usersSnapshot.forEach(doc => {
+    const userData = doc.data();
+    if (isValidLocation(userData.location)) {
+      users.push({
+        userId: doc.id,
+        ...userData,
+      });
+    }
+  });
+
+  // Calculate distances and filter by radius
+  return findUsersWithinRadius({ latitude: lat, longitude: lon }, users, radiusKm)
+    .slice(0, limit);
+}
+
 module.exports = {
   calculateDistance,
   formatDistance,
@@ -246,6 +325,9 @@ module.exports = {
   getBoundingBox,
   isInBoundingBox,
   simpleGeohash,
+  getGeohashNeighbors,
+  getGeohashPrecision,
+  findNearbyUsersOptimized,
   approximateLocation,
   toRadians,
 };

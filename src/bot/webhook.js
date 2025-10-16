@@ -3,7 +3,7 @@
  * Use this instead of long polling for better performance
  */
 
-require("dotenv").config();
+require("../config/env");
 const express = require("express");
 const { Telegraf } = require("telegraf");
 const logger = require("../utils/logger");

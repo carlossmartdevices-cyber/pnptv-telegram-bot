@@ -24,7 +24,8 @@
       "Bash(python:*)",
       "Bash(git reset:*)",
       "Bash(heroku logs:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
