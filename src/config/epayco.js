@@ -59,86 +59,80 @@ async function createPaymentLink({
 
     const testMode = process.env.EPAYCO_TEST_MODE === "true";
 
-    const amountString = Number(amount).toString();
-    const currencyCode = (currency || "COP").toUpperCase();
-
-    const signature = crypto
-      .createHash("md5")
-      .update(
-        [
-          process.env.EPAYCO_P_CUST_ID,
-          process.env.EPAYCO_P_KEY,
-          invoiceId,
-          amountString,
-          currencyCode,
-        ].join("^")
-      )
-      .digest("hex");
-
-    // Use ePayco Onpage Checkout (embedded checkout)
-    // This is the correct method for creating payment links
-    const baseUrl = "https://checkout.epayco.co";
-
-    const paymentParams = {
-      // Autenticación
-      public_key: process.env.EPAYCO_PUBLIC_KEY,
-
-      // Información de la transacción
+    // Use ePayco cash.create() method for payment links
+    // This creates a hosted checkout page
+    const paymentData = {
       name: name,
       description: description,
       invoice: invoiceId,
-      amount: amountString,
+      currency: currency,
+      amount: amount.toString(),
       tax_base: "0",
       tax: "0",
-      currency: currencyCode,
-      country: "co",
-      lang: "es",
+      country: "CO",
+      lang: "ES",
+      external: "false",
 
-      // Test mode
-      test: testMode ? "true" : "false",
-
-      // URLs de respuesta
+      // URLs
       response: responseUrl,
       confirmation: confirmationUrl,
 
-      // Información del cliente
+      // Customer info
       name_billing: userName,
       address_billing: "Calle 123",
       type_doc_billing: "cc",
       number_doc_billing: userId.substring(0, 10).padStart(10, '0'),
-      email_billing: userEmail,
       mobilephone_billing: "3000000000",
+      number_mobilephone_billing: "3000000000",
 
-      // Datos extra
+      // Extra data for tracking
       extra1: userId,
       extra2: plan,
       extra3: Date.now().toString(),
+
+      // Payment method type
+      type_person: "0", // Natural person
+      email_billing: userEmail,
     };
 
-    const paymentUrl = `${baseUrl}?${new URLSearchParams(paymentParams).toString()}`;
-
-    logger.info("Creating ePayco payment with Standard Checkout:", {
+    logger.info("Creating ePayco payment with cash.create():", {
       invoice: invoiceId,
       amount: amount,
       email: userEmail,
       test: testMode,
-      method: "standard_checkout",
-      urlLength: paymentUrl.length
     });
+
+    // Use cash.create to generate payment link
+    const response = await epayco.cash.create("efecty", paymentData);
+
+    logger.info("ePayco cash.create response:", {
+      success: response?.success,
+      hasData: !!response?.data,
+      hasUrl: !!(response?.data?.urlbanco || response?.data?.url),
+    });
+
+    if (!response || !response.success) {
+      const errorMsg = response?.data?.errors || response?.data?.description || response?.message || "Unknown error";
+      logger.error("ePayco payment creation failed:", errorMsg);
+      throw new Error(`ePayco error: ${JSON.stringify(errorMsg)}`);
+    }
+
+    // Get payment URL from response
+    const paymentUrl = response.data?.urlbanco || response.data?.url;
+
+    if (!paymentUrl) {
+      logger.error("No payment URL in response:", JSON.stringify(response.data));
+      throw new Error("Payment URL not found in ePayco response");
+    }
 
     logger.info(`ePayco payment link created successfully: ${paymentUrl.substring(0, 80)}...`);
 
-    // Return payment link directly
     return {
       success: true,
       paymentUrl: paymentUrl,
-      reference: invoiceId,
+      reference: response.data?.ref_payco || invoiceId,
       invoiceId: invoiceId,
-      data: {
-        url: paymentUrl,
-        urlbanco: paymentUrl,
-        ref_payco: invoiceId,
-      },
+      data: response.data,
     };
   } catch (error) {
     logger.error("Error creating ePayco payment link:", error);
