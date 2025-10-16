@@ -1,4 +1,4 @@
-# ✅ Setup Complete!
+﻿# ✅ Setup Complete!
 
 ## 🎉 Your PNPtv Bot is Now Running!
 
@@ -41,15 +41,10 @@ Your `.env` file now contains:
 # Telegram Bot
 TELEGRAM_TOKEN=8499797477:AAENAxfDXTwoKw2aaDOjA--ANmCOtP2haFQ
 
-# Bold Payment Gateway
-BOLD_API_KEY=vn33sdUENAeux79Y8Pmo0Powb1rqqP9Cu_i5ClgLlcE
-BOLD_SECRET_KEY=BKJa2QDTVe_j_IVInwBYYg
+# ePayco Payment Gateway
 
 # Channels & Webhooks
 CHANNEL_ID=-1002997324714
-BOLD_CALLBACK_URL=https://api.pnptv.app/api/webhooks/bold
-BOLD_REDIRECT_URL=https://app.pnptv.app/payment/return
-BOLD_API_BASE=https://integrations.api.bold.co
 
 # Admin Configuration
 ADMIN_IDS=6636269
@@ -174,7 +169,7 @@ Expected:
 5. **Subscription System**
    - Silver plan ($15/month)
    - Golden plan ($25+5 USDT/month)
-   - Bold.co payment integration
+   - ePayco.co payment integration
    - Webhook support
 
 6. **Live Streaming** (Placeholder)
@@ -257,7 +252,7 @@ src/
 │   ├── admin.js            - Admin configuration
 │   ├── menus.js            - Menu system
 │   ├── plans.js            - Subscription plans
-│   ├── bold.js             - Payment integration
+│   ├── ePayco.js             - Payment integration
 │   ├── firebase.js         - Database connection
 │   └── firebase_credentials.json - Firebase service account
 ├── utils/
@@ -319,10 +314,10 @@ firebase init firestore
 firebase deploy --only firestore:indexes
 ```
 
-### 4. Set Up Bold Webhook
-Configure Bold.co to send payment notifications to:
+### 4. Set Up ePayco Webhook
+Configure ePayco.co to send payment notifications to:
 ```
-https://your-domain.com/api/webhooks/bold
+https://your-domain.com/api/webhooks/ePayco
 ```
 
 ### 5. Monitor Logs
@@ -350,8 +345,8 @@ tail -f logs/combined.log
 3. Ensure Firebase project is active
 
 ### Payment not working?
-1. Verify Bold API keys in `.env`
-2. Check Bold.co dashboard
+1. Verify ePayco API keys in `.env`
+2. Check ePayco.co dashboard
 3. Test with sandbox environment first
 
 ### Rate limit issues?
@@ -407,3 +402,4 @@ Start testing and enjoy your new bot! If you encounter any issues, check the log
 **Version:** 2.0 (Enterprise Edition)
 
 Happy coding! 🎉
+

@@ -1,4 +1,4 @@
-# 🎉 Complete Refactoring - Changes Summary
+﻿# 🎉 Complete Refactoring - Changes Summary
 
 ## Overview
 This document summarizes all changes made during the comprehensive refactoring of the PNPtv Telegram Bot.
@@ -118,8 +118,6 @@ This document summarizes all changes made during the comprehensive refactoring o
   - `tmp_trim.js`
   - `test.js`
   - `dump.py`
-  - `bold_page.js`
-  - `bold_page_text.txt`
 - **Added to .gitignore:** Prevents recreation
 
 ---
@@ -169,7 +167,6 @@ This document summarizes all changes made during the comprehensive refactoring o
 - **Features:**
   - Express server for webhooks
   - Telegram webhook endpoint
-  - Bold payment webhook endpoint
   - Health check endpoint
 - **Usage:** For production deployment
 
@@ -210,7 +207,6 @@ This document summarizes all changes made during the comprehensive refactoring o
 
 1. **Rotate ALL credentials** (see SECURITY_CHECKLIST.md)
    - Telegram bot token
-   - Bold API keys
    - Firebase service account
 
 2. **Clean git history** of exposed credentials
@@ -280,12 +276,9 @@ This document summarizes all changes made during the comprehensive refactoring o
 - `tmp_trim.js`
 - `test.js`
 - `dump.py`
-- `bold_page.js`
-- `bold_page_text.txt`
 
 ### Unchanged (Key files still working):
 - `src/config/firebase.js`
-- `src/config/bold.js`
 - `src/config/plans.js`
 - `src/utils/formatters.js`
 - `src/webapp/*` (future enhancement)
@@ -305,3 +298,4 @@ All items from Option A have been completed successfully!
 **Refactoring completed on:** [Current Date]
 **Automated by:** Claude Code
 **Time saved:** ~4-6 hours of manual work
+

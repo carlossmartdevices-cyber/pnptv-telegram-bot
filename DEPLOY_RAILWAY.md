@@ -56,8 +56,6 @@ Add these variables one by one:
 TELEGRAM_TOKEN=your_bot_token_here
 FIREBASE_PROJECT_ID=your_firebase_project_id
 ADMIN_IDS=your_telegram_user_id
-BOLD_PUBLIC_KEY=pk_live_your_key
-BOLD_SECRET_KEY=sk_live_your_key
 WEB_PORT=3000
 NODE_ENV=production
 ```

@@ -3,7 +3,6 @@ const { Telegraf } = require("telegraf");
 const { db } = require("../config/firebase");
 const { t } = require("../utils/i18n");
 const logger = require("../utils/logger");
-const bold = require("../config/bold");
 const epayco = require("../config/epayco");
 const plans = require("../config/plans");
 const { ensureOnboarding } = require("../utils/guards");

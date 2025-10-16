@@ -28,8 +28,6 @@ TELEGRAM_TOKEN=your_bot_token
 FIREBASE_PROJECT_ID=your_firebase_project_id
 FIREBASE_CREDENTIALS={"type":"service_account"...}
 ADMIN_IDS=your_telegram_user_id
-BOLD_PUBLIC_KEY=pk_live_xxx
-BOLD_SECRET_KEY=sk_live_xxx
 NODE_ENV=production
 ```
 
