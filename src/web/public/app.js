@@ -44,6 +44,7 @@ async function initApp() {
   // Prefetch premium plans so data is ready when user opens the tab
   loadPremiumPlans().catch((error) =>
     console.warn("Failed to preload premium plans:", error)
+  );
 
   // Update map radius label on load
   updateRadiusSummary();
@@ -470,16 +471,6 @@ function displayNearbyUsers(users) {
     });
 
     usersList.appendChild(groupEl);
-  });
-}
-          <span class="tier-badge">${tierBadge}</span>
-        </h3>
-        <div class="distance">📍 ${user.distanceFormatted}</div>
-        ${user.bio ? `<div class="bio">${user.bio.substring(0, 50)}...</div>` : ""}
-      </div>
-    `;
-
-    usersList.appendChild(userCard);
   });
 }
 

@@ -26,9 +26,6 @@ const PORT = process.env.PORT || process.env.WEB_PORT || 3000;
 const MAX_BIO_LENGTH = 500;
 const MAX_NEARBY_USERS = 100;
 
-// Constants
-const MAX_BIO_LENGTH = 500;
-
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // For form data
@@ -265,11 +262,11 @@ app.post("/api/map/nearby", async (req, res) => {
     const boundingBox = getBoundingBox(
       userLocation.latitude,
       userLocation.longitude,
+      searchRadius
+    );
+
     const usersSnapshot = await db
       .collection("users")
-      .where("location", "!=", null)
-      .limit(MAX_CANDIDATE_USERS)
-      .get();
       .where("location", "!=", null)
       .limit(300)
       .get();
@@ -310,6 +307,9 @@ app.post("/api/map/nearby", async (req, res) => {
         xp: data.xp || 0,
         photoFileId: data.photoFileId || null,
         lastActive,
+      });
+    });
+
     const nearbyUsers = findUsersWithinRadius(
       userLocation,
       candidates,
@@ -327,9 +327,6 @@ app.post("/api/map/nearby", async (req, res) => {
         locationName: user.locationName,
         distance: user.distance,
         distanceFormatted: user.distanceFormatted,
-        distanceCategory: getDistanceCategory(user.distance),
-        lastActive: serializeDate(user.lastActive),
-      }));
         distanceCategory: getDistanceCategory(user.distance),
         lastActive: serializeDate(user.lastActive),
       }));
