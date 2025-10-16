@@ -23,7 +23,8 @@
       "Bash(git push:*)",
       "Bash(python:*)",
       "Bash(git reset:*)",
-      "Bash(heroku logs:*)"
+      "Bash(heroku logs:*)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []
