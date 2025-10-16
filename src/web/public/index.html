@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -60,6 +60,16 @@
                         </div>
                     </div>
                 </div>
+                <div class="profile-meta">
+                    <div class="meta-row">
+                        <span class="meta-label">Member since</span>
+                        <span class="meta-value" id="profile-joined-text">—</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Last active</span>
+                        <span class="meta-value" id="profile-last-active-text">—</span>
+                    </div>
+                </div>
                 <div class="profile-bio">
                     <h3>Bio</h3>
                     <p id="profile-bio-text">No bio set</p>
@@ -68,7 +78,31 @@
                 <div class="profile-location">
                     <h3>Location</h3>
                     <p id="profile-location-text">Not set</p>
+                    <p id="profile-coordinates-text" class="location-coordinates hidden">—</p>
                     <button id="edit-location-btn" class="btn btn-secondary">Update Location</button>
+                </div>
+                <div class="membership-card">
+                    <div class="membership-card__header">
+                        <h3>Membership</h3>
+                        <span class="membership-status" id="membership-status">Free</span>
+                    </div>
+                    <div class="membership-card__body">
+                        <div class="membership-row">
+                            <span class="membership-label">Tier</span>
+                            <span class="membership-value" id="membership-tier-value">Free</span>
+                        </div>
+                        <div class="membership-row">
+                            <span class="membership-label">Expires</span>
+                            <span class="membership-value" id="membership-expires-value">—</span>
+                        </div>
+                        <div class="membership-row">
+                            <span class="membership-label">Status</span>
+                            <span class="membership-value" id="membership-days-remaining">Unlimited</span>
+                        </div>
+                    </div>
+                    <button id="open-subscribe-btn" class="btn btn-secondary membership-cta">
+                        Manage Membership
+                    </button>
                 </div>
             </div>
         </div>
@@ -85,13 +119,17 @@
                 </div>
             </div>
             <div class="map-content">
-                <button id="share-location-btn" class="btn btn-primary">
-                    📍 Share My Location
-                </button>
-                <div id="users-list" class="users-list">
-                    <p class="empty-state">Share your location to see nearby users</p>
-                </div>
+            <button id="share-location-btn" class="btn btn-primary">
+                📍 Share My Location
+            </button>
+            <div id="map-summary" class="map-summary hidden">
+                <span class="map-location" id="map-location-label">Location not set</span>
+                <span class="map-radius">Radius: <strong id="map-radius-label">25 km</strong></span>
             </div>
+            <div id="users-list" class="users-list">
+                <p class="empty-state">Share your location to see nearby users</p>
+            </div>
+        </div>
         </div>
 
         <!-- Live Streams Page -->

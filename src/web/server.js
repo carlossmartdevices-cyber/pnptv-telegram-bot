@@ -8,10 +8,15 @@ const path = require("path");
 const { db } = require("../config/firebase");
 const logger = require("../utils/logger");
 const {
-  calculateDistance,
-  formatDistance,
   findUsersWithinRadius,
+  getDistanceCategory,
+  getBoundingBox,
+  isInBoundingBox,
+  approximateLocation,
+  isValidLocation,
+  simpleGeohash,
 } = require("../utils/geolocation");
+const { getMembershipInfo } = require("../utils/membershipManager");
 
 const app = express();
 // Railway sets PORT automatically, fallback to WEB_PORT or 3000
@@ -31,6 +36,104 @@ app.use((req, res, next) => {
 });
 
 /**
+ * Helpers
+ */
+function serializeDate(value) {
+  if (!value) return null;
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  if (typeof value.toDate === "function") {
+    return value.toDate().toISOString();
+  }
+  return null;
+}
+
+function buildUserResponse(userId, userData, membershipInfo = null) {
+  const location =
+    userData.location && isValidLocation(userData.location)
+      ? userData.location
+      : null;
+
+  const locationName =
+    userData.locationName ||
+    (location
+      ? approximateLocation(location.latitude, location.longitude)
+      : null);
+
+  return {
+    userId: userId,
+    username: userData.username || "Anonymous",
+    bio: userData.bio || null,
+    location,
+    locationName,
+    tier: userData.tier || "Free",
+    xp: userData.xp || 0,
+    badges: userData.badges || [],
+    photoFileId: userData.photoFileId || null,
+    createdAt: serializeDate(userData.createdAt),
+    lastActive: serializeDate(userData.lastActive),
+    locationUpdatedAt: serializeDate(userData.locationUpdatedAt),
+    membership: membershipInfo
+      ? {
+          tier: membershipInfo.tier,
+          status: membershipInfo.status,
+          expiresAt: serializeDate(membershipInfo.expiresAt),
+          daysRemaining: membershipInfo.daysRemaining,
+          updatedAt: serializeDate(membershipInfo.updatedAt),
+          updatedBy: membershipInfo.updatedBy || null,
+        }
+      : null,
+  };
+}
+
+function prepareLocationUpdate(rawLocation) {
+  if (rawLocation === undefined) {
+    return {};
+  }
+
+  if (rawLocation === null) {
+    return {
+      location: null,
+      locationName: null,
+      locationGeohash: null,
+      locationUpdatedAt: new Date(),
+    };
+  }
+
+  if (
+    typeof rawLocation !== "object" ||
+    rawLocation === null ||
+    typeof rawLocation.latitude === "undefined" ||
+    typeof rawLocation.longitude === "undefined"
+  ) {
+    throw new Error("Location must include latitude and longitude");
+  }
+
+  const parsedLocation = {
+    latitude: Number(rawLocation.latitude),
+    longitude: Number(rawLocation.longitude),
+  };
+
+  if (!isValidLocation(parsedLocation)) {
+    throw new Error("Invalid location coordinates");
+  }
+
+  return {
+    location: parsedLocation,
+    locationName: approximateLocation(
+      parsedLocation.latitude,
+      parsedLocation.longitude
+    ),
+    locationGeohash: simpleGeohash(
+      parsedLocation.latitude,
+      parsedLocation.longitude
+    ),
+    locationUpdatedAt: new Date(),
+  };
+}
+
+/**
  * API: Get user profile
  */
 app.get("/api/profile/:userId", async (req, res) => {
@@ -44,19 +147,20 @@ app.get("/api/profile/:userId", async (req, res) => {
     }
 
     const userData = doc.data();
+
+    let membershipInfo = null;
+    try {
+      membershipInfo = await getMembershipInfo(userId);
+    } catch (membershipError) {
+      logger.warn(
+        `API: Failed to load membership info for user ${userId}:`,
+        membershipError.message
+      );
+    }
+
     res.json({
       success: true,
-      user: {
-        userId: userData.userId,
-        username: userData.username || "Anonymous",
-        bio: userData.bio || null,
-        location: userData.location || null,
-        tier: userData.tier || "Free",
-        xp: userData.xp || 0,
-        badges: userData.badges || [],
-        photoFileId: userData.photoFileId || null,
-        createdAt: userData.createdAt,
-      },
+      user: buildUserResponse(userId, userData, membershipInfo),
     });
 
     logger.info(`API: Profile fetched for user ${userId}`);
@@ -73,14 +177,60 @@ app.put("/api/profile/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     const { bio, location } = req.body;
+    const userRef = db.collection("users").doc(userId);
+    const doc = await userRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
     const updateData = {};
-    if (bio !== undefined) updateData.bio = bio;
-    if (location !== undefined) updateData.location = location;
 
-    await db.collection("users").doc(userId).update(updateData);
+    if (bio !== undefined) {
+      if (typeof bio !== "string" || bio.length > 500) {
+        return res
+          .status(400)
+          .json({ error: "Bio must be a string of up to 500 characters" });
+      }
+      updateData.bio = bio.trim();
+    }
 
-    res.json({ success: true, message: "Profile updated" });
+    if (location !== undefined) {
+      try {
+        Object.assign(updateData, prepareLocationUpdate(location));
+      } catch (locationError) {
+        return res.status(400).json({ error: locationError.message });
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res
+        .status(400)
+        .json({ error: "No valid fields provided for update" });
+    }
+
+    updateData.updatedAt = new Date();
+
+    await userRef.update(updateData);
+
+    const updatedDoc = await userRef.get();
+    const updatedData = updatedDoc.data();
+
+    let membershipInfo = null;
+    try {
+      membershipInfo = await getMembershipInfo(userId);
+    } catch (membershipError) {
+      logger.warn(
+        `API: Failed to refresh membership info for user ${userId}:`,
+        membershipError.message
+      );
+    }
+
+    res.json({
+      success: true,
+      message: "Profile updated",
+      user: buildUserResponse(userId, updatedData, membershipInfo),
+    });
     logger.info(`API: Profile updated for user ${userId}`);
   } catch (error) {
     logger.error("API Error updating profile:", error);
@@ -95,49 +245,98 @@ app.post("/api/map/nearby", async (req, res) => {
   try {
     const { userId, latitude, longitude, radius = 25 } = req.body;
 
-    if (!latitude || !longitude) {
-      return res.status(400).json({ error: "Location required" });
+    const userLocation = {
+      latitude: Number(latitude),
+      longitude: Number(longitude),
+    };
+
+    if (!isValidLocation(userLocation)) {
+      return res.status(400).json({ error: "Valid latitude and longitude required" });
     }
 
-    const userLocation = { latitude, longitude };
+    const searchRadius = Number(radius) || 25;
+    const boundingBox = getBoundingBox(
+      userLocation.latitude,
+      userLocation.longitude,
+      searchRadius
+    );
 
-    // Fetch all users with location
     const usersSnapshot = await db
       .collection("users")
       .where("location", "!=", null)
-      .limit(100)
+      .limit(300)
       .get();
 
-    let allUsers = [];
+    const candidates = [];
     usersSnapshot.forEach((doc) => {
-      if (doc.id !== userId) {
-        const data = doc.data();
-        allUsers.push({
-          userId: doc.id,
-          username: data.username || "Anonymous",
-          tier: data.tier || "Free",
-          location: data.location,
-          bio: data.bio || null,
-          xp: data.xp || 0,
-          photoFileId: data.photoFileId || null,
-        });
+      if (doc.id === userId) {
+        return;
       }
+
+      const data = doc.data();
+      if (!isValidLocation(data.location)) {
+        return;
+      }
+
+      if (!isInBoundingBox(data.location, boundingBox)) {
+        return;
+      }
+
+      const locationName =
+        data.locationName ||
+        approximateLocation(
+          data.location.latitude,
+          data.location.longitude
+        );
+
+      const lastActive = data.lastActive?.toDate
+        ? data.lastActive.toDate()
+        : data.lastActive || null;
+
+      candidates.push({
+        userId: doc.id,
+        username: data.username || "Anonymous",
+        tier: data.tier || "Free",
+        location: data.location,
+        locationName,
+        bio: data.bio || null,
+        xp: data.xp || 0,
+        photoFileId: data.photoFileId || null,
+        lastActive,
+      });
     });
 
-    const nearbyUsers = findUsersWithinRadius(userLocation, allUsers, radius);
+    const nearbyUsers = findUsersWithinRadius(
+      userLocation,
+      candidates,
+      searchRadius
+    )
+      .slice(0, 100)
+      .map((user) => ({
+        userId: user.userId,
+        username: user.username,
+        tier: user.tier,
+        bio: user.bio,
+        xp: user.xp,
+        photoFileId: user.photoFileId,
+        location: user.location,
+        locationName: user.locationName,
+        distance: user.distance,
+        distanceFormatted: user.distanceFormatted,
+        distanceCategory: getDistanceCategory(user.distance),
+        lastActive: serializeDate(user.lastActive),
+      }));
 
     res.json({
       success: true,
-      count: nearbyUsers.length,
-      radius,
-      users: nearbyUsers.slice(0, 50), // Limit to 50 users
+      users: nearbyUsers,
     });
 
     logger.info(
-      `API: Found ${nearbyUsers.length} users within ${radius}km for user ${userId}`
+      `API: Nearby users fetched for ${userId || "unknown"} within ${searchRadius}km`
     );
   } catch (error) {
-    logger.error("API Error finding nearby users:", error);
+    logger.error("API Error fetching nearby users:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

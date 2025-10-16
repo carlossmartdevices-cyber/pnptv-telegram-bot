@@ -43,11 +43,11 @@ async function createPaymentLink({
     logger.info(`Creating ePayco payment link for user ${userId}, plan: ${plan}`);
 
     // Validate credentials
-    if (!process.env.EPAYCO_PUBLIC_KEY || !process.env.EPAYCO_PRIVATE_KEY) {
-      throw new Error("ePayco credentials not configured");
+    if (!process.env.EPAYCO_PUBLIC_KEY) {
+      throw new Error("ePayco PUBLIC_KEY not configured");
     }
     if (!process.env.EPAYCO_P_CUST_ID || !process.env.EPAYCO_P_KEY) {
-      throw new Error("ePayco signing credentials not configured");
+      throw new Error("ePayco signing credentials (P_CUST_ID, P_KEY) not configured");
     }
 
     // Generate unique invoice ID
@@ -59,80 +59,77 @@ async function createPaymentLink({
 
     const testMode = process.env.EPAYCO_TEST_MODE === "true";
 
-    // Use ePayco cash.create() method for payment links
-    // This creates a hosted checkout page
-    const paymentData = {
+    // Build payment URL manually using ePayco's Standard Checkout
+    // This avoids SDK issues and provides direct control over parameters
+    const baseUrl = "https://checkout.epayco.co/checkout.php";
+
+    const paymentParams = new URLSearchParams({
+      // Authentication
+      public_key: process.env.EPAYCO_PUBLIC_KEY,
+      p_cust_id_cliente: process.env.EPAYCO_P_CUST_ID,
+      p_key: process.env.EPAYCO_P_KEY,
+
+      // Transaction info
       name: name,
       description: description,
       invoice: invoiceId,
-      currency: currency,
       amount: amount.toString(),
       tax_base: "0",
       tax: "0",
+      currency: currency,
       country: "CO",
       lang: "ES",
-      external: "false",
+
+      // Test mode
+      test: testMode ? "true" : "false",
+
+      // Customer info
+      name_billing: userName,
+      address_billing: "N/A",
+      type_doc_billing: "CC",
+      number_doc_billing: userId.substring(0, 10).padStart(10, '0'),
+      email_billing: userEmail,
+      mobilephone_billing: "3000000000",
 
       // URLs
       response: responseUrl,
       confirmation: confirmationUrl,
-
-      // Customer info
-      name_billing: userName,
-      address_billing: "Calle 123",
-      type_doc_billing: "cc",
-      number_doc_billing: userId.substring(0, 10).padStart(10, '0'),
-      mobilephone_billing: "3000000000",
-      number_mobilephone_billing: "3000000000",
+      url_response: responseUrl,
+      url_confirmation: confirmationUrl,
+      method_confirmation: "GET",
 
       // Extra data for tracking
       extra1: userId,
       extra2: plan,
       extra3: Date.now().toString(),
 
-      // Payment method type
-      type_person: "0", // Natural person
-      email_billing: userEmail,
-    };
+      // Enable all payment methods
+      methodsDisable: "",
+    });
 
-    logger.info("Creating ePayco payment with cash.create():", {
+    const paymentUrl = `${baseUrl}?${paymentParams.toString()}`;
+
+    logger.info("Creating ePayco payment with Standard Checkout:", {
       invoice: invoiceId,
       amount: amount,
       email: userEmail,
       test: testMode,
+      method: "standard_checkout",
+      urlLength: paymentUrl.length,
     });
-
-    // Use cash.create to generate payment link
-    const response = await epayco.cash.create("efecty", paymentData);
-
-    logger.info("ePayco cash.create response:", {
-      success: response?.success,
-      hasData: !!response?.data,
-      hasUrl: !!(response?.data?.urlbanco || response?.data?.url),
-    });
-
-    if (!response || !response.success) {
-      const errorMsg = response?.data?.errors || response?.data?.description || response?.message || "Unknown error";
-      logger.error("ePayco payment creation failed:", errorMsg);
-      throw new Error(`ePayco error: ${JSON.stringify(errorMsg)}`);
-    }
-
-    // Get payment URL from response
-    const paymentUrl = response.data?.urlbanco || response.data?.url;
-
-    if (!paymentUrl) {
-      logger.error("No payment URL in response:", JSON.stringify(response.data));
-      throw new Error("Payment URL not found in ePayco response");
-    }
 
     logger.info(`ePayco payment link created successfully: ${paymentUrl.substring(0, 80)}...`);
 
     return {
       success: true,
       paymentUrl: paymentUrl,
-      reference: response.data?.ref_payco || invoiceId,
+      reference: invoiceId,
       invoiceId: invoiceId,
-      data: response.data,
+      data: {
+        url: paymentUrl,
+        urlbanco: paymentUrl,
+        ref_payco: invoiceId,
+      },
     };
   } catch (error) {
     logger.error("Error creating ePayco payment link:", error);
