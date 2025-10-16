@@ -491,6 +491,39 @@ body {
   padding: 40px 20px;
 }
 
+.error-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.error-state p {
+  color: var(--danger-color);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.user-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.user-meta span {
+  padding: 4px 8px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 6px;
+  color: var(--tg-theme-hint-color);
+}
+
+.location-chip {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
 /* Live Page */
 .coming-soon {
   display: flex;
@@ -556,7 +589,14 @@ body {
   font-size: 28px;
   font-weight: 700;
   color: var(--primary-color);
+  margin-bottom: 12px;
+}
+
+.plan-description {
+  font-size: 14px;
+  color: var(--tg-theme-hint-color);
   margin-bottom: 16px;
+  line-height: 1.5;
 }
 
 .plan-features {

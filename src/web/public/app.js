@@ -75,11 +75,14 @@ function applyTheme() {
  */
 async function loadProfile() {
   try {
+    console.log(`Loading profile for user: ${userId}`);
+
     const response = await fetch(`${API_BASE}/profile/${userId}`);
+
     if (!response.ok) {
       if (response.status === 404) {
         console.warn(`Profile not found for ${userId}`);
-        tg.showAlert("We couldn't find your profile yet. Start the bot to create one!");
+        showError("Profile not found. Please start the bot first!");
         return;
       }
       throw new Error(`Request failed with status ${response.status}`);
@@ -91,15 +94,25 @@ async function loadProfile() {
       userData = data.user;
       membershipData = data.user.membership || null;
       userLocation = data.user.location || null;
+
+      console.log("Profile loaded successfully:", {
+        username: userData.username,
+        tier: userData.tier,
+        hasMembership: !!membershipData,
+      });
+
       updateProfileUI();
       updateRadiusSummary();
+
       if (currentPage === "map") {
         loadMapData();
       }
+    } else {
+      throw new Error(data.error || "Failed to load profile data");
     }
   } catch (error) {
     console.error("Error loading profile:", error);
-    tg.showAlert("Failed to load profile");
+    showError(`Failed to load profile: ${error.message}`);
   }
 }
 
@@ -263,8 +276,11 @@ function hideBioModal() {
  */
 async function saveBio() {
   const bio = document.getElementById("bio-input").value.trim();
+  const saveBtn = document.getElementById("save-bio-btn");
 
   try {
+    setButtonLoading(saveBtn, true, "Saving...");
+
     const response = await fetch(`${API_BASE}/profile/${userId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -273,15 +289,20 @@ async function saveBio() {
 
     const data = await response.json();
 
-    if (data.success) {
-      userData.bio = bio;
-      updateProfileUI();
-      hideBioModal();
-      tg.showAlert("Bio updated successfully!");
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || "Failed to update bio");
     }
+
+    userData.bio = bio;
+    updateProfileUI();
+    hideBioModal();
+    tg.showAlert("Bio updated successfully!");
+
   } catch (error) {
     console.error("Error saving bio:", error);
-    tg.showAlert("Failed to save bio");
+    tg.showAlert(`Failed to save bio: ${error.message}`);
+  } finally {
+    setButtonLoading(saveBtn, false);
   }
 }
 
@@ -387,33 +408,6 @@ async function loadMapData() {
   }
 }
 
-  const usersList = document.getElementById("users-list");
-  usersList.innerHTML = '<p class="empty-state">Loading nearby users...</p>';
-
-  try {
-    const response = await fetch(`${API_BASE}/map/nearby`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId,
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
-        radius: currentRadius,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (data.success && data.users.length > 0) {
-      displayNearbyUsers(data.users);
-    } else {
-      usersList.innerHTML = `<p class="empty-state">No users found within ${currentRadius}km</p>`;
-    }
-  } catch (error) {
-    console.error("Error loading map data:", error);
-    usersList.innerHTML = '<p class="empty-state">Failed to load nearby users</p>';
-  }
-}
 
 /**
  * Display nearby users
@@ -494,10 +488,13 @@ function displayNearbyUsers(users) {
  */
 async function loadPremiumPlans(force = false) {
   try {
+    // Use cached data if available and not forcing refresh
     if (!force && premiumPlansCache) {
       displayPremiumPlans(premiumPlansCache);
       return;
     }
+
+    console.log("Loading premium plans...");
 
     const response = await fetch(`${API_BASE}/plans`);
     if (!response.ok) {
@@ -506,21 +503,24 @@ async function loadPremiumPlans(force = false) {
 
     const data = await response.json();
 
-    if (data.success) {
+    if (data.success && data.plans) {
       premiumPlansCache = data.plans;
+      console.log("Premium plans loaded:", Object.keys(data.plans));
       displayPremiumPlans(data.plans);
+    } else {
+      throw new Error(data.error || "No plans data received");
     }
   } catch (error) {
     console.error("Error loading plans:", error);
-  }
-}/plans`);
-    const data = await response.json();
-
-    if (data.success) {
-      displayPremiumPlans(data.plans);
+    const container = document.getElementById("plans-container");
+    if (container) {
+      container.innerHTML = `
+        <div class="error-state">
+          <p>Failed to load premium plans</p>
+          <button class="btn btn-secondary" onclick="loadPremiumPlans(true)">Retry</button>
+        </div>
+      `;
     }
-  } catch (error) {
-    console.error("Error loading plans:", error);
   }
 }
 
@@ -536,7 +536,16 @@ function displayPremiumPlans(plans) {
     return;
   }
 
+  // Filter out lowercase duplicates and only show Silver and Golden
+  const validPlans = {};
   Object.entries(plans).forEach(([tier, plan]) => {
+    const tierKey = tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase();
+    if (tierKey === "Silver" || tierKey === "Golden") {
+      validPlans[tierKey] = plan;
+    }
+  });
+
+  Object.entries(validPlans).forEach(([tier, plan]) => {
     const isCurrentTier = (userData?.tier || "Free") === tier;
     const planCard = document.createElement("div");
     planCard.className = `plan-card ${tier === "Silver" ? "recommended" : ""}`;
@@ -545,45 +554,24 @@ function displayPremiumPlans(plans) {
       .map((f) => `<li>${sanitizeText(f)}</li>`)
       .join("");
 
-    const buttonLabel = isCurrentTier ? "Current Plan" : "Subscribe";
+    const priceDisplay = formatCurrency(plan.priceInCOP, plan.currency);
+    const buttonLabel = isCurrentTier ? "Current Plan" : `Subscribe - ${priceDisplay}`;
     const buttonClass = isCurrentTier ? "btn-secondary" : "btn-premium";
     const disabledAttr = isCurrentTier ? "disabled" : "";
 
     planCard.innerHTML = `
       <div class="plan-header">
         <div class="plan-name">${tier}</div>
-        <div class="plan-icon">${plan.icon}</div>
+        <div class="plan-icon">${plan.icon || (tier === "Golden" ? "💎" : "🥈")}</div>
       </div>
-      <div class="plan-price">${plan.price}/month</div>
+      <div class="plan-price">${priceDisplay}/month</div>
+      <div class="plan-description">${sanitizeText(plan.description || "")}</div>
       <ul class="plan-features">
         ${features}
       </ul>
-      <button class="btn ${buttonClass}" ${disabledAttr}
+      <button class="btn ${buttonClass}" ${disabledAttr} data-tier="${tier}"
               onclick="subscribeToPlan('${tier}')">
         ${buttonLabel}
-      </button>
-    `;
-
-    container.appendChild(planCard);
-  });
-}`;
-
-    const features = plan.features
-      .map((f) => `<li>${f}</li>`)
-      .join("");
-
-    planCard.innerHTML = `
-      <div class="plan-header">
-        <div class="plan-name">${tier}</div>
-        <div class="plan-icon">${plan.icon}</div>
-      </div>
-      <div class="plan-price">$${plan.price}/month</div>
-      <ul class="plan-features">
-        ${features}
-      </ul>
-      <button class="btn ${tier === "Free" ? "btn-secondary" : "btn-premium"}"
-              onclick="subscribeToPlan('${tier}')">
-        ${tier === "Free" ? "Current Plan" : "Subscribe"}
       </button>
     `;
 
@@ -594,7 +582,7 @@ function displayPremiumPlans(plans) {
 /**
  * Subscribe to plan
  */
-function subscribeToPlan(tier) {
+async function subscribeToPlan(tier) {
   const currentTier = userData?.tier || "Free";
 
   if (tier === "Free" || tier === currentTier) {
@@ -602,30 +590,61 @@ function subscribeToPlan(tier) {
     return;
   }
 
-  tg.showConfirm(
-    `Subscribe to ${tier} plan? This will open payment options in the bot.`,
-    (confirmed) => {
-      if (!confirmed) return;
+  // Get the plan details
+  const plan = premiumPlansCache?.[tier];
+  if (!plan) {
+    tg.showAlert("Plan not found. Please try again.");
+    return;
+  }
 
-      try {
-        tg.sendData && tg.sendData(JSON.stringify({ action: "subscribe", tier }));
-      } catch (error) {
-        console.warn("Failed to send data back to bot:", error);
-      }
+  // Show loading state
+  const button = event?.target;
+  if (button) {
+    setButtonLoading(button, true, "Creating payment...");
+  }
 
-      tg.close();
+  try {
+    // Create payment link via API
+    const response = await fetch(`${API_BASE}/payment/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: userId,
+        planType: tier.toLowerCase(),
+      }),
+    });
+
+    const data = await response.json();
+
+    if (button) {
+      setButtonLoading(button, false);
     }
-  );
-}
 
-  tg.showConfirm(
-    `Subscribe to ${tier} plan? This will open payment options in the bot.`,
-    (confirmed) => {
-      if (confirmed) {
-        tg.close();
-        // User will be redirected back to bot to complete payment
-      }
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || data.message || "Failed to create payment link");
     }
+
+    // Open payment link in external browser
+    tg.openLink(data.paymentUrl);
+
+    // Optionally show confirmation
+    tg.showPopup({
+      title: "Payment Link Created",
+      message: `Your payment link for ${plan.name} (${plan.price}) has been created. Complete the payment in the opened browser window.`,
+      buttons: [
+        { id: "close", type: "close", text: "OK" }
+      ]
+    });
+
+  } catch (error) {
+    console.error("Error creating payment:", error);
+
+    if (button) {
+      setButtonLoading(button, false);
+    }
+
+    tg.showAlert(`Failed to create payment link: ${error.message}`);
+  }
 }
 
 function updateMembershipUI() {
@@ -844,6 +863,28 @@ async function updateLocationOnServer(latitude, longitude) {
   userLocation = data.user.location;
   updateProfileUI();
   updateRadiusSummary();
+}
+
+/**
+ * Show error message to user
+ */
+function showError(message) {
+  console.error("Error:", message);
+  if (tg.showAlert) {
+    tg.showAlert(message);
+  } else {
+    alert(message);
+  }
+}
+
+/**
+ * Format currency for display
+ */
+function formatCurrency(amount, currency = "COP") {
+  if (currency === "COP") {
+    return `$${amount.toLocaleString()} COP`;
+  }
+  return `$${amount}`;
 }
 // Initialize app when DOM is ready
 if (document.readyState === "loading") {
