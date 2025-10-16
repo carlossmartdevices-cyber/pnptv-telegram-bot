@@ -45,8 +45,6 @@ Follow this super quick guide: **[RAILWAY_QUICKSTART.md](RAILWAY_QUICKSTART.md)*
    FIREBASE_PROJECT_ID=your_project_id
    FIREBASE_CREDENTIALS={"type":"service_account",...}
    ADMIN_IDS=your_user_id
-   BOLD_PUBLIC_KEY=pk_live_xxx
-   BOLD_SECRET_KEY=sk_live_xxx
    NODE_ENV=production
    ```
 
@@ -115,8 +113,6 @@ Follow this super quick guide: **[RAILWAY_QUICKSTART.md](RAILWAY_QUICKSTART.md)*
 
 ### Optional but Recommended:
 - `ADMIN_IDS` - Admin user IDs
-- `BOLD_PUBLIC_KEY` - Payment gateway
-- `BOLD_SECRET_KEY` - Payment gateway
 - `NODE_ENV` - Set to "production"
 
 ## 🎨 Testing After Deployment

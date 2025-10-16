@@ -1,4 +1,4 @@
-# PNPtv Bot - Comprehensive Improvements
+﻿# PNPtv Bot - Comprehensive Improvements
 
 ## Overview
 
@@ -193,7 +193,7 @@ Main Menu
 - Unlimited swipes
 
 **Payment Integration:**
-- Bold.co payment gateway
+- ePayco.co payment gateway
 - Secure payment links
 - Webhook support for payment confirmation
 - Metadata tracking (userId, plan, username)
@@ -208,7 +208,7 @@ View Features
  ↓
 Click "Pay Now"
  ↓
-Redirect to Bold Payment
+Redirect to ePayco Payment
  ↓
 Complete Payment
  ↓
@@ -434,7 +434,7 @@ npm start
 2. Choose Silver or Golden plan
 3. View features
 4. Click "💳 Pay Now"
-5. Complete payment on Bold
+5. Complete payment on ePayco
 
 ### Test Admin (ID 6636269 only)
 
@@ -472,11 +472,9 @@ Your Firebase credentials are currently invalid. You need to:
 ### Telegram Bot Token
 Your bot token is valid and working!
 
-### Bold API Keys
-Ensure your Bold API keys in `.env` are valid:
+### ePayco API Keys
+Ensure your ePayco API keys in `.env` are valid:
 ```
-BOLD_PUBLIC_KEY=pk_live_xxxxx
-BOLD_SECRET_KEY=sk_live_xxxxx
 ```
 
 ---
@@ -514,7 +512,7 @@ The PNPtv bot now has:
 ✅ **Geolocation** (share location, find nearby users)
 ✅ **Enhanced profiles** (XP, badges, tiers, editable bio/location)
 ✅ **Live streaming** (placeholder for future implementation)
-✅ **Subscription system** (Silver/Golden plans with Bold payment)
+✅ **Subscription system** (Silver/Golden plans with ePayco payment)
 ✅ **Configurable menus** (easy customization)
 ✅ **Full i18n** (English/Spanish with 54 messages each)
 ✅ **Security** (validation, rate limiting, admin auth)
@@ -540,3 +538,4 @@ All features are production-ready except Firebase credentials which need to be r
 **Total Improvements:** 10 major features
 
 🎉 **Your bot is now enterprise-ready!** 🎉
+

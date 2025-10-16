@@ -1,4 +1,4 @@
-# 🔐 Security Checklist
+﻿# 🔐 Security Checklist
 
 ## ⚠️ BEFORE DEPLOYING TO PRODUCTION
 
@@ -10,8 +10,8 @@
   - Select your bot → API Token → Revoke current token
   - Copy new token to `.env` file
 
-- [ ] **Bold API Keys**
-  - Login to Bold dashboard
+- [ ] **ePayco API Keys**
+  - Login to ePayco dashboard
   - Navigate to API settings
   - Generate new API Key and Secret Key
   - Update `.env` file
@@ -75,12 +75,7 @@ Create `.env` file with NEW credentials:
 # Telegram
 TELEGRAM_TOKEN=YOUR_NEW_TOKEN_HERE
 
-# Bold Payment API
-BOLD_API_KEY=YOUR_NEW_API_KEY_HERE
-BOLD_SECRET_KEY=YOUR_NEW_SECRET_KEY_HERE
-BOLD_API_BASE=https://integrations.api.bold.co
-BOLD_CALLBACK_URL=https://yourdomain.com/api/webhooks/bold
-BOLD_REDIRECT_URL=https://yourdomain.com/payment/return
+# ePayco Payment API
 
 # Channel
 CHANNEL_ID=YOUR_CHANNEL_ID
@@ -133,7 +128,7 @@ firebase deploy --only firestore:indexes
 - [ ] Never commit `.env` file
 - [ ] Never commit `firebase_credentials.json`
 - [ ] Use environment variables for all secrets
-- [ ] Enable 2FA on all accounts (Telegram, Firebase, Bold)
+- [ ] Enable 2FA on all accounts (Telegram, Firebase, ePayco)
 - [ ] Regularly rotate credentials (every 90 days)
 - [ ] Monitor logs for suspicious activity
 - [ ] Set up error alerting (Sentry, etc.)
@@ -194,10 +189,11 @@ After deploying:
 ### Emergency Contacts:
 
 - Telegram Support: @BotSupport
-- Bold Support: [support email]
+- ePayco Support: [support email]
 - Firebase Support: Firebase Console
 
 ---
 
 **Last Updated:** [Current Date]
 **Reviewed By:** [Your Name]
+

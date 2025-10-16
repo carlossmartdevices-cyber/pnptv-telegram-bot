@@ -25,22 +25,6 @@ app.post(`/bot${process.env.TELEGRAM_TOKEN}`, (req, res) => {
   bot.handleUpdate(req.body, res);
 });
 
-// Webhook endpoint for Bold payment callbacks
-app.post("/api/webhooks/bold", async (req, res) => {
-  try {
-    logger.info("Received Bold webhook", { body: req.body });
-
-    // TODO: Verify webhook signature using BOLD_SECRET_KEY
-    // TODO: Update user subscription status in database
-    // TODO: Send confirmation message to user
-
-    res.json({ success: true });
-  } catch (error) {
-    logger.error("Error processing Bold webhook:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
 // Set webhook
 async function setupWebhook() {
   const webhookUrl = process.env.WEBHOOK_URL || "https://yourdomain.com";

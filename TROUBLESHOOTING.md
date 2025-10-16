@@ -1,4 +1,4 @@
-# 🔧 Troubleshooting Guide
+﻿# 🔧 Troubleshooting Guide
 
 ## Common Issues and Solutions
 
@@ -150,18 +150,16 @@ npm start
 
 ### ❌ Payments not working
 
-**Problem:** Bold API credentials are invalid or missing.
+**Problem:** ePayco API credentials are invalid or missing.
 
 **Solutions:**
 
-1. Check Bold credentials in `.env`:
+1. Check ePayco credentials in `.env`:
    ```env
-   BOLD_PUBLIC_KEY=pk_live_...
-   BOLD_SECRET_KEY=sk_live_...
    ```
 
-2. Verify Bold API is accessible
-3. Check logs for Bold API errors
+2. Verify ePayco API is accessible
+3. Check logs for ePayco API errors
 
 ### ❌ Sessions lost after restart
 
@@ -301,3 +299,4 @@ npm start
 ---
 
 For more help, open an issue on GitHub or contact support through the bot.
+

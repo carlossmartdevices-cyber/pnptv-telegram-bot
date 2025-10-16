@@ -1,4 +1,4 @@
-# PNPtv Bot - Recommended Improvements Roadmap
+﻿# PNPtv Bot - Recommended Improvements Roadmap
 
 ## 🎯 Strategic Priorities
 
@@ -19,9 +19,9 @@ This roadmap outlines recommended improvements to transform your PNPtv bot from 
 
 **What to Build:**
 ```javascript
-// src/bot/webhook.js - Bold webhook handler
-app.post('/api/webhooks/bold', async (req, res) => {
-  // 1. Verify Bold signature
+// src/bot/webhook.js - ePayco webhook handler
+app.post('/api/webhooks/ePayco', async (req, res) => {
+  // 1. Verify ePayco signature
   // 2. Extract payment data
   // 3. Update user tier in Firestore
   // 4. Send confirmation message to user
@@ -31,7 +31,7 @@ app.post('/api/webhooks/bold', async (req, res) => {
 
 **Files to Create/Modify:**
 - `src/bot/webhook.js` - Webhook server
-- `src/utils/boldWebhook.js` - Signature verification
+- `src/utils/ePaycoWebhook.js` - Signature verification
 - `src/bot/handlers/subscribe.js` - Update tier logic
 
 **Benefits:**
@@ -652,3 +652,4 @@ These three will transform your bot from "functional" to "engaging" and start ge
 ---
 
 **Questions or need help implementing any of these?** Let me know which features you'd like to prioritize!
+

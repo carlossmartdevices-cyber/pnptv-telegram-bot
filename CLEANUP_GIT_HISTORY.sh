@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 # Git History Cleanup Script for WSL/Linux
 # This script removes sensitive files from git history
 
@@ -10,7 +10,7 @@ echo ""
 echo "⚠️  WARNING: This will rewrite git history!"
 echo "⚠️  Make sure you have:"
 echo "   1. Backed up your repository"
-echo "   2. Rotated all credentials (Telegram, Bold, Firebase)"
+echo "   2. Rotated all credentials (Telegram, ePayco, Firebase)"
 echo "   3. Committed all current changes"
 echo ""
 read -p "Continue? (yes/no): " confirm
@@ -88,3 +88,4 @@ echo "   3. Delete passwords.txt: rm passwords.txt"
 echo "   4. Notify team members to re-clone the repository"
 echo ""
 echo "⚠️  Remember: Everyone with access must re-clone!"
+

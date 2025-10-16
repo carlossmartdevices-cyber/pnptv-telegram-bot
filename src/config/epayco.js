@@ -4,6 +4,7 @@
  */
 
 require("dotenv").config();
+const crypto = require("crypto");
 const epaycoSdk = require("epayco-sdk-node");
 const logger = require("../utils/logger");
 
@@ -45,6 +46,9 @@ async function createPaymentLink({
     if (!process.env.EPAYCO_PUBLIC_KEY || !process.env.EPAYCO_PRIVATE_KEY) {
       throw new Error("ePayco credentials not configured");
     }
+    if (!process.env.EPAYCO_P_CUST_ID || !process.env.EPAYCO_P_KEY) {
+      throw new Error("ePayco signing credentials not configured");
+    }
 
     // Generate unique invoice ID
     const invoiceId = `${plan}_${userId}_${Date.now()}`;
@@ -54,6 +58,22 @@ async function createPaymentLink({
     const confirmationUrl = process.env.EPAYCO_CONFIRMATION_URL || `${process.env.BOT_URL}/epayco/confirmation`;
 
     const testMode = process.env.EPAYCO_TEST_MODE === "true";
+
+    const amountString = Number(amount).toString();
+    const currencyCode = (currency || "COP").toUpperCase();
+
+    const signature = crypto
+      .createHash("md5")
+      .update(
+        [
+          process.env.EPAYCO_P_CUST_ID,
+          process.env.EPAYCO_P_KEY,
+          invoiceId,
+          amountString,
+          currencyCode,
+        ].join("^")
+      )
+      .digest("hex");
 
     // Create payment using ePayco's Standard Checkout
     // Build payment URL manually as the SDK doesn't support hosted checkout properly
@@ -71,12 +91,12 @@ async function createPaymentLink({
       name: name,
       description: description,
       invoice: invoiceId,
-      amount: amount.toString(),
+      amount: amountString,
       tax_base: "0",
       tax: "0",
-      currency: currency,
-      country: "CO",
-      lang: "ES",
+      currency: currencyCode,
+      country: "co",
+      lang: "es",
 
       // Test mode
       test: testMode ? "true" : "false",
@@ -95,6 +115,7 @@ async function createPaymentLink({
       url_response: responseUrl,
       url_confirmation: confirmationUrl,
       method_confirmation: "POST",
+      signature,
 
       // Extra data
       extra1: userId,

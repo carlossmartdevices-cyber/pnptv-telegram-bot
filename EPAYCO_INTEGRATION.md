@@ -243,18 +243,14 @@ if (transaction.approved) {
 }
 ```
 
-## Migration from Bold API
+## Migration Notes
 
-The bot still includes Bold API code for backward compatibility. To fully migrate:
+The codebase now uses ePayco exclusively for subscription payments. Any legacy references to other gateways have been removed. If you're upgrading from an older deployment:
 
-1. Update all payment links to use ePayco
-2. Test thoroughly
-3. Remove Bold configuration if not needed
-4. Update documentation
-
-Both can run simultaneously if needed.
+1. Redeploy with the new code
+2. Remove old payment gateway webhooks or dashboard configurations
+3. Ensure the new ePayco environment variables are set
 
 ---
 
 **Status**: ✅ ePayco integration complete and ready for testing!
-

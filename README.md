@@ -1,4 +1,4 @@
-# 🤖 PNPtv Telegram Bot & Mini App
+﻿# 🤖 PNPtv Telegram Bot & Mini App
 
 A full-featured Telegram bot with an integrated Mini App for social networking, live streaming, and premium subscriptions.
 
@@ -33,7 +33,7 @@ A full-featured Telegram bot with an integrated Mini App for social networking, 
 - Node.js >= 14.x
 - Firebase project with Firestore enabled
 - Telegram Bot Token (from [@BotFather](https://t.me/botfather))
-- Bold API credentials
+- ePayco API credentials (public/private/test mode)
 
 ## 🔧 Installation
 
@@ -60,8 +60,6 @@ A full-featured Telegram bot with an integrated Mini App for social networking, 
    TELEGRAM_TOKEN=your_telegram_bot_token
    FIREBASE_PROJECT_ID=your_firebase_project_id
    ADMIN_IDS=your_telegram_user_id
-   BOLD_PUBLIC_KEY=pk_live_your_public_key
-   BOLD_SECRET_KEY=sk_live_your_secret_key
    WEB_PORT=3000
    WEB_APP_URL=http://localhost:3000
    ```
@@ -126,7 +124,7 @@ pnptv-bot/
 │   │       └── demo.html        # Demo mode (no Telegram)
 │   ├── config/                  # Configuration files
 │   │   ├── firebase.js
-│   │   ├── bold.js
+│   │   ├── epayco.js
 │   │   ├── plans.js
 │   │   ├── admin.js
 │   │   └── menus.js
@@ -154,7 +152,7 @@ pnptv-bot/
 
 1. **Rotate ALL credentials**:
    - Generate new Telegram bot token
-   - Rotate Bold API keys
+   - Rotate ePayco API keys
    - Create new Firebase service account
    - Update `.env` file
 
@@ -271,15 +269,15 @@ See complete guide: **[RAILWAY_QUICKSTART.md](RAILWAY_QUICKSTART.md)**
 
 ## 🔌 API Integration
 
-### Bold Payment API
+### ePayco Payment API
 
-The bot integrates with Bold's payment gateway for subscription processing:
+The bot integrates with ePayco's payment gateway for subscription processing:
 
 - Create payment links
 - Query payment status
 - Handle payment callbacks
 
-See `src/config/bold.js` for implementation details.
+See `src/config/epayco.js` for implementation details.
 
 ## 🧪 Testing
 
@@ -332,8 +330,8 @@ Add new languages by:
 - Check logs for errors
 
 ### Payment links not working
-- Verify Bold API credentials
-- Check Bold API base URL
+- Verify ePayco API credentials
+- Check ePayco API base URL
 - Review callback URL configuration
 
 ### Session data lost
@@ -363,3 +361,6 @@ For support, email [your-email] or open an issue in the repository.
 ---
 
 **Made with ❤️ for PNPtv Community**
+
+
+

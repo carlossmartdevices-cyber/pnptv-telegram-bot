@@ -1,4 +1,4 @@
-# 🚀 Quick Start Guide
+﻿# 🚀 Quick Start Guide
 
 ## Step 1: Clean Git History (15 minutes)
 
@@ -62,15 +62,13 @@ git commit -m "Remove sensitive files from tracking"
 6. Copy the new token
 7. Update `.env`: `TELEGRAM_TOKEN=NEW_TOKEN_HERE`
 
-### Bold API Keys
-1. Login to Bold dashboard
+### ePayco API Keys
+1. Login to ePayco dashboard
 2. Go to Settings → API Configuration
 3. Generate new API Key
 4. Generate new Secret Key
 5. Update `.env`:
    ```
-   BOLD_API_KEY=NEW_KEY_HERE
-   BOLD_SECRET_KEY=NEW_SECRET_HERE
    ```
 
 ### Firebase Credentials
@@ -192,7 +190,7 @@ pm2 start src/bot/index.js --name pnptv-bot
 
 - [ ] Git history cleaned
 - [ ] Telegram token rotated
-- [ ] Bold API keys rotated
+- [ ] ePayco API keys rotated
 - [ ] Firebase credentials rotated
 - [ ] `.env` updated with new credentials
 - [ ] Dependencies installed (`npm install`)
@@ -245,7 +243,7 @@ npm test
 3. Check [CHANGES.md](CHANGES.md) for what was refactored
 4. Add team members to Firebase project
 5. Set up monitoring (Sentry, etc.)
-6. Configure Bold webhook for payment notifications
+6. Configure ePayco webhook for payment notifications
 7. Implement map functionality
 8. Add live streaming features
 
@@ -261,3 +259,4 @@ Your bot is now:
 - ✅ Maintainable (modular architecture)
 
 **Time to celebrate! 🎊**
+
