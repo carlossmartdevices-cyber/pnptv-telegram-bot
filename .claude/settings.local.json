@@ -18,7 +18,10 @@
       "Read(//c/Users/carlo/Downloads/**)",
       "Bash(copy:*)",
       "Bash(dir srcconfigfirebase_credentials.json)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []
