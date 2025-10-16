@@ -9,14 +9,14 @@ const { ensureOnboarding } = require("../utils/guards");
 const { isAdmin, adminMiddleware } = require("../config/admin");
 const { getMenu } = require("../config/menus");
 
-// Constants
-const ONBOARDING_REWARD_XP = 100;
-const ONBOARDING_BADGE = "Trailblazer";
-
 // Middleware
 const session = require("./middleware/session");
 const rateLimitMiddleware = require("./middleware/rateLimit");
 const errorHandler = require("./middleware/errorHandler");
+
+// Helpers
+const onboardingHelpers = require("./helpers/onboardingHelpers");
+const subscriptionHelpers = require("./helpers/subscriptionHelpers");
 
 // Handlers
 const startHandler = require("./handlers/start");
@@ -62,286 +62,17 @@ bot.command("subscribe", subscribeHandler);
 bot.command("admin", adminMiddleware(), adminPanel);
 
 // ===== ONBOARDING FLOW =====
-
-// Language selection
-bot.action(/language_(.+)/, async (ctx) => {
-  try {
-    const langCandidate = ctx.match[1];
-    const lang = langCandidate === "es" ? "es" : "en";
-
-    ctx.session.language = lang;
-    ctx.session.onboardingStep = "ageVerification";
-
-    logger.info(`User ${ctx.from.id} selected language: ${lang}`);
-
-    await ctx.editMessageText(t("ageVerification", lang), {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: t("confirmAge", lang), callback_data: "confirm_age" }],
-        ],
-      },
-      parse_mode: "Markdown",
-    });
-  } catch (error) {
-    logger.error("Error in language selection:", error);
-    await ctx.answerCbQuery("An error occurred");
-  }
-});
-
-// Age verification
-bot.action("confirm_age", async (ctx) => {
-  try {
-    const lang = ctx.session.language || "en";
-    ctx.session.ageVerified = true;
-    ctx.session.onboardingStep = "terms";
-
-    logger.info(`User ${ctx.from.id} confirmed age`);
-
-    await ctx.editMessageText(t("terms", lang), {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: t("accept", lang), callback_data: "accept_terms" },
-            { text: t("decline", lang), callback_data: "decline_terms" },
-          ],
-        ],
-      },
-      parse_mode: "Markdown",
-    });
-  } catch (error) {
-    logger.error("Error in age confirmation:", error);
-    await ctx.answerCbQuery("An error occurred");
-  }
-});
-
-// Terms acceptance
-bot.action("accept_terms", async (ctx) => {
-  try {
-    const lang = ctx.session.language || "en";
-    ctx.session.termsAccepted = true;
-    ctx.session.onboardingStep = "privacy";
-
-    logger.info(`User ${ctx.from.id} accepted terms`);
-
-    await ctx.editMessageText(t("privacy", lang), {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: t("accept", lang), callback_data: "accept_privacy" },
-            { text: t("decline", lang), callback_data: "decline_privacy" },
-          ],
-        ],
-      },
-      parse_mode: "Markdown",
-    });
-  } catch (error) {
-    logger.error("Error in terms acceptance:", error);
-    await ctx.answerCbQuery("An error occurred");
-  }
-});
-
-bot.action("decline_terms", async (ctx) => {
-  try {
-    const lang = ctx.session.language || "en";
-    logger.info(`User ${ctx.from.id} declined terms`);
-    await ctx.answerCbQuery(t("termsDeclined", lang), { show_alert: true });
-  } catch (error) {
-    logger.error("Error declining terms:", error);
-    await ctx.answerCbQuery("An error occurred");
-  }
-});
-
-// Privacy policy acceptance
-bot.action("accept_privacy", async (ctx) => {
-  try {
-    const lang = ctx.session.language || "en";
-    const userId = ctx.from.id.toString();
-
-    ctx.session.privacyAccepted = true;
-    ctx.session.onboardingComplete = true;
-    ctx.session.xp = ONBOARDING_REWARD_XP;
-    ctx.session.badges = [ONBOARDING_BADGE];
-    ctx.session.tier = "Free";
-
-    // Create user profile in database
-    const userRef = db.collection("users").doc(userId);
-    await userRef.set(
-      {
-        userId,
-        username: ctx.from.username || "Anonymous",
-        language: lang,
-        ageVerified: true,
-        termsAccepted: true,
-        privacyAccepted: true,
-        onboardingComplete: true,
-        createdAt: new Date(),
-        lastActive: new Date(),
-        xp: ONBOARDING_REWARD_XP,
-        badges: [ONBOARDING_BADGE],
-        tier: "Free",
-      },
-      { merge: true }
-    );
-
-    logger.info(`User ${userId} completed onboarding`);
-
-    await ctx.editMessageText(t("profileCreated", lang), {
-      parse_mode: "Markdown",
-    });
-
-    await ctx.reply(
-      t("onboardingReward", lang, {
-        xp: ONBOARDING_REWARD_XP,
-        badge: ONBOARDING_BADGE,
-      }),
-      { parse_mode: "Markdown" }
-    );
-
-    // Show main menu
-    const mainMenu = getMenu("main", lang);
-    await ctx.reply(t("mainMenuIntro", lang), {
-      reply_markup: mainMenu,
-      parse_mode: "Markdown",
-    });
-  } catch (error) {
-    logger.error("Error completing onboarding:", error);
-    await ctx.answerCbQuery("An error occurred");
-  }
-});
-
-bot.action("decline_privacy", async (ctx) => {
-  try {
-    const lang = ctx.session.language || "en";
-    logger.info(`User ${ctx.from.id} declined privacy policy`);
-    await ctx.answerCbQuery(t("privacyDeclined", lang), { show_alert: true });
-  } catch (error) {
-    logger.error("Error declining privacy:", error);
-    await ctx.answerCbQuery("An error occurred");
-  }
-});
+bot.action(/language_(.+)/, onboardingHelpers.handleLanguageSelection);
+bot.action("confirm_age", onboardingHelpers.handleAgeConfirmation);
+bot.action("accept_terms", onboardingHelpers.handleTermsAcceptance);
+bot.action("decline_terms", onboardingHelpers.handleTermsDecline);
+bot.action("accept_privacy", onboardingHelpers.handlePrivacyAcceptance);
+bot.action("decline_privacy", onboardingHelpers.handlePrivacyDecline);
 
 // ===== SUBSCRIPTION HANDLERS =====
-
-async function handleSubscription(ctx, planKey) {
-  if (!ensureOnboarding(ctx)) {
-    return;
-  }
-
-  try {
-    const lang = ctx.session.language || "en";
-    const planLookup = planKey.toUpperCase();
-    const plan = plans[planLookup] || plans[planKey];
-
-    if (!plan) {
-      logger.warn(`Plan ${planKey} not found in plans config`);
-      await ctx.answerCbQuery(t("error", lang), { show_alert: true });
-      return;
-    }
-
-    const userId = ctx.from.id.toString();
-
-    logger.info(`User ${userId} initiated ${planKey} subscription - Plan: ${plan.name}, Price: ${plan.priceInCOP} COP`);
-
-    // Validate required environment variables
-    if (!process.env.EPAYCO_PUBLIC_KEY) {
-      logger.error("EPAYCO_PUBLIC_KEY not configured");
-      throw new Error("Payment gateway not configured");
-    }
-
-    // Use ePayco for payment processing
-    const paymentData = await epayco.createPaymentLink({
-      name: plan.name,
-      description: plan.description || `${plan.name} subscription - ${plan.duration} days`,
-      amount: plan.priceInCOP, // ePayco works with Colombian Pesos
-      currency: "COP",
-      userId: userId,
-      userEmail: ctx.from.username
-        ? `${ctx.from.username}@telegram.user`
-        : `user${userId}@telegram.bot`,
-      userName: ctx.from.first_name || ctx.from.username || "User",
-      plan: planKey,
-    });
-
-    if (!paymentData.success || !paymentData.paymentUrl) {
-      logger.error("Payment link creation failed:", paymentData);
-      throw new Error("Payment link creation failed");
-    }
-
-    const linkUrl = paymentData.paymentUrl;
-
-    logger.info(`Payment link created successfully for user ${userId}: ${linkUrl.substring(0, 50)}...`);
-
-    const featuresKey =
-      planKey === "golden" ? "goldenFeatures" : "silverFeatures";
-    const features = t(featuresKey, lang);
-
-    const message = lang === "es"
-      ? `${features}\n\n💳 **Detalles del Pago:**\n• Plan: ${plan.displayName || plan.name}\n• Precio: $${plan.price} USD / ${plan.priceInCOP.toLocaleString()} COP\n• Duración: ${plan.duration} días\n\nHaz clic en el botón para continuar con el pago:`
-      : `${features}\n\n💳 **Payment Details:**\n• Plan: ${plan.displayName || plan.name}\n• Price: $${plan.price} USD / ${plan.priceInCOP.toLocaleString()} COP\n• Duration: ${plan.duration} days\n\nClick the button to proceed with payment:`;
-
-    await ctx.answerCbQuery();
-    await ctx.editMessageText(message, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: lang === "es" ? "💳 Ir a Pagar" : "💳 Go to Payment",
-              url: linkUrl,
-            },
-          ],
-          [
-            {
-              text: lang === "es" ? "« Volver" : "« Back",
-              callback_data: "back_to_main",
-            },
-          ],
-        ],
-      },
-    });
-  } catch (error) {
-    logger.error(`Error creating ${planKey} payment link:`, error);
-    logger.error("Error stack:", error.stack);
-
-    const lang = ctx.session.language || "en";
-    const errorMessage = lang === "es"
-      ? `❌ Error al crear el link de pago.\n\nPor favor intenta de nuevo o contacta a soporte.\n\nError: ${error.message}`
-      : `❌ Error creating payment link.\n\nPlease try again or contact support.\n\nError: ${error.message}`;
-
-    if (ctx.updateType === "callback_query") {
-      await ctx.answerCbQuery();
-      try {
-        await ctx.editMessageText(errorMessage, {
-          parse_mode: "Markdown",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: lang === "es" ? "🔄 Reintentar" : "🔄 Retry",
-                  callback_data: `subscribe_${planKey}`,
-                },
-              ],
-              [
-                {
-                  text: lang === "es" ? "« Volver" : "« Back",
-                  callback_data: "back_to_main",
-                },
-              ],
-            ],
-          },
-        });
-      } catch (editError) {
-        await ctx.reply(errorMessage, { parse_mode: "Markdown" });
-      }
-    } else {
-      await ctx.reply(errorMessage, { parse_mode: "Markdown" });
-    }
-  }
-}
-
-bot.action("subscribe_silver", (ctx) => handleSubscription(ctx, "silver"));
-bot.action("subscribe_golden", (ctx) => handleSubscription(ctx, "golden"));
-bot.action("subscribe_prime", (ctx) => handleSubscription(ctx, "golden"));
+bot.action("subscribe_silver", (ctx) => subscriptionHelpers.handleSubscription(ctx, "silver"));
+bot.action("subscribe_golden", (ctx) => subscriptionHelpers.handleSubscription(ctx, "golden"));
+bot.action("subscribe_prime", (ctx) => subscriptionHelpers.handleSubscription(ctx, "golden"));
 bot.action("upgrade_tier", (ctx) => subscribeHandler(ctx));
 
 // ===== PROFILE EDIT HANDLERS =====
