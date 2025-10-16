@@ -75,19 +75,15 @@ async function createPaymentLink({
       )
       .digest("hex");
 
-    // Create payment using ePayco's Standard Checkout
-    // Build payment URL manually as the SDK doesn't support hosted checkout properly
-    const baseUrl = testMode
-      ? "https://checkout.epayco.co/checkout.php"
-      : "https://checkout.epayco.co/checkout.php";
+    // Use ePayco Onpage Checkout (embedded checkout)
+    // This is the correct method for creating payment links
+    const baseUrl = "https://checkout.epayco.co";
 
-    const paymentParams = new URLSearchParams({
-      // Authentication
+    const paymentParams = {
+      // Autenticación
       public_key: process.env.EPAYCO_PUBLIC_KEY,
-      p_cust_id_cliente: process.env.EPAYCO_P_CUST_ID,
-      p_key: process.env.EPAYCO_P_KEY,
 
-      // Transaction info
+      // Información de la transacción
       name: name,
       description: description,
       invoice: invoiceId,
@@ -101,32 +97,25 @@ async function createPaymentLink({
       // Test mode
       test: testMode ? "true" : "false",
 
-      // Customer info
+      // URLs de respuesta
+      response: responseUrl,
+      confirmation: confirmationUrl,
+
+      // Información del cliente
       name_billing: userName,
-      address_billing: "N/A",
-      type_doc_billing: "CC",
+      address_billing: "Calle 123",
+      type_doc_billing: "cc",
       number_doc_billing: userId.substring(0, 10).padStart(10, '0'),
       email_billing: userEmail,
       mobilephone_billing: "3000000000",
 
-      // URLs
-      response: responseUrl,
-      confirmation: confirmationUrl,
-      url_response: responseUrl,
-      url_confirmation: confirmationUrl,
-      method_confirmation: "POST",
-      signature,
-
-      // Extra data
+      // Datos extra
       extra1: userId,
       extra2: plan,
       extra3: Date.now().toString(),
+    };
 
-      // Enable credit cards and debit cards
-      methodsDisable: "",
-    });
-
-    const paymentUrl = `${baseUrl}?${paymentParams.toString()}`;
+    const paymentUrl = `${baseUrl}?${new URLSearchParams(paymentParams).toString()}`;
 
     logger.info("Creating ePayco payment with Standard Checkout:", {
       invoice: invoiceId,
