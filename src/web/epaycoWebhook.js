@@ -39,7 +39,16 @@ router.get("/confirmation", async (req, res) => {
 
     // Verify transaction with ePayco
     logger.info(`[WEBHOOK] Verifying transaction with ePayco: ${ref_payco}`);
-    const transaction = await verifyTransaction(ref_payco);
+
+    let transaction;
+    try {
+      transaction = await verifyTransaction(ref_payco);
+    } catch (verifyError) {
+      logger.error(`[WEBHOOK] Failed to verify transaction: ${ref_payco}`, {
+        error: verifyError.message,
+      });
+      return res.status(400).send(`Invalid transaction reference: ${verifyError.message}`);
+    }
 
     logger.info(`[WEBHOOK] Transaction verified`, {
       reference: transaction.reference,
