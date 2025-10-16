@@ -1,0 +1,11 @@
+{
+  "folders": [
+	{
+		"name": "Bots",
+		"path": "."
+	}
+],
+  "settings": {
+    "chatgpt.openOnStartup": true
+  }
+}
