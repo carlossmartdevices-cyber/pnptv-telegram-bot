@@ -40,7 +40,9 @@ async function createPaymentLink({
   plan,
 }) {
   try {
-    logger.info(`Creating ePayco payment link for user ${userId}, plan: ${plan}`);
+    logger.info(
+      `Creating ePayco payment link for user ${userId}, plan: ${plan}`
+    );
 
     // Validate credentials
     if (!process.env.EPAYCO_P_CUST_ID || !process.env.EPAYCO_P_KEY) {
@@ -51,8 +53,12 @@ async function createPaymentLink({
     const invoiceId = `${plan}_${userId}_${Date.now()}`;
 
     // Response and confirmation URLs
-    const responseUrl = process.env.EPAYCO_RESPONSE_URL || `${process.env.BOT_URL}/epayco/response`;
-    const confirmationUrl = process.env.EPAYCO_CONFIRMATION_URL || `${process.env.BOT_URL}/epayco/confirmation`;
+    const responseUrl =
+      process.env.EPAYCO_RESPONSE_URL ||
+      `${process.env.BOT_URL}/epayco/response`;
+    const confirmationUrl =
+      process.env.EPAYCO_CONFIRMATION_URL ||
+      `${process.env.BOT_URL}/epayco/confirmation`;
 
     const testMode = process.env.EPAYCO_TEST_MODE === "true";
 
@@ -63,7 +69,10 @@ async function createPaymentLink({
     // Generate signature according to ePayco documentation
     // Format: p_cust_id_cliente^p_key^p_id_invoice^p_amount^p_currency_code
     const signatureString = `${process.env.EPAYCO_P_CUST_ID}^${process.env.EPAYCO_P_KEY}^${invoiceId}^${amount}^${currency}`;
-    const signature = crypto.createHash('md5').update(signatureString).digest('hex');
+    const signature = crypto
+      .createHash("md5")
+      .update(signatureString)
+      .digest("hex");
 
     logger.info("Creating ePayco payment with Standard Checkout:", {
       invoice: invoiceId,
@@ -119,7 +128,12 @@ async function createPaymentLink({
 
     const paymentUrl = `${baseUrl}?${paymentParams.toString()}`;
 
-    logger.info(`ePayco payment link created successfully: ${paymentUrl.substring(0, 80)}...`);
+    logger.info(
+      `ePayco payment link created successfully: ${paymentUrl.substring(
+        0,
+        80
+      )}...`
+    );
 
     return {
       success: true,
@@ -251,7 +265,8 @@ async function verifyTransaction(refPayco) {
     return {
       success: true,
       status: transaction.x_transaction_state || transaction.estado,
-      approved: transaction.x_cod_response === 1 || transaction.x_cod_response === "1",
+      approved:
+        transaction.x_cod_response === 1 || transaction.x_cod_response === "1",
       amount: transaction.x_amount,
       currency: transaction.x_currency_code,
       reference: transaction.x_ref_payco || transaction.ref_payco,
