@@ -176,6 +176,56 @@ const epaycoWebhook = require("./epaycoWebhook");
 app.use("/epayco", epaycoWebhook);
 
 /**
+ * Debug: Test ePayco payment link creation
+ */
+app.get("/debug/test-payment", async (req, res) => {
+  try {
+    const epayco = require("../config/epayco");
+    const plans = require("../config/plans");
+
+    const testUserId = "123456789";
+    const plan = plans.SILVER;
+
+    logger.info("[DEBUG] Testing ePayco payment link creation");
+    logger.info("[DEBUG] Environment check:", {
+      publicKey: !!process.env.EPAYCO_PUBLIC_KEY,
+      privateKey: !!process.env.EPAYCO_PRIVATE_KEY,
+      testMode: process.env.EPAYCO_TEST_MODE,
+    });
+
+    const paymentData = await epayco.createPaymentLink({
+      name: plan.name,
+      description: plan.description || `${plan.name} subscription`,
+      amount: plan.priceInCOP,
+      currency: "COP",
+      userId: testUserId,
+      userEmail: "test@telegram.user",
+      userName: "Test User",
+      plan: "silver",
+    });
+
+    res.json({
+      success: true,
+      message: "Payment link created successfully",
+      data: {
+        paymentUrl: paymentData.paymentUrl,
+        reference: paymentData.reference,
+        invoiceId: paymentData.invoiceId,
+      },
+    });
+
+    logger.info("[DEBUG] Payment link test successful");
+  } catch (error) {
+    logger.error("[DEBUG] Payment link test failed:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack,
+    });
+  }
+});
+
+/**
  * Serve Mini App main page
  */
 app.get("/", (req, res) => {
