@@ -116,44 +116,19 @@ async function createPaymentLink({
       urlLength: paymentUrl.length
     });
 
-    // Return response in expected format
-    const response = {
-      success: true,
-      data: {
-        urlbanco: paymentUrl,
-        url: paymentUrl,
-        ref_payco: invoiceId,
-      }
-    };
+    logger.info(`ePayco payment link created successfully: ${paymentUrl.substring(0, 80)}...`);
 
-    logger.info("ePayco SDK response:", {
-      success: response?.success,
-      hasData: !!response?.data,
-      hasUrl: !!(response?.data?.urlbanco || response?.data?.url)
-    });
-
-    if (!response || !response.success) {
-      const errorMsg = response?.data?.errors || response?.data?.description || response?.message || "Unknown error";
-      logger.error("ePayco payment creation failed:", errorMsg);
-      throw new Error(`ePayco error: ${JSON.stringify(errorMsg)}`);
-    }
-
-    // Get payment URL from response
-    const paymentUrl = response.data?.urlbanco || response.data?.url;
-
-    if (!paymentUrl) {
-      logger.error("No payment URL in response:", JSON.stringify(response.data));
-      throw new Error("Payment URL not found in ePayco response");
-    }
-
-    logger.info(`ePayco payment link created successfully: ${paymentUrl.substring(0, 50)}...`);
-
+    // Return payment link directly
     return {
       success: true,
       paymentUrl: paymentUrl,
-      reference: response.data?.ref_payco || invoiceId,
+      reference: invoiceId,
       invoiceId: invoiceId,
-      data: response.data,
+      data: {
+        url: paymentUrl,
+        urlbanco: paymentUrl,
+        ref_payco: invoiceId,
+      },
     };
   } catch (error) {
     logger.error("Error creating ePayco payment link:", error);
