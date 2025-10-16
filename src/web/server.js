@@ -376,6 +376,99 @@ app.get("/api/plans", (req, res) => {
 });
 
 /**
+ * API: Create payment link for subscription
+ */
+app.post("/api/payment/create", async (req, res) => {
+  try {
+    const { userId, planType } = req.body;
+
+    logger.info(`[API] Payment link creation requested`, {
+      userId,
+      planType,
+    });
+
+    // Validate inputs
+    if (!userId || !planType) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required parameters: userId, planType",
+      });
+    }
+
+    // Get user data
+    const userDoc = await db.collection("users").doc(userId).get();
+    if (!userDoc.exists) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+
+    const userData = userDoc.data();
+    const userEmail = userData.email || `${userId}@telegram.user`;
+    const userName = userData.username || `User${userId}`;
+
+    // Get plan configuration
+    const plans = require("../config/plans");
+    const planKey = planType.toUpperCase();
+    const plan = plans[planKey];
+
+    if (!plan) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid plan type: ${planType}`,
+      });
+    }
+
+    // Check if user already has this tier
+    if (userData.tier === plan.tier) {
+      return res.status(400).json({
+        success: false,
+        error: `You already have the ${plan.tier} plan`,
+      });
+    }
+
+    // Create payment link
+    const epayco = require("../config/epayco");
+    const paymentData = await epayco.createPaymentLink({
+      name: plan.name,
+      description: plan.description,
+      amount: plan.priceInCOP,
+      currency: "COP",
+      userId: userId,
+      userEmail: userEmail,
+      userName: userName,
+      plan: planType.toLowerCase(),
+    });
+
+    logger.info(`[API] Payment link created successfully`, {
+      userId,
+      planType,
+      reference: paymentData.reference,
+    });
+
+    res.json({
+      success: true,
+      paymentUrl: paymentData.paymentUrl,
+      reference: paymentData.reference,
+      plan: {
+        name: plan.name,
+        price: plan.priceInCOP,
+        currency: "COP",
+        tier: plan.tier,
+      },
+    });
+  } catch (error) {
+    logger.error("[API] Error creating payment link:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to create payment link",
+      message: error.message,
+    });
+  }
+});
+
+/**
  * ePayco Webhook Routes
  */
 const epaycoWebhook = require("./epaycoWebhook");
