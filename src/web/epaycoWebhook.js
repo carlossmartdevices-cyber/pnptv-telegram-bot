@@ -20,68 +20,79 @@ router.get("/confirmation", async (req, res) => {
   const startTime = Date.now();
 
   try {
-    const { ref_payco, x_transaction_id, x_response, x_cod_response } = req.query;
-
-    logger.info(`[WEBHOOK] ePayco confirmation received`, {
-      ref_payco,
-      x_transaction_id,
-      x_response,
-      x_cod_response,
+    // Log all received parameters for debugging
+    logger.info(`[WEBHOOK] ePayco confirmation received - ALL PARAMS:`, {
+      query: req.query,
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });
 
+    // Extract parameters - support both ref_payco and x_id_factura
+    const {
+      ref_payco,
+      x_ref_payco,
+      x_id_factura,
+      x_id_invoice,
+      x_transaction_id,
+      x_response,
+      x_cod_response,
+      x_extra1,
+      x_extra2,
+      x_extra3,
+    } = req.query;
+
+    // Use ref_payco, x_ref_payco, or x_id_factura as the reference
+    const reference = ref_payco || x_ref_payco || x_id_factura || x_id_invoice;
+
+    logger.info(`[WEBHOOK] Extracted parameters:`, {
+      reference,
+      x_transaction_id,
+      x_response,
+      x_cod_response,
+      x_extra1,
+      x_extra2,
+    });
+
     // Validate required parameters
-    if (!ref_payco) {
-      logger.warn("[WEBHOOK] Missing ref_payco in confirmation webhook");
+    if (!reference) {
+      logger.warn("[WEBHOOK] Missing reference in confirmation webhook", {
+        receivedParams: Object.keys(req.query),
+      });
       return res.status(400).send("Missing required parameters");
     }
 
-    // Verify transaction with ePayco
-    logger.info(`[WEBHOOK] Verifying transaction with ePayco: ${ref_payco}`);
+    // For Standard Checkout, we get the data from URL params directly
+    // Extract user data from extra fields
+    const userId = x_extra1 || req.query.p_extra1;
+    const planType = x_extra2 || req.query.p_extra2;
+    const timestamp = x_extra3 || req.query.p_extra3;
 
-    let transaction;
-    try {
-      transaction = await verifyTransaction(ref_payco);
-    } catch (verifyError) {
-      logger.error(`[WEBHOOK] Failed to verify transaction: ${ref_payco}`, {
-        error: verifyError.message,
-      });
-      return res.status(400).send(`Invalid transaction reference: ${verifyError.message}`);
-    }
-
-    logger.info(`[WEBHOOK] Transaction verified`, {
-      reference: transaction.reference,
-      status: transaction.status,
-      approved: transaction.approved,
-      amount: transaction.amount,
-      currency: transaction.currency,
+    logger.info(`[WEBHOOK] Processing payment:`, {
+      reference,
+      userId,
+      planType,
+      x_cod_response,
+      x_response,
     });
 
     // Check if transaction was approved
-    if (!transaction.approved) {
-      logger.warn(`[WEBHOOK] Transaction not approved: ${ref_payco}`, {
-        status: transaction.status,
-        cod_response: transaction.data?.x_cod_response,
-        response_reason: transaction.data?.x_response_reason_text,
+    // Response codes: 1=Accepted, 2=Rejected, 3=Pending, 4=Failed
+    const isApproved = x_cod_response === "1" || x_cod_response === 1;
+    const isPending = x_cod_response === "3" || x_cod_response === 3;
+
+    if (!isApproved) {
+      logger.warn(`[WEBHOOK] Transaction not approved: ${reference}`, {
+        x_cod_response,
+        x_response,
+        status: isPending ? "pending" : "rejected",
       });
       return res.status(200).send("Transaction not approved");
     }
 
-    // Extract user data from transaction
-    const userId = transaction.extra1;
-    const planType = transaction.extra2;
-    const timestamp = transaction.extra3;
-
-    logger.info(`[WEBHOOK] Processing payment for user ${userId}`, {
-      plan: planType,
-      timestamp,
-    });
-
     if (!userId || !planType) {
-      logger.error("[WEBHOOK] Missing userId or planType in transaction data", {
-        extra1: transaction.extra1,
-        extra2: transaction.extra2,
+      logger.error("[WEBHOOK] Missing userId or planType in webhook data", {
+        x_extra1,
+        x_extra2,
       });
       return res.status(400).send("Invalid transaction data");
     }
@@ -114,34 +125,37 @@ router.get("/confirmation", async (req, res) => {
     // Check if payment already processed (idempotency check)
     const paymentDoc = await db
       .collection("payments")
-      .where("reference", "==", ref_payco)
+      .where("reference", "==", reference)
       .limit(1)
       .get();
 
     if (!paymentDoc.empty) {
       const existingPayment = paymentDoc.docs[0].data();
-      logger.info(`[WEBHOOK] Payment already processed: ${ref_payco}`, {
+      logger.info(`[WEBHOOK] Payment already processed: ${reference}`, {
         processedAt: existingPayment.createdAt,
         status: existingPayment.status,
       });
       return res.status(200).send("Payment already processed");
     }
 
+    // Extract amount and currency from query params
+    const amount = req.query.x_amount || req.query.p_amount || plan.priceInCOP;
+    const currency = req.query.x_currency_code || req.query.p_currency_code || "COP";
+
     // Record payment in database
     logger.info(`[WEBHOOK] Recording payment in database`);
     const paymentRef = await db.collection("payments").add({
       userId: userId,
-      reference: ref_payco,
-      transactionId: x_transaction_id || transaction.data.x_transaction_id,
-      amount: transaction.amount,
-      currency: transaction.currency,
+      reference: reference,
+      transactionId: x_transaction_id || req.query.x_id_factura,
+      amount: amount,
+      currency: currency,
       plan: planType,
       tier: plan.tier,
       status: "completed",
       provider: "epayco",
       createdAt: new Date(),
       webhookReceivedAt: new Date(),
-      transactionData: transaction.data,
       rawWebhookData: req.query,
     });
 
@@ -177,8 +191,8 @@ router.get("/confirmation", async (req, res) => {
 
       const message =
         userLang === "es"
-          ? `🎉 **¡Pago Confirmado!**\n\nGracias por tu compra.\n\n💎 Plan: **${plan.name}**\n💰 Monto: $${transaction.amount} ${transaction.currency}\n📅 Vence: ${expirationText}\n🔖 Referencia: ${ref_payco}\n\n¡Disfruta todas las características premium!`
-          : `🎉 **Payment Confirmed!**\n\nThank you for your purchase.\n\n💎 Plan: **${plan.name}**\n💰 Amount: $${transaction.amount} ${transaction.currency}\n📅 Expires: ${expirationText}\n🔖 Reference: ${ref_payco}\n\nEnjoy all premium features!`;
+          ? `🎉 **¡Pago Confirmado!**\n\nGracias por tu compra.\n\n💎 Plan: **${plan.name}**\n💰 Monto: $${amount} ${currency}\n📅 Vence: ${expirationText}\n🔖 Referencia: ${reference}\n\n¡Disfruta todas las características premium!`
+          : `🎉 **Payment Confirmed!**\n\nThank you for your purchase.\n\n💎 Plan: **${plan.name}**\n💰 Amount: $${amount} ${currency}\n📅 Expires: ${expirationText}\n🔖 Reference: ${reference}\n\nEnjoy all premium features!`;
 
       await bot.telegram.sendMessage(userId, message, {
         parse_mode: "Markdown",
@@ -192,7 +206,7 @@ router.get("/confirmation", async (req, res) => {
 
     const processingTime = Date.now() - startTime;
     logger.info(`[WEBHOOK] Payment processed successfully in ${processingTime}ms`, {
-      reference: ref_payco,
+      reference: reference,
       userId,
       plan: planType,
     });

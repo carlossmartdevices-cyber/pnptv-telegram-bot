@@ -43,11 +43,8 @@ async function createPaymentLink({
     logger.info(`Creating ePayco payment link for user ${userId}, plan: ${plan}`);
 
     // Validate credentials
-    if (!process.env.EPAYCO_PUBLIC_KEY) {
-      throw new Error("ePayco PUBLIC_KEY not configured");
-    }
     if (!process.env.EPAYCO_P_CUST_ID || !process.env.EPAYCO_P_KEY) {
-      throw new Error("ePayco signing credentials (P_CUST_ID, P_KEY) not configured");
+      throw new Error("ePayco credentials (P_CUST_ID, P_KEY) not configured");
     }
 
     // Generate unique invoice ID
@@ -59,64 +56,68 @@ async function createPaymentLink({
 
     const testMode = process.env.EPAYCO_TEST_MODE === "true";
 
-    // Build payment URL manually using ePayco's Standard Checkout
-    // This avoids SDK issues and provides direct control over parameters
-    const baseUrl = "https://checkout.epayco.co/checkout.php";
+    // Calculate tax breakdown (assuming 0% tax for now)
+    const taxAmount = "0";
+    const amountBase = amount.toString();
 
-    const paymentParams = new URLSearchParams({
-      // Authentication
-      public_key: process.env.EPAYCO_PUBLIC_KEY,
-      p_cust_id_cliente: process.env.EPAYCO_P_CUST_ID,
-      p_key: process.env.EPAYCO_P_KEY,
-
-      // Transaction info
-      name: name,
-      description: description,
-      invoice: invoiceId,
-      amount: amount.toString(),
-      tax_base: "0",
-      tax: "0",
-      currency: currency,
-      country: "CO",
-      lang: "ES",
-
-      // Test mode
-      test: testMode ? "true" : "false",
-
-      // Customer info
-      name_billing: userName,
-      address_billing: "N/A",
-      type_doc_billing: "CC",
-      number_doc_billing: userId.substring(0, 10).padStart(10, '0'),
-      email_billing: userEmail,
-      mobilephone_billing: "3000000000",
-
-      // URLs
-      response: responseUrl,
-      confirmation: confirmationUrl,
-      url_response: responseUrl,
-      url_confirmation: confirmationUrl,
-      method_confirmation: "GET",
-
-      // Extra data for tracking
-      extra1: userId,
-      extra2: plan,
-      extra3: Date.now().toString(),
-
-      // Enable all payment methods
-      methodsDisable: "",
-    });
-
-    const paymentUrl = `${baseUrl}?${paymentParams.toString()}`;
+    // Generate signature according to ePayco documentation
+    // Format: p_cust_id_cliente^p_key^p_id_invoice^p_amount^p_currency_code
+    const signatureString = `${process.env.EPAYCO_P_CUST_ID}^${process.env.EPAYCO_P_KEY}^${invoiceId}^${amount}^${currency}`;
+    const signature = crypto.createHash('md5').update(signatureString).digest('hex');
 
     logger.info("Creating ePayco payment with Standard Checkout:", {
       invoice: invoiceId,
       amount: amount,
+      currency: currency,
       email: userEmail,
       test: testMode,
-      method: "standard_checkout",
-      urlLength: paymentUrl.length,
+      method: "standard_checkout_form",
     });
+
+    // Build payment URL using ePayco's official Standard Checkout endpoint
+    // POST to: https://secure.payco.co/checkout.php
+    const baseUrl = "https://secure.payco.co/checkout.php";
+
+    const paymentParams = new URLSearchParams({
+      // Required merchant credentials
+      p_cust_id_cliente: process.env.EPAYCO_P_CUST_ID,
+      p_key: process.env.EPAYCO_P_KEY,
+
+      // Required transaction info
+      p_id_invoice: invoiceId,
+      p_description: description,
+      p_amount: amount.toString(),
+      p_amount_base: amountBase,
+      p_tax: taxAmount,
+      p_currency_code: currency,
+
+      // Required customer info
+      p_email: userEmail,
+
+      // Required security signature
+      p_signature: signature,
+
+      // Required test mode flag
+      p_test_request: testMode ? "TRUE" : "FALSE",
+
+      // Optional but recommended: confirmation URLs
+      p_url_response: responseUrl,
+      p_url_confirmation: confirmationUrl,
+      p_confirm_method: "GET",
+
+      // Optional: extra data for tracking
+      p_extra1: userId,
+      p_extra2: plan,
+      p_extra3: Date.now().toString(),
+
+      // Optional: additional billing info
+      p_name_billing: userName,
+      p_billing_address: "N/A",
+      p_billing_country: "CO",
+      p_billing_phone: "3000000000",
+    });
+
+    const paymentUrl = `${baseUrl}?${paymentParams.toString()}`;
 
     logger.info(`ePayco payment link created successfully: ${paymentUrl.substring(0, 80)}...`);
 
@@ -125,10 +126,12 @@ async function createPaymentLink({
       paymentUrl: paymentUrl,
       reference: invoiceId,
       invoiceId: invoiceId,
+      signature: signature,
       data: {
         url: paymentUrl,
         urlbanco: paymentUrl,
         ref_payco: invoiceId,
+        invoice: invoiceId,
       },
     };
   } catch (error) {

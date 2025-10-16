@@ -22,6 +22,13 @@ const app = express();
 // Railway sets PORT automatically, fallback to WEB_PORT or 3000
 const PORT = process.env.PORT || process.env.WEB_PORT || 3000;
 
+// Constants
+const MAX_BIO_LENGTH = 500;
+const MAX_NEARBY_USERS = 100;
+
+// Constants
+const MAX_BIO_LENGTH = 500;
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // For form data
@@ -187,10 +194,10 @@ app.put("/api/profile/:userId", async (req, res) => {
     const updateData = {};
 
     if (bio !== undefined) {
-      if (typeof bio !== "string" || bio.length > 500) {
+      if (typeof bio !== "string" || bio.length > MAX_BIO_LENGTH) {
         return res
           .status(400)
-          .json({ error: "Bio must be a string of up to 500 characters" });
+          .json({ error: `Bio must be a string of up to ${MAX_BIO_LENGTH} characters` });
       }
       updateData.bio = bio.trim();
     }
@@ -258,11 +265,11 @@ app.post("/api/map/nearby", async (req, res) => {
     const boundingBox = getBoundingBox(
       userLocation.latitude,
       userLocation.longitude,
-      searchRadius
-    );
-
     const usersSnapshot = await db
       .collection("users")
+      .where("location", "!=", null)
+      .limit(MAX_CANDIDATE_USERS)
+      .get();
       .where("location", "!=", null)
       .limit(300)
       .get();
@@ -303,15 +310,12 @@ app.post("/api/map/nearby", async (req, res) => {
         xp: data.xp || 0,
         photoFileId: data.photoFileId || null,
         lastActive,
-      });
-    });
-
     const nearbyUsers = findUsersWithinRadius(
       userLocation,
       candidates,
       searchRadius
     )
-      .slice(0, 100)
+      .slice(0, MAX_NEARBY_USERS)
       .map((user) => ({
         userId: user.userId,
         username: user.username,
@@ -323,6 +327,9 @@ app.post("/api/map/nearby", async (req, res) => {
         locationName: user.locationName,
         distance: user.distance,
         distanceFormatted: user.distanceFormatted,
+        distanceCategory: getDistanceCategory(user.distance),
+        lastActive: serializeDate(user.lastActive),
+      }));
         distanceCategory: getDistanceCategory(user.distance),
         lastActive: serializeDate(user.lastActive),
       }));
