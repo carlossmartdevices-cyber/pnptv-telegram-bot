@@ -3,7 +3,7 @@
  * Handles network connectivity issues gracefully
  */
 
-require("dotenv").config();
+require("./src/config/env");
 const logger = require("./src/utils/logger");
 const { startServer } = require("./src/web/server");
 
@@ -15,7 +15,7 @@ const RETRY_DELAY = 3000; // 3 seconds
  */
 async function launchBotWithRetry(retryCount = 0) {
   try {
-    console.log("🚀 Starting PNPtv Bot...\n");
+    console.log("Starting PNPtv Bot...\n");
 
     // Dynamically require the bot to avoid caching issues
     delete require.cache[require.resolve("./src/bot/index.js")];
@@ -25,9 +25,9 @@ async function launchBotWithRetry(retryCount = 0) {
     await bot.launch();
 
     logger.info("Bot started successfully");
-    console.log("✅ PNPtv Bot is running!");
-    console.log("📱 Bot username: @PNPtvbot");
-    console.log("🔗 Start chatting: https://t.me/PNPtvbot\n");
+    console.log("PNPtv Bot is running!");
+    console.log("Bot username: @PNPtvbot");
+    console.log("Start chatting: https://t.me/PNPtvbot\n");
 
     // Start web server for Mini App
     try {
@@ -35,7 +35,7 @@ async function launchBotWithRetry(retryCount = 0) {
       logger.info("Web server started successfully");
     } catch (error) {
       logger.warn("Failed to start web server:", error.message);
-      console.log("⚠️  Mini App server could not start. Bot will continue running.");
+      console.log("Mini App server could not start. Bot will continue running.");
     }
 
     // Initialize scheduler for membership expiration
@@ -43,10 +43,10 @@ async function launchBotWithRetry(retryCount = 0) {
       const { initializeScheduler } = require("./src/services/scheduler");
       initializeScheduler(bot);
       logger.info("Scheduler initialized successfully");
-      console.log("⏰ Membership expiration scheduler started");
+      console.log("Membership expiration scheduler started");
     } catch (error) {
       logger.warn("Failed to initialize scheduler:", error.message);
-      console.log("⚠️  Scheduler could not start. Manual expiration checks required.");
+      console.log("Scheduler could not start. Manual expiration checks required.");
     }
 
     console.log("\nPress Ctrl+C to stop the bot.\n");
@@ -54,7 +54,7 @@ async function launchBotWithRetry(retryCount = 0) {
     // Setup graceful shutdown
     const shutdown = (signal) => {
       logger.info(`Received ${signal}, stopping bot...`);
-      console.log(`\n⏹️  Stopping bot...`);
+      console.log("\nStopping bot...\n");
       bot.stop(signal);
       process.exit(0);
     };
@@ -75,11 +75,9 @@ async function launchBotWithRetry(retryCount = 0) {
     ) {
       if (retryCount < MAX_RETRIES) {
         const nextRetry = retryCount + 1;
-        console.error(
-          `❌ Connection failed: ${errorMessage}`
-        );
+        console.error(`Connection failed: ${errorMessage}`);
         console.log(
-          `🔄 Retrying in ${RETRY_DELAY / 1000} seconds... (Attempt ${nextRetry}/${MAX_RETRIES})\n`
+          `Retrying in ${RETRY_DELAY / 1000} seconds... (Attempt ${nextRetry}/${MAX_RETRIES})\n`
         );
 
         logger.warn(`Connection failed, retrying (${nextRetry}/${MAX_RETRIES}):`, errorMessage);
@@ -90,8 +88,8 @@ async function launchBotWithRetry(retryCount = 0) {
         // Retry
         return launchBotWithRetry(nextRetry);
       } else {
-        console.error(`\n❌ Failed to connect after ${MAX_RETRIES} attempts.\n`);
-        console.log("💡 Troubleshooting steps:");
+        console.error(`\nFailed to connect after ${MAX_RETRIES} attempts.\n`);
+        console.log("Troubleshooting steps:");
         console.log("   1. Check your internet connection");
         console.log("   2. Verify firewall settings");
         console.log("   3. Check if Telegram is accessible in your region");
@@ -103,7 +101,7 @@ async function launchBotWithRetry(retryCount = 0) {
       }
     } else {
       // Non-network error
-      console.error("❌ Error starting bot:", errorMessage);
+      console.error("Error starting bot:", errorMessage);
       logger.error("Failed to start bot:", error);
       process.exit(1);
     }
@@ -112,7 +110,7 @@ async function launchBotWithRetry(retryCount = 0) {
 
 // Start the bot
 launchBotWithRetry().catch((error) => {
-  console.error("❌ Unexpected error:", error);
+  console.error("Unexpected error:", error);
   logger.error("Unexpected error during bot launch:", error);
   process.exit(1);
 });

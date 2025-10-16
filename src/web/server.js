@@ -15,8 +15,12 @@ const {
   approximateLocation,
   isValidLocation,
   simpleGeohash,
+  getGeohashNeighbors,
+  getGeohashPrecision,
 } = require("../utils/geolocation");
 const { getMembershipInfo } = require("../utils/membershipManager");
+const { authenticateTelegramUser } = require("./middleware/auth");
+const { errorHandler, asyncHandler } = require("../utils/errorHandler");
 
 const app = express();
 // Railway sets PORT automatically, fallback to WEB_PORT or 3000
@@ -140,7 +144,7 @@ function prepareLocationUpdate(rawLocation) {
 /**
  * API: Get user profile
  */
-app.get("/api/profile/:userId", async (req, res) => {
+app.get("/api/profile/:userId", authenticateTelegramUser, async (req, res) => {
   try {
     const { userId } = req.params;
     const userRef = db.collection("users").doc(userId);
@@ -177,7 +181,7 @@ app.get("/api/profile/:userId", async (req, res) => {
 /**
  * API: Update user profile
  */
-app.put("/api/profile/:userId", async (req, res) => {
+app.put("/api/profile/:userId", authenticateTelegramUser, async (req, res) => {
   try {
     const { userId } = req.params;
     const { bio, location } = req.body;
@@ -245,7 +249,7 @@ app.put("/api/profile/:userId", async (req, res) => {
 /**
  * API: Get nearby users
  */
-app.post("/api/map/nearby", async (req, res) => {
+app.post("/api/map/nearby", authenticateTelegramUser, async (req, res) => {
   try {
     const { userId, latitude, longitude, radius = 25 } = req.body;
 
@@ -259,16 +263,21 @@ app.post("/api/map/nearby", async (req, res) => {
     }
 
     const searchRadius = Number(radius) || 25;
-    const boundingBox = getBoundingBox(
+
+    // OPTIMIZED: Use geohash-based querying for better performance
+    const precision = getGeohashPrecision(searchRadius);
+    const centerHash = simpleGeohash(
       userLocation.latitude,
       userLocation.longitude,
-      searchRadius
+      precision
     );
+    const searchHashes = getGeohashNeighbors(centerHash, precision);
 
+    // Query users with matching geohashes (up to 10 due to Firestore 'in' limit)
     const usersSnapshot = await db
       .collection("users")
-      .where("location", "!=", null)
-      .limit(300)
+      .where("locationGeohash", "in", searchHashes.slice(0, 10))
+      .limit(MAX_NEARBY_USERS * 2) // Get more for filtering
       .get();
 
     const candidates = [];
@@ -279,10 +288,6 @@ app.post("/api/map/nearby", async (req, res) => {
 
       const data = doc.data();
       if (!isValidLocation(data.location)) {
-        return;
-      }
-
-      if (!isInBoundingBox(data.location, boundingBox)) {
         return;
       }
 
@@ -375,7 +380,7 @@ app.get("/api/plans", (req, res) => {
 /**
  * API: Create payment link for subscription
  */
-app.post("/api/payment/create", async (req, res) => {
+app.post("/api/payment/create", authenticateTelegramUser, async (req, res) => {
   try {
     const { userId, planType } = req.body;
 
@@ -527,6 +532,18 @@ app.get("/debug/test-payment", async (req, res) => {
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
+// 404 handler for unknown routes
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Route not found',
+    path: req.path,
+  });
+});
+
+// Global error handler (must be last)
+app.use(errorHandler);
 
 // Track if server is already running
 let serverInstance = null;

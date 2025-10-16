@@ -17,11 +17,37 @@ const isDemoMode = Boolean(window.DEMO_MODE);
 let isUpdatingLocation = false;
 let premiumPlansCache = null;
 
+// Performance caches
+const gradientCache = new Map();
+const MAX_USERS_PER_PAGE = 20;
+let currentUserPage = 0;
+let allNearbyUsers = [];
+
 // Get user ID from Telegram
 const userId = tg.initDataUnsafe?.user?.id?.toString() || "demo";
 
 // API Base URL
 const API_BASE = window.location.origin + "/api";
+
+/**
+ * Helper function to make authenticated API requests
+ */
+async function apiRequest(url, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  // Add Telegram initData for authentication
+  if (tg.initData) {
+    headers['X-Telegram-Init-Data'] = tg.initData;
+  }
+
+  return fetch(url, {
+    ...options,
+    headers,
+  });
+}
 
 /**
  * Initialize app
@@ -78,7 +104,7 @@ async function loadProfile() {
   try {
     console.log(`Loading profile for user: ${userId}`);
 
-    const response = await fetch(`${API_BASE}/profile/${userId}`);
+    const response = await apiRequest(`${API_BASE}/profile/${userId}`);
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -282,9 +308,8 @@ async function saveBio() {
   try {
     setButtonLoading(saveBtn, true, "Saving...");
 
-    const response = await fetch(`${API_BASE}/profile/${userId}`, {
+    const response = await apiRequest(`${API_BASE}/profile/${userId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bio }),
     });
 
@@ -366,7 +391,7 @@ function shareLocation() {
 }
 
 /**
- * Load map data
+ * Load map data (OPTIMIZED with caching and pagination)
  */
 async function loadMapData() {
   const usersList = document.getElementById("users-list");
@@ -381,9 +406,8 @@ async function loadMapData() {
   usersList.innerHTML = '<p class="empty-state">Loading nearby users...</p>';
 
   try {
-    const response = await fetch(`${API_BASE}/map/nearby`, {
+    const response = await apiRequest(`${API_BASE}/map/nearby`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userId,
         latitude: userLocation.latitude,
@@ -399,36 +423,60 @@ async function loadMapData() {
     const data = await response.json();
 
     if (data.success && Array.isArray(data.users) && data.users.length > 0) {
-      displayNearbyUsers(data.users);
+      allNearbyUsers = data.users;
+      currentUserPage = 0;
+      displayNearbyUsers();
     } else {
+      allNearbyUsers = [];
       usersList.innerHTML = `<p class="empty-state">No users found within ${currentRadius} km</p>`;
     }
   } catch (error) {
     console.error("Error loading map data:", error);
+    allNearbyUsers = [];
     usersList.innerHTML = '<p class="empty-state">Failed to load nearby users</p>';
   }
 }
 
 
 /**
- * Display nearby users
+ * Display nearby users (OPTIMIZED with pagination and DOM fragment)
  */
-function displayNearbyUsers(users) {
+function displayNearbyUsers() {
   const usersList = document.getElementById("users-list");
   usersList.innerHTML = "";
 
-  if (!Array.isArray(users) || users.length === 0) {
+  if (!Array.isArray(allNearbyUsers) || allNearbyUsers.length === 0) {
     usersList.innerHTML = `<p class="empty-state">No users found within ${currentRadius} km</p>`;
     return;
   }
 
-  const groups = users.reduce((acc, user) => {
+  // Calculate pagination
+  const startIndex = currentUserPage * MAX_USERS_PER_PAGE;
+  const endIndex = startIndex + MAX_USERS_PER_PAGE;
+  const usersToDisplay = allNearbyUsers.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(allNearbyUsers.length / MAX_USERS_PER_PAGE);
+  const hasMore = endIndex < allNearbyUsers.length;
+
+  // Group users by distance category
+  const groups = usersToDisplay.reduce((acc, user) => {
     const category = user.distanceCategory || "Nearby";
     if (!acc[category]) acc[category] = [];
     acc[category].push(user);
     return acc;
   }, {});
 
+  // Use DocumentFragment for better performance
+  const fragment = document.createDocumentFragment();
+
+  // Show summary
+  const summary = document.createElement("div");
+  summary.className = "user-list-summary";
+  summary.innerHTML = `
+    <p>Showing ${startIndex + 1}-${Math.min(endIndex, allNearbyUsers.length)} of ${allNearbyUsers.length} nearby ${allNearbyUsers.length === 1 ? 'user' : 'users'}</p>
+  `;
+  fragment.appendChild(summary);
+
+  // Render groups
   Object.entries(groups).forEach(([category, list]) => {
     const groupEl = document.createElement("div");
     groupEl.className = "user-group";
@@ -439,39 +487,94 @@ function displayNearbyUsers(users) {
     groupEl.appendChild(header);
 
     list.forEach((user) => {
-      const initial = (user.username || "U").charAt(0).toUpperCase();
-      const gradient = generateGradientFromString(user.username || user.userId);
-      const tierBadge = user.tier === "Golden" ? "💎" : user.tier === "Silver" ? "🥈" : "🙂";
-      const locationName = user.locationName || (user.location ? formatCoordinates(user.location) : "Unknown");
-      const lastActiveLabel = formatRelativeTime(user.lastActive, "Recently active");
-      const xpChip = typeof user.xp === "number" ? `<span>⭐ ${user.xp} XP</span>` : "";
-
-      const userCard = document.createElement("div");
-      userCard.className = "user-card";
-      userCard.innerHTML = `
-        <div class="user-photo" style="background:${gradient};">
-          <span class="photo-placeholder">${initial}</span>
-        </div>
-        <div class="user-info">
-          <h3>
-            @${user.username}
-            <span class="tier-badge">${tierBadge}</span>
-          </h3>
-          <div class="distance">📏 ${user.distanceFormatted}</div>
-          <div class="user-meta">
-            <span class="location-chip">📌 ${locationName}</span>
-            <span>🕒 ${lastActiveLabel}</span>
-            ${xpChip}
-          </div>
-          ${user.bio ? `<div class="bio">${sanitizeText(user.bio)}</div>` : ""}
-        </div>
-      `;
-
+      const userCard = createUserCard(user);
       groupEl.appendChild(userCard);
     });
 
-    usersList.appendChild(groupEl);
+    fragment.appendChild(groupEl);
   });
+
+  // Add pagination controls
+  if (totalPages > 1) {
+    const pagination = createPaginationControls(currentUserPage, totalPages);
+    fragment.appendChild(pagination);
+  }
+
+  usersList.appendChild(fragment);
+}
+
+/**
+ * Create user card element (optimized)
+ */
+function createUserCard(user) {
+  const initial = (user.username || "U").charAt(0).toUpperCase();
+  const gradient = generateGradientFromString(user.username || user.userId);
+  const tierBadge = user.tier === "Golden" ? "💎" : user.tier === "Silver" ? "🥈" : "🙂";
+  const locationName = user.locationName || (user.location ? formatCoordinates(user.location) : "Unknown");
+  const lastActiveLabel = formatRelativeTime(user.lastActive, "Recently active");
+  const xpChip = typeof user.xp === "number" ? `<span>⭐ ${user.xp} XP</span>` : "";
+
+  const userCard = document.createElement("div");
+  userCard.className = "user-card";
+  userCard.innerHTML = `
+    <div class="user-photo" style="background:${gradient};">
+      <span class="photo-placeholder">${initial}</span>
+    </div>
+    <div class="user-info">
+      <h3>
+        @${sanitizeText(user.username)}
+        <span class="tier-badge">${tierBadge}</span>
+      </h3>
+      <div class="distance">📏 ${user.distanceFormatted}</div>
+      <div class="user-meta">
+        <span class="location-chip">📌 ${sanitizeText(locationName)}</span>
+        <span>🕒 ${lastActiveLabel}</span>
+        ${xpChip}
+      </div>
+      ${user.bio ? `<div class="bio">${sanitizeText(user.bio)}</div>` : ""}
+    </div>
+  `;
+
+  return userCard;
+}
+
+/**
+ * Create pagination controls
+ */
+function createPaginationControls(currentPage, totalPages) {
+  const paginationEl = document.createElement("div");
+  paginationEl.className = "pagination-controls";
+
+  const prevDisabled = currentPage === 0 ? 'disabled' : '';
+  const nextDisabled = currentPage >= totalPages - 1 ? 'disabled' : '';
+
+  paginationEl.innerHTML = `
+    <button class="btn btn-secondary" id="prev-page-btn" ${prevDisabled}>← Previous</button>
+    <span class="page-info">Page ${currentPage + 1} of ${totalPages}</span>
+    <button class="btn btn-secondary" id="next-page-btn" ${nextDisabled}>Next →</button>
+  `;
+
+  // Add event listeners
+  const prevBtn = paginationEl.querySelector('#prev-page-btn');
+  const nextBtn = paginationEl.querySelector('#next-page-btn');
+
+  if (prevBtn && !prevDisabled) {
+    prevBtn.addEventListener('click', () => {
+      currentUserPage--;
+      displayNearbyUsers();
+      document.getElementById('users-list').scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+
+  if (nextBtn && !nextDisabled) {
+    nextBtn.addEventListener('click', () => {
+      currentUserPage++;
+      displayNearbyUsers();
+      document.getElementById('users-list').scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+
+  return paginationEl;
 }
 
 /**
@@ -596,9 +699,8 @@ async function subscribeToPlan(tier) {
 
   try {
     // Create payment link via API
-    const response = await fetch(`${API_BASE}/payment/create`, {
+    const response = await apiRequest(`${API_BASE}/payment/create`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userId: userId,
         planType: tier.toLowerCase(),
@@ -711,15 +813,32 @@ function renderProfilePhoto(username) {
   photoEl.style.background = generateGradientFromString(username || "user");
 }
 
+/**
+ * Generate gradient from string (OPTIMIZED with caching)
+ */
 function generateGradientFromString(value) {
   const str = value || "user";
+
+  // Check cache first
+  if (gradientCache.has(str)) {
+    return gradientCache.get(str);
+  }
+
+  // Generate gradient
   let hash = 0;
   for (let i = 0; i < str.length; i += 1) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
   const hue = Math.abs(hash) % 360;
   const secondaryHue = (hue + 40) % 360;
-  return `linear-gradient(135deg, hsl(${hue}, 70%, 55%), hsl(${secondaryHue}, 65%, 45%))`;
+  const gradient = `linear-gradient(135deg, hsl(${hue}, 70%, 55%), hsl(${secondaryHue}, 65%, 45%))`;
+
+  // Cache the gradient (limit cache size)
+  if (gradientCache.size < 100) {
+    gradientCache.set(str, gradient);
+  }
+
+  return gradient;
 }
 
 function formatCoordinates(location) {
@@ -832,9 +951,8 @@ function geolocationErrorMessage(error) {
 }
 
 async function updateLocationOnServer(latitude, longitude) {
-  const response = await fetch(`${API_BASE}/profile/${userId}`, {
+  const response = await apiRequest(`${API_BASE}/profile/${userId}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       location: { latitude, longitude },
     }),

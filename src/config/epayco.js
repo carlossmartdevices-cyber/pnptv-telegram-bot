@@ -3,7 +3,7 @@
  * Colombian payment processor integration
  */
 
-require("dotenv").config();
+require("./env");
 const crypto = require("crypto");
 const epaycoSdk = require("epayco-sdk-node");
 const logger = require("../utils/logger");
