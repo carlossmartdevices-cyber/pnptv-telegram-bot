@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Who's Getting Spun Near Me? - PNPtv</title>
+    <script
+      src="https://telegram.org/js/telegram-web-app.js"
+      onerror="console.error('Failed to load Telegram WebApp script')"
+    ></script>
+    <script>
+      // Fallback if Telegram WebApp fails to load
+      if (!window.Telegram) {
+        window.Telegram = { WebApp: null };
+        console.warn(
+          "Telegram WebApp not available - running in standalone mode"
+        );
+      }
+    </script>
+    <link rel="stylesheet" href="nearby.css?v=1.0.0" />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Loading Screen -->
+      <div id="loading" class="screen active">
+        <div class="loader"></div>
+        <p>Finding nearby users...</p>
+      </div>
+
+      <!-- Error Screen -->
+      <div id="error-screen" class="screen hidden">
+        <div class="error-content">
+          <span class="material-icons error-icon">error_outline</span>
+          <h2>Oops!</h2>
+          <p id="error-message">Something went wrong</p>
+          <button id="retry-btn" class="btn btn-primary">Try Again</button>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div id="main-content" class="hidden">
+        <!-- Header -->
+        <header class="app-header">
+          <h1>🌍 Who's Getting Spun Near Me?</h1>
+          <div class="location-info">
+            <span class="material-icons">location_on</span>
+            <span id="user-location">Loading location...</span>
+          </div>
+        </header>
+
+        <!-- Radius Selector -->
+        <div class="radius-selector">
+          <label>Search radius:</label>
+          <div class="radius-buttons">
+            <button class="radius-btn" data-radius="5">5km</button>
+            <button class="radius-btn active" data-radius="10">10km</button>
+            <button class="radius-btn" data-radius="25">25km</button>
+            <button class="radius-btn" data-radius="50">50km</button>
+          </div>
+          <button id="refresh-btn" class="btn btn-secondary">
+            <span class="material-icons">refresh</span>
+            Refresh
+          </button>
+        </div>
+
+        <!-- User Stats -->
+        <div class="stats-bar">
+          <div class="stat">
+            <span class="stat-value" id="total-users">0</span>
+            <span class="stat-label">users nearby</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="unlocked-chats">0/3</span>
+            <span class="stat-label">free chats</span>
+          </div>
+        </div>
+
+        <!-- Freemium Notice -->
+        <div class="freemium-notice">
+          <span class="material-icons">info</span>
+          <p>
+            Chat with your first <strong>3 users for free</strong>! Subscribe to unlock unlimited chats with everyone.
+          </p>
+        </div>
+
+        <!-- Users List -->
+        <div id="users-container" class="users-container">
+          <div class="empty-state hidden" id="empty-state">
+            <span class="material-icons empty-icon">person_search</span>
+            <h3>No users nearby</h3>
+            <p>Try increasing your search radius or check back later.</p>
+          </div>
+
+          <div id="users-list" class="users-list"></div>
+        </div>
+
+        <!-- Upgrade CTA (shown when free limit reached) -->
+        <div id="upgrade-banner" class="upgrade-banner hidden">
+          <div class="upgrade-content">
+            <span class="material-icons">lock</span>
+            <div class="upgrade-text">
+              <h3>Unlock All Chats</h3>
+              <p>Subscribe to chat with unlimited users nearby</p>
+            </div>
+            <button id="upgrade-btn" class="btn btn-premium">
+              <span class="material-icons">star</span>
+              View Plans
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Detail Modal -->
+    <div id="user-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <button class="modal-close" id="close-modal-btn">
+          <span class="material-icons">close</span>
+        </button>
+
+        <div class="user-profile">
+          <div class="user-photo-wrapper">
+            <div id="modal-user-photo" class="user-photo">
+              <span class="photo-placeholder">👤</span>
+            </div>
+            <div class="user-tier-badge" id="modal-user-tier">Free</div>
+          </div>
+
+          <h2 id="modal-username">Username</h2>
+
+          <div class="user-stats">
+            <div class="user-stat">
+              <span class="material-icons">location_on</span>
+              <span id="modal-distance">5 km away</span>
+            </div>
+            <div class="user-stat">
+              <span class="material-icons">stars</span>
+              <span id="modal-xp">0 XP</span>
+            </div>
+          </div>
+
+          <div class="user-bio">
+            <h3>About</h3>
+            <p id="modal-bio">No bio available</p>
+          </div>
+
+          <div class="user-location">
+            <h3>Location</h3>
+            <p id="modal-location">Unknown</p>
+          </div>
+
+          <div class="user-last-active">
+            <span class="material-icons">schedule</span>
+            <span id="modal-last-active">Last seen: Unknown</span>
+          </div>
+
+          <!-- Chat Button (locked/unlocked based on subscription) -->
+          <div class="modal-actions">
+            <button id="chat-btn" class="btn btn-primary">
+              <span class="material-icons">chat</span>
+              Start Chat
+            </button>
+
+            <div id="chat-locked-notice" class="locked-notice hidden">
+              <span class="material-icons">lock</span>
+              <p>Subscribe to unlock chat with this user</p>
+              <button id="modal-upgrade-btn" class="btn btn-premium">
+                View Plans
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="nearby.js?v=1.0.0" async defer></script>
+  </body>
+</html>
