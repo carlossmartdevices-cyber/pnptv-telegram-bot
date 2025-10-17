@@ -1,63 +1,726 @@
-const { Markup } = require("telegraf");
-const planService = require("../../../services/planService");
+const { Markup } = require('telegraf');
+const { isAdmin } = require('../../../config/admin');
+const logger = require('../../../utils/logger');
+const planService = require('../../../services/planService');
 
-async function handlePlanManagement(ctx) {
-  if (!ctx.state.isAdmin) return;
+const PLAN_CREATION_STEPS = [
+  {
+    key: 'name',
+    prompt: 'Enter the internal plan name (e.g. PNPtv Silver):',
+    transform: (value) => value.trim(),
+    validate: (value) => value.length >= 3,
+    errorMessage: 'Name must be at least 3 characters.'
+  },
+  {
+    key: 'displayName',
+    prompt: 'Enter the display name shown to users (or type "skip"): ',
+    optional: true,
+    transform: (value) => value.trim(),
+  },
+  {
+    key: 'tier',
+    prompt: 'Enter the tier (e.g. Free, Silver, Golden):',
+    transform: (value) => value.trim(),
+    validate: (value) => value.length >= 3,
+    errorMessage: 'Tier must be provided (e.g. Silver).'
+  },
+  {
+    key: 'price',
+    prompt: 'Enter the price in USD:',
+    transform: (value) => parseFloat(value.replace(',', '.')),
+    validate: (value) => Number.isFinite(value) && value >= 0,
+    errorMessage: 'Please enter a valid number for the USD price.'
+  },
+  {
+    key: 'priceInCOP',
+    prompt: 'Enter the price in COP (or type "skip" to auto-calculate):',
+    optional: true,
+    transform: (value) => {
+      const trimmed = value.trim();
+      if (!trimmed || trimmed.toLowerCase() === 'skip') {
+        return undefined;
+      }
+      const parsed = parseInt(trimmed.replace(/[^0-9.]/g, ''), 10);
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        throw new Error('Please enter a valid numeric COP amount or "skip".');
+      }
+      return parsed;
+    },
+  },
+  {
+    key: 'currency',
+    prompt: 'Enter the currency code (default USD, type "skip" to use USD):',
+    optional: true,
+    transform: (value) => {
+      const trimmed = value.trim();
+      if (!trimmed || trimmed.toLowerCase() === 'skip') {
+        return 'USD';
+      }
+      return trimmed.toUpperCase();
+    },
+  },
+  {
+    key: 'duration',
+    prompt: 'Enter the duration in days:',
+    transform: (value) => parseInt(value, 10),
+    validate: (value) => Number.isInteger(value) && value > 0,
+    errorMessage: 'Duration must be a positive integer.'
+  },
+  {
+    key: 'description',
+    prompt: 'Enter a short description (or type "skip"): ',
+    optional: true,
+    transform: (value) => value.trim(),
+  },
+  {
+    key: 'features',
+    prompt: 'Enter the plan features, one per line. Send all features in a single message.',
+    transform: (value) => value.split(/\r?\n+/).map((item) => item.trim()).filter(Boolean),
+    validate: (value) => Array.isArray(value) && value.length > 0,
+    errorMessage: 'Please provide at least one feature.'
+  },
+  {
+    key: 'icon',
+    prompt: 'Enter an emoji/icon for the plan (or type "skip"): ',
+    optional: true,
+    transform: (value) => value.trim(),
+  },
+  {
+    key: 'cryptoBonus',
+    prompt: 'Enter a crypto bonus description (or type "skip"): ',
+    optional: true,
+    transform: (value) => value.trim(),
+  },
+  {
+    key: 'recommended',
+    prompt: 'Should this plan be recommended? (yes/no, default no):',
+    optional: true,
+    transform: (value) => {
+      const normalized = value.trim().toLowerCase();
+      if (!normalized || normalized === 'skip') {
+        return false;
+      }
+      if (['yes', 'y', 'true', '1'].includes(normalized)) {
+        return true;
+      }
+      if (['no', 'n', 'false', '0'].includes(normalized)) {
+        return false;
+      }
+      throw new Error('Please reply with yes or no.');
+    },
+  },
+];
 
-  return ctx.reply(
-    "💎 Plan Management:",
-    Markup.inlineKeyboard([
-      [Markup.button.callback("➕ Create Plan", "create_plan")],
-      [Markup.button.callback("📋 List Plans", "list_plans")],
-      [Markup.button.callback("✏️ Edit Plan", "edit_plan")],
-      [Markup.button.callback("❌ Delete Plan", "delete_plan")],
-    ])
-  );
+const PLAN_EDIT_FIELDS = {
+  name: {
+    label: 'Plan name',
+    transform: (value) => value.trim(),
+    validate: (value) => value.length >= 3,
+    prepare: (value) => ({ name: value }),
+    errorMessage: 'Name must be at least 3 characters.'
+  },
+  displayName: {
+    label: 'Display name',
+    transform: (value) => value.trim(),
+    validate: (value) => value.length >= 1,
+    prepare: (value) => ({ displayName: value }),
+    errorMessage: 'Display name cannot be empty.'
+  },
+  price: {
+    label: 'Price (USD)',
+    transform: (value) => parseFloat(value.replace(',', '.')),
+    validate: (value) => Number.isFinite(value) && value >= 0,
+    prepare: (value) => ({ price: value }),
+    errorMessage: 'Provide a valid non-negative number.'
+  },
+  priceInCOP: {
+    label: 'Price (COP)',
+    optional: true,
+    transform: (value) => {
+      const trimmed = value.trim();
+      if (!trimmed || trimmed.toLowerCase() === 'skip') {
+        return undefined;
+      }
+      const parsed = parseInt(trimmed.replace(/[^0-9.]/g, ''), 10);
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        throw new Error('Please enter a numeric COP amount or "skip".');
+      }
+      return parsed;
+    },
+    validate: () => true,
+    prepare: (value) => ({ priceInCOP: value }),
+  },
+  duration: {
+    label: 'Duration (days)',
+    transform: (value) => parseInt(value, 10),
+    validate: (value) => Number.isInteger(value) && value > 0,
+    prepare: (value) => ({ duration: value, durationDays: value }),
+    errorMessage: 'Duration must be a positive integer.'
+  },
+  tier: {
+    label: 'Tier',
+    transform: (value) => value.trim(),
+    validate: (value) => value.length >= 3,
+    prepare: (value) => ({ tier: value }),
+    errorMessage: 'Tier must be at least 3 characters.'
+  },
+  description: {
+    label: 'Description',
+    optional: true,
+    transform: (value) => value.trim(),
+    validate: () => true,
+    prepare: (value) => ({ description: value || '' }),
+  },
+  features: {
+    label: 'Features',
+    transform: (value) => value.split(/\r?\n+/).map((item) => item.trim()).filter(Boolean),
+    validate: (value) => Array.isArray(value) && value.length > 0,
+    prepare: (value) => ({ features: value }),
+    errorMessage: 'Provide at least one feature (one per line).'
+  },
+  icon: {
+    label: 'Icon/emoji',
+    optional: true,
+    transform: (value) => value.trim(),
+    validate: () => true,
+    prepare: (value) => ({ icon: value || '💎' }),
+  },
+  cryptoBonus: {
+    label: 'Crypto bonus',
+    optional: true,
+    transform: (value) => value.trim(),
+    validate: () => true,
+    prepare: (value) => ({ cryptoBonus: value || null }),
+  },
+  currency: {
+    label: 'Currency code',
+    optional: true,
+    transform: (value) => {
+      const trimmed = value.trim();
+      if (!trimmed || trimmed.toLowerCase() === 'skip') {
+        return undefined;
+      }
+      return trimmed.toUpperCase();
+    },
+    validate: () => true,
+    prepare: (value) => ({ currency: value }),
+  },
+  recommended: {
+    label: 'Recommended (yes/no)',
+    optional: true,
+    transform: (value) => {
+      const normalized = value.trim().toLowerCase();
+      if (!normalized || normalized === 'skip') {
+        return undefined;
+      }
+      if (['yes', 'y', 'true', '1'].includes(normalized)) {
+        return true;
+      }
+      if (['no', 'n', 'false', '0'].includes(normalized)) {
+        return false;
+      }
+      throw new Error('Reply with yes or no.');
+    },
+    validate: () => true,
+    prepare: (value) => ({ recommended: value }),
+  },
+};
+
+function formatCurrency(value, currency = 'USD') {
+  if (!Number.isFinite(value)) {
+    return '-';
+  }
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch (error) {
+    return `${value}`;
+  }
 }
 
-async function startPlanCreation(ctx) {
-  ctx.scene.enter("createPlanWizard");
+function formatPlanSummary(plan) {
+  const parts = [];
+  const name = plan.displayName || plan.name || 'Unnamed plan';
+  const icon = plan.icon || '💎';
+  const priceLabel = formatCurrency(plan.price, plan.currency || 'USD');
+  parts.push(`${icon} ${name}`);
+  parts.push(`• Tier: ${plan.tier || 'n/a'}`);
+  parts.push(`• Price: ${priceLabel}`);
+  if (Number.isFinite(plan.priceInCOP)) {
+    parts.push(`• Price (COP): ${plan.priceInCOP.toLocaleString('es-CO')}`);
+  }
+  if (plan.duration) {
+    parts.push(`• Duration: ${plan.duration} days`);
+  }
+  parts.push(`• Status: ${plan.active === false ? 'inactive' : 'active'}`);
+  if (plan.recommended) {
+    parts.push('• Recommended: Yes');
+  }
+  return parts.join('\n');
 }
 
-async function listPlans(ctx) {
-  const plans = await planService.getActivePlans();
-  const message = plans
-    .map((p) => `📌 ${p.name}\n💰 $${p.price}\n⏱️ ${p.duration} days\n`)
-    .join("\n");
-
-  return ctx.editMessageText(message || "No plans found");
+function ensureAdmin(ctx) {
+  if (ctx.state?.isAdmin || isAdmin(ctx.from?.id)) {
+    return true;
+  }
+  if (ctx.answerCbQuery) {
+    ctx.answerCbQuery('Not authorized', { show_alert: true }).catch(() => {});
+  }
+  return false;
 }
 
-async function handleEditPlan(ctx) {
-  ctx.scene.enter("editPlanWizard");
+async function showPlanDashboard(ctx, options = {}) {
+  const replace = options.replace || false;
+
+  if (!ensureAdmin(ctx)) {
+    return;
+  }
+
+  const plans = await planService.getAllPlans();
+  const textParts = ['💎 Plan Management'];
+
+  if (plans.length === 0) {
+    textParts.push('\n\nNo plans found. Tap "Create Plan" to add your first plan.');
+  } else {
+    textParts.push('\n');
+    plans
+      .sort((a, b) => (a.price || 0) - (b.price || 0))
+      .forEach((plan, index) => {
+        textParts.push(`\n${index + 1}. ${formatPlanSummary(plan)}`);
+      });
+  }
+
+  const buttons = [
+    [
+      Markup.button.callback('➕ Create Plan', 'plan:create'),
+      Markup.button.callback('🔄 Refresh', 'plan:refresh'),
+    ],
+  ];
+
+  plans.forEach((plan) => {
+    const label = `${plan.icon || '📋'} ${plan.displayName || plan.name || 'Plan'}`;
+    buttons.push([Markup.button.callback(label, `plan:view:${plan.id}`)]);
+  });
+
+  const keyboard = Markup.inlineKeyboard(buttons);
+  const message = textParts.join('\n');
+
+  if (replace && ctx.updateType === 'callback_query') {
+    try {
+      await ctx.editMessageText(message, {
+        reply_markup: keyboard.reply_markup,
+      });
+    } catch (error) {
+      if (error.description && error.description.includes('message is not modified')) {
+        // ignore
+      } else {
+        await ctx.reply(message, keyboard);
+      }
+    }
+    await ctx.answerCbQuery().catch(() => {});
+  } else {
+    await ctx.reply(message, keyboard);
+  }
 }
 
-async function handleDeletePlan(ctx) {
-  const plans = await planService.getActivePlans();
-  const buttons = plans.map((p) => [
-    Markup.button.callback(`❌ ${p.name}`, `confirm_delete:${p.id}`),
-  ]);
+async function showPlanDetails(ctx, planId, options = {}) {
+  const replace = options.replace !== undefined ? options.replace : true;
 
-  return ctx.editMessageText(
-    "Select plan to delete:",
-    Markup.inlineKeyboard([
-      ...buttons,
-      [Markup.button.callback("Cancel", "cancel_delete")],
-    ])
-  );
+  if (!ensureAdmin(ctx)) {
+    return;
+  }
+
+  const plan = await planService.getPlanById(planId);
+  if (!plan) {
+    if (ctx.answerCbQuery) {
+      await ctx.answerCbQuery('Plan not found', { show_alert: true }).catch(() => {});
+    }
+    await showPlanDashboard(ctx, { replace: true });
+    return;
+  }
+
+  const lines = [];
+  lines.push(`${plan.icon || '💎'} ${plan.displayName || plan.name || 'Plan'}`);
+  lines.push(`ID: ${plan.id}`);
+  lines.push(`Tier: ${plan.tier || 'n/a'}`);
+  lines.push(`Price: ${formatCurrency(plan.price, plan.currency || 'USD')}`);
+  if (Number.isFinite(plan.priceInCOP)) {
+    lines.push(`Price (COP): ${plan.priceInCOP.toLocaleString('es-CO')}`);
+  }
+  if (plan.duration) {
+    lines.push(`Duration: ${plan.duration} days`);
+  }
+  lines.push(`Status: ${plan.active === false ? 'Inactive' : 'Active'}`);
+  lines.push(`Recommended: ${plan.recommended ? 'Yes' : 'No'}`);
+  lines.push(`Description: ${plan.description || '—'}`);
+
+  if (Array.isArray(plan.features) && plan.features.length > 0) {
+    lines.push('\nFeatures:');
+    plan.features.forEach((feature) => {
+      lines.push(` • ${feature}`);
+    });
+  } else {
+    lines.push('\nFeatures: (none)');
+  }
+
+  if (plan.cryptoBonus) {
+    lines.push(`\nCrypto bonus: ${plan.cryptoBonus}`);
+  }
+
+  const isEditable = Boolean(plan.createdAt);
+
+  const buttons = [];
+  if (isEditable) {
+    buttons.push([Markup.button.callback('✏️ Edit', `plan:edit:${plan.id}`)]);
+    if (plan.active === false) {
+      buttons.push([Markup.button.callback('♻️ Activate', `plan:toggle:${plan.id}:activate`)]);
+    } else {
+      buttons.push([Markup.button.callback('🗑️ Archive', `plan:toggle:${plan.id}:archive`)]);
+    }
+  } else {
+    buttons.push([Markup.button.callback('ℹ️ Read-only plan', 'plan:refresh')]);
+  }
+
+  buttons.push([Markup.button.callback('⬅️ Back to Plans', 'plan:refresh')]);
+
+  const keyboard = Markup.inlineKeyboard(buttons);
+  const message = lines.join('\n');
+
+  if (replace && ctx.updateType === 'callback_query') {
+    try {
+      await ctx.editMessageText(message, { reply_markup: keyboard.reply_markup });
+    } catch (error) {
+      await ctx.reply(message, keyboard);
+    }
+    await ctx.answerCbQuery().catch(() => {});
+  } else {
+    await ctx.reply(message, keyboard);
+  }
 }
 
-async function confirmDeletePlan(ctx) {
-  const planId = ctx.callbackQuery.data.split(":")[1];
-  await planService.deletePlan(planId);
-  return ctx.editMessageText("✅ Plan deleted successfully");
+function promptCreationStep(ctx) {
+  const state = ctx.session.planCreation;
+  const step = PLAN_CREATION_STEPS[state.stepIndex];
+  if (!step) {
+    return;
+  }
+  let prompt = step.prompt;
+  prompt += '\n\nSend "cancel" to abort.';
+  if (step.optional) {
+    prompt += ' Send "skip" to leave this field blank.';
+  }
+  ctx.reply(prompt);
+}
+
+async function startPlanCreationFlow(ctx) {
+  if (!ensureAdmin(ctx)) {
+    return;
+  }
+
+  ctx.session.planCreation = {
+    stepIndex: 0,
+    data: {},
+  };
+
+  await ctx.answerCbQuery().catch(() => {});
+  await ctx.reply('Let\'s create a new subscription plan. You can type "cancel" at any time to stop.');
+  promptCreationStep(ctx);
+}
+
+async function handlePlanCreationResponse(ctx, text) {
+  const state = ctx.session.planCreation;
+  if (!state) {
+    return false;
+  }
+
+  const step = PLAN_CREATION_STEPS[state.stepIndex];
+  if (!step) {
+    ctx.session.planCreation = null;
+    return false;
+  }
+
+  const lower = text.trim().toLowerCase();
+  if (lower === 'cancel') {
+    ctx.session.planCreation = null;
+    await ctx.reply('Plan creation cancelled.');
+    await showPlanDashboard(ctx);
+    return true;
+  }
+
+  let value;
+  try {
+    if (step.optional && lower === 'skip') {
+      value = undefined;
+    } else if (step.transform) {
+      value = step.transform(text);
+    } else {
+      value = text.trim();
+    }
+  } catch (error) {
+    await ctx.reply(error.message || 'Invalid value. Please try again.');
+    return true;
+  }
+
+  if (step.validate && !(step.optional && value === undefined)) {
+    try {
+      const isValid = step.validate(value);
+      if (!isValid) {
+        await ctx.reply(step.errorMessage || 'Invalid value. Please try again.');
+        return true;
+      }
+    } catch (error) {
+      await ctx.reply(step.errorMessage || error.message || 'Invalid value. Please try again.');
+      return true;
+    }
+  }
+
+  if (value !== undefined) {
+    state.data[step.key] = value;
+  }
+
+  state.stepIndex += 1;
+
+  if (state.stepIndex >= PLAN_CREATION_STEPS.length) {
+    try {
+      const payload = {
+        name: state.data.name,
+        displayName: state.data.displayName || state.data.name,
+        tier: state.data.tier,
+        price: state.data.price,
+        priceInCOP: state.data.priceInCOP,
+        currency: state.data.currency || 'USD',
+        duration: state.data.duration,
+        features: state.data.features,
+        description: state.data.description || '',
+        icon: state.data.icon || '💎',
+        cryptoBonus: state.data.cryptoBonus || null,
+        recommended: Boolean(state.data.recommended),
+      };
+
+      const newPlan = await planService.createPlan(payload);
+      ctx.session.planCreation = null;
+      await ctx.reply(`✅ Plan "${newPlan.displayName || newPlan.name}" created successfully.`);
+      await showPlanDashboard(ctx, { replace: false });
+    } catch (error) {
+      logger.error('Error creating plan:', error);
+      await ctx.reply(`❌ Failed to create plan: ${error.message}`);
+      ctx.session.planCreation = null;
+    }
+    return true;
+  }
+
+  promptCreationStep(ctx);
+  return true;
+}
+
+async function handlePlanEditResponse(ctx, text) {
+  const state = ctx.session.planEdit;
+  if (!state) {
+    return false;
+  }
+
+  const lower = text.trim().toLowerCase();
+  if (lower === 'cancel') {
+    ctx.session.planEdit = null;
+    await ctx.reply('Plan update cancelled.');
+    await showPlanDetails(ctx, state.planId);
+    return true;
+  }
+
+  const fieldConfig = PLAN_EDIT_FIELDS[state.field];
+  if (!fieldConfig) {
+    ctx.session.planEdit = null;
+    await ctx.reply('Invalid field.');
+    return false;
+  }
+
+  let value;
+  try {
+    if (fieldConfig.optional && lower === 'skip') {
+      value = undefined;
+    } else if (fieldConfig.transform) {
+      value = fieldConfig.transform(text);
+    } else {
+      value = text.trim();
+    }
+  } catch (error) {
+    await ctx.reply(error.message || 'Invalid value. Please try again.');
+    return true;
+  }
+
+  if (fieldConfig.validate && !(fieldConfig.optional && value === undefined)) {
+    try {
+      const isValid = fieldConfig.validate(value);
+      if (!isValid) {
+        await ctx.reply(fieldConfig.errorMessage || 'Invalid value. Please try again.');
+        return true;
+      }
+    } catch (error) {
+      await ctx.reply(fieldConfig.errorMessage || error.message || 'Invalid value. Please try again.');
+      return true;
+    }
+  }
+
+  try {
+    const updates = value !== undefined ? fieldConfig.prepare(value) : {};
+    await planService.updatePlan(state.planId, updates);
+    ctx.session.planEdit = null;
+    await ctx.reply('✅ Plan updated successfully.');
+    await showPlanDetails(ctx, state.planId, { replace: false });
+  } catch (error) {
+    logger.error('Error updating plan:', error);
+    await ctx.reply(`❌ Failed to update plan: ${error.message}`);
+    ctx.session.planEdit = null;
+  }
+
+  return true;
+}
+
+async function handlePlanCallback(ctx) {
+  if (!ensureAdmin(ctx)) {
+    return;
+  }
+
+  const data = ctx.callbackQuery?.data || '';
+  const parts = data.split(':');
+
+  try {
+    if (data === 'plan:refresh') {
+      await showPlanDashboard(ctx, { replace: true });
+      return;
+    }
+
+    if (data === 'plan:create') {
+      await startPlanCreationFlow(ctx);
+      return;
+    }
+
+    if (parts[0] === 'plan' && parts[1] === 'view' && parts[2]) {
+      await showPlanDetails(ctx, parts[2]);
+      return;
+    }
+
+    if (parts[0] === 'plan' && parts[1] === 'edit' && parts[2]) {
+      await showPlanEditMenu(ctx, parts[2]);
+      await ctx.answerCbQuery().catch(() => {});
+      return;
+    }
+
+    if (parts[0] === 'plan' && parts[1] === 'editField' && parts[2] && parts[3]) {
+      await startPlanEditField(ctx, parts[2], parts[3]);
+      await ctx.answerCbQuery().catch(() => {});
+      return;
+    }
+
+    if (parts[0] === 'plan' && parts[1] === 'toggle' && parts[2] && parts[3]) {
+      const planId = parts[2];
+      const action = parts[3];
+      const active = action === 'activate';
+      await planService.updatePlan(planId, { active });
+      await ctx.answerCbQuery(`Plan ${active ? 'activated' : 'archived'} successfully`).catch(() => {});
+      await showPlanDetails(ctx, planId, { replace: true });
+      return;
+    }
+
+    if (parts[0] === 'plan' && parts[1] === 'deleteConfirm' && parts[2]) {
+      await planService.updatePlan(parts[2], { active: false });
+      await ctx.answerCbQuery('Plan archived successfully').catch(() => {});
+      await showPlanDashboard(ctx, { replace: true });
+      return;
+    }
+
+    await ctx.answerCbQuery('Unknown action').catch(() => {});
+  } catch (error) {
+    logger.error('Plan callback error:', error);
+    await ctx.answerCbQuery('Error handling plan action', { show_alert: true }).catch(() => {});
+    await ctx.reply(`❌ ${error.message || 'An error occurred.'}`);
+  }
+}
+
+async function handlePlanTextResponse(ctx) {
+  if (ctx.session?.planCreation) {
+    return await handlePlanCreationResponse(ctx, ctx.message.text);
+  }
+  if (ctx.session?.planEdit) {
+    return await handlePlanEditResponse(ctx, ctx.message.text);
+  }
+  return false;
+}
+
+async function showPlanEditMenu(ctx, planId) {
+  const plan = await planService.getPlanById(planId);
+  if (!plan) {
+    await ctx.reply('Plan not found.');
+    await showPlanDashboard(ctx, { replace: true });
+    return;
+  }
+
+  const isEditable = Boolean(plan.createdAt);
+  if (!isEditable) {
+    await ctx.reply('This plan is read-only. You can create a new plan to customize tiers.');
+    await showPlanDashboard(ctx, { replace: true });
+    return;
+  }
+
+  const buttons = [
+    [
+      Markup.button.callback('Name', `plan:editField:${planId}:name`),
+      Markup.button.callback('Display name', `plan:editField:${planId}:displayName`),
+    ],
+    [
+      Markup.button.callback('Tier', `plan:editField:${planId}:tier`),
+      Markup.button.callback('Duration', `plan:editField:${planId}:duration`),
+    ],
+    [
+      Markup.button.callback('Price (USD)', `plan:editField:${planId}:price`),
+      Markup.button.callback('Price (COP)', `plan:editField:${planId}:priceInCOP`),
+    ],
+    [
+      Markup.button.callback('Currency', `plan:editField:${planId}:currency`),
+      Markup.button.callback('Recommended', `plan:editField:${planId}:recommended`),
+    ],
+    [
+      Markup.button.callback('Description', `plan:editField:${planId}:description`),
+      Markup.button.callback('Features', `plan:editField:${planId}:features`),
+    ],
+    [
+      Markup.button.callback('Icon', `plan:editField:${planId}:icon`),
+      Markup.button.callback('Crypto bonus', `plan:editField:${planId}:cryptoBonus`),
+    ],
+    [Markup.button.callback('⬅️ Back', `plan:view:${planId}`)],
+  ];
+
+  await ctx.editMessageText('Select the field you want to modify:', {
+    reply_markup: Markup.inlineKeyboard(buttons).reply_markup,
+  });
+}
+
+async function startPlanEditField(ctx, planId, field) {
+  const fieldConfig = PLAN_EDIT_FIELDS[field];
+  if (!fieldConfig) {
+    await ctx.reply('This field is not editable.');
+    return;
+  }
+
+  ctx.session.planEdit = {
+    planId,
+    field,
+  };
+
+  let prompt = `Send the new value for ${fieldConfig.label}.`;
+  prompt += '\nType "cancel" to abort.';
+  if (fieldConfig.optional) {
+    prompt += '\nType "skip" to leave unchanged.';
+  }
+
+  await ctx.reply(prompt);
 }
 
 module.exports = {
-  handlePlanManagement,
-  startPlanCreation,
-  listPlans,
-  handleEditPlan,
-  handleDeletePlan,
-  confirmDeletePlan,
+  showPlanDashboard,
+  handlePlanCallback,
+  handlePlanTextResponse,
 };

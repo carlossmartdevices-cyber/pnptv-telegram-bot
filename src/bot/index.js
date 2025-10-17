@@ -1,6 +1,5 @@
 require("../config/env");
-const Telegraf = require("telegraf");
-const Stage = require("telegraf/stage");
+const { Telegraf } = require('telegraf');
 const { db } = require("../config/firebase");
 const { t } = require("../utils/i18n");
 const logger = require("../utils/logger");
@@ -9,9 +8,12 @@ const { ensureOnboarding } = require("../utils/guards");
 const { isAdmin, adminMiddleware } = require("../config/admin");
 const { getMenu } = require("../config/menus");
 const { prepareTextLocationUpdate } = require("../services/profileService");
-const createPlanWizard = require("./scenes/createPlanWizard");
-const editPlanWizard = require("./scenes/editPlanWizard");
 
+const {
+  showPlanDashboard,
+  handlePlanCallback,
+  handlePlanTextResponse,
+} = require('./handlers/admin/planManager');
 // Middleware
 const session = require("./middleware/session");
 const rateLimitMiddleware = require("./middleware/rateLimit");
@@ -49,22 +51,12 @@ const {
 } = require("./handlers/admin");
 const { handleMapCallback, handleLocation } = require("./handlers/map");
 const { handleLiveCallback } = require("./handlers/live");
-const {
-  handlePlanManagement,
-  startPlanCreation,
-  listPlans,
-  handleEditPlan,
-  handleDeletePlan,
-  confirmDeletePlan,
-} = require("./handlers/admin/planManager");
 
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
 
 // Add scenes
-const stage = new Stage([createPlanWizard, editPlanWizard]);
-bot.use(session.middleware()); // Ensure session runs before stage
-bot.use(stage.middleware());
+bot.use(session.middleware()); // Ensure session runs before other middleware
 
 // Apply middleware
 bot.use(rateLimitMiddleware());
@@ -81,7 +73,9 @@ bot.command("app", appHandler);
 bot.command("profile", viewProfile);
 bot.command("subscribe", subscribeHandler);
 bot.command("admin", adminMiddleware(), adminPanel);
-bot.command("plans", handlePlanManagement);
+bot.command("plans", adminMiddleware(), async (ctx) => {
+  await showPlanDashboard(ctx);
+});
 
 // ===== ONBOARDING FLOW =====
 bot.action(/language_(.+)/, onboardingHelpers.handleLanguageSelection);
@@ -147,6 +141,7 @@ bot.action("edit_photo", handleEditPhoto);
 
 // ===== ADMIN CALLBACKS =====
 
+bot.action(/^plan:/, handlePlanCallback);
 bot.action(/^admin_/, handleAdminCallback);
 
 // ===== MAP CALLBACKS =====
@@ -182,6 +177,9 @@ bot.action("back_to_main", async (ctx) => {
 // ===== PHOTO MESSAGE HANDLER =====bot.on("photo", handlePhotoMessage);
 bot.on("text", async (ctx) => {
   try {
+    if (await handlePlanTextResponse(ctx)) {
+      return;
+    }
     // Check onboarding
     if (!ctx.session?.onboardingComplete) {
       const lang = ctx.session?.language || "en";
@@ -390,11 +388,6 @@ bot.on("text", async (ctx) => {
 bot.on("location", handleLocation);
 
 // Add action handlers
-bot.action("create_plan", startPlanCreation);
-bot.action("list_plans", listPlans);
-bot.action("edit_plan", handleEditPlan);
-bot.action("delete_plan", handleDeletePlan);
-bot.action(/^confirm_delete:/, confirmDeletePlan);
 bot.action("cancel_delete", (ctx) =>
   ctx.editMessageText("Operation cancelled")
 );

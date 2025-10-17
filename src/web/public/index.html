@@ -13,9 +13,24 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <title>PNPtv Mini App</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="styles.css?v=2.0.1" />
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script
+      src="https://telegram.org/js/telegram-web-app.js"
+      onerror="console.error('Failed to load Telegram WebApp script')"
+    ></script>
+    <script>
+      // Fallback if Telegram WebApp fails to load
+      if (!window.Telegram) {
+        window.Telegram = { WebApp: null };
+        console.warn(
+          "Telegram WebApp not available - running in standalone mode"
+        );
+      }
+    </script>
+    <link rel="stylesheet" href="styles.css?v=2.0.2" />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="app">
@@ -169,17 +184,24 @@
           <section class="posts-section">
             <div class="section-header">
               <h3>My Posts</h3>
-              <button id="refresh-posts-btn" class="btn btn-secondary btn-compact">
+              <button
+                id="refresh-posts-btn"
+                class="btn btn-secondary btn-compact"
+              >
                 Refresh
               </button>
             </div>
             <div id="posts-feedback" class="posts-feedback hidden"></div>
             <div id="user-posts-list" class="posts-list">
               <p class="posts-empty">
-                You haven't shared any posts yet. Tap the button below to create your first one.
+                You haven't shared any posts yet. Tap the button below to create
+                your first one.
               </p>
             </div>
-            <button id="load-more-posts-btn" class="btn btn-secondary posts-load-more hidden">
+            <button
+              id="load-more-posts-btn"
+              class="btn btn-secondary posts-load-more hidden"
+            >
               Load More
             </button>
           </section>
@@ -304,6 +326,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=2.0.1"></script>
+    <script src="app.js?v=2.0.2" async defer></script>
   </body>
 </html>

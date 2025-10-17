@@ -1571,48 +1571,61 @@ async function loadPublicConfig() {
 
 // Modify bootstrap function to always check if we're in Telegram
 async function bootstrap() {
-  console.log('Bootstrap starting, in Telegram:', !!tg); // Debug log
-  await loadPublicConfig();
+  console.log('Starting bootstrap process...');
+  console.log('Telegram WebApp available:', !!tg);
+  console.log('Has Telegram user:', hasTelegramUser);
+  console.log('Is Demo Mode:', isDemoMode);
 
-  // Show welcome if not in Telegram
-  if (!tg || !hasTelegramUser) {
-    console.log('Not in Telegram, showing welcome'); // Debug log
-    showWelcomeOverlay();
-    return;
-  }
+  const loadingScreen = document.getElementById('loading');
 
-  await initApp();
-  registerTelegramBackButtonHandlers();
-}
+  try {
+    await loadPublicConfig();
+    console.log('Public config loaded:', publicConfig);
 
-function registerTelegramBackButtonHandlers() {
-  if (!tg || !tg.BackButton) {
-    return;
-  }
-
-  tg.BackButton.onClick(() => {
-    if (currentPage !== "profile") {
-      showPage("profile");
-      document.querySelectorAll(".nav-btn").forEach((btn) => {
-        btn.classList.toggle("active", btn.dataset.page === "profile");
-      });
-    } else if (typeof tg.close === "function") {
-      tg.close();
-    } else {
-      window.close();
+    if (isDemoMode) {
+      console.log('Running in demo mode');
+      await initApp();
+      registerTelegramBackButtonHandlers();
+      return;
     }
-  });
 
-  if (typeof tg.onEvent === "function") {
-    tg.onEvent("viewportChanged", () => {
-      if (currentPage !== "profile") {
-        tg.BackButton.show();
-      } else {
-        tg.BackButton.hide();
-      }
-    });
+    if (tg && hasTelegramUser) {
+      console.log('Running in Telegram with user');
+      await initApp();
+      registerTelegramBackButtonHandlers();
+    } else {
+      console.log('Running outside Telegram, showing welcome');
+      hideLoadingScreen();
+      showWelcomeOverlay();
+    }
+  } catch (error) {
+    console.error('Bootstrap error:', error);
+    showError('Failed to initialize app. Please refresh the page.');
+    hideLoadingScreen();
+  } finally {
+    if (loadingScreen) {
+      loadingScreen.classList.remove('active');
+      loadingScreen.classList.add('hidden');
+    }
   }
 }
+
+function hideLoadingScreen() {
+  const loadingScreen = document.getElementById('loading');
+  if (loadingScreen) {
+    loadingScreen.classList.remove('active');
+    loadingScreen.classList.add('hidden');
+  }
+}
+
+// Ensure DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM loaded, starting app...');
+  bootstrap().catch(error => {
+    console.error('Critical error:', error);
+    showError('Failed to start app. Please refresh the page.');
+  });
+});
 
 function initPostComposer() {
   if (postComposerInitialized) {
@@ -1805,8 +1818,7 @@ function handleMediaChange(event) {
   renderMediaPreview();
 
   if (warnings.length > 0) {
-    showAlert(warnings.join('
-'));
+    showAlert(warnings.join('\n'));
   }
 }
 

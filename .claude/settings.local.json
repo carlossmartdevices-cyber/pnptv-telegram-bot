@@ -29,7 +29,13 @@
       "Bash(heroku whoami:*)",
       "Bash(sed:*)",
       "Bash(git checkout:*)",
-      "Bash(npm run dev)"
+      "Bash(npm run dev)",
+      "Bash(Get-Content \"c:\\Users\\carlo\\Documents\\Bots\\src\\bot\\handlers\\admin\\planManager.js\")",
+      "Bash(Select-Object -First 50)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(tasklist:*)"
     ],
     "deny": [],
     "ask": []

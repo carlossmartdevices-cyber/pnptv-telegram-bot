@@ -2,6 +2,7 @@ const { db } = require("../../config/firebase");
 const { t } = require("../../utils/i18n");
 const logger = require("../../utils/logger");
 const { getMenu } = require("../../config/menus");
+const { showPlanDashboard } = require('./admin/planManager');
 const { activateMembership, getExpiringMemberships } = require("../../utils/membershipManager");
 const { runManualExpirationCheck } = require("../../services/scheduler");
 
@@ -2026,93 +2027,14 @@ async function executeModifyExpiration(ctx, userId, dateInput) {
  */
 async function managePlans(ctx) {
   try {
-    const lang = ctx.session.language || "en";
-    const plans = require("../../config/plans");
-
-    // Get subscription statistics
-    const silverCount = await db.collection("users").where("tier", "==", "Silver").get();
-    const goldenCount = await db.collection("users").where("tier", "==", "Golden").get();
-
-    let message = lang === "es"
-      ? "💰 **Gestión de Planes**\n\n"
-      : "💰 **Plan Management**\n\n";
-
-    message += lang === "es" ? "📋 **Planes Actuales:**\n\n" : "📋 **Current Plans:**\n\n";
-
-    // Silver Plan
-    message += `🥈 **Silver**\n`;
-    message += `💵 Precio: $${plans.SILVER.price} USD / ${plans.SILVER.priceInCOP.toLocaleString()} COP\n`;
-    message += `⏱️ Duración: ${plans.SILVER.duration} días\n`;
-    message += `👥 Suscriptores: ${silverCount.size}\n`;
-    message += `📊 Ingresos/mes: $${silverCount.size * plans.SILVER.price}\n\n`;
-
-    // Golden Plan
-    message += `🥇 **Golden**\n`;
-    message += `💵 Precio: $${plans.GOLDEN.price} USD / ${plans.GOLDEN.priceInCOP.toLocaleString()} COP\n`;
-    message += `⏱️ Duración: ${plans.GOLDEN.duration} días\n`;
-    message += `💎 Bonus: ${plans.GOLDEN.cryptoBonus}\n`;
-    message += `👥 Suscriptores: ${goldenCount.size}\n`;
-    message += `📊 Ingresos/mes: $${goldenCount.size * plans.GOLDEN.price}\n\n`;
-
-    // Total revenue
-    const totalRevenue = (silverCount.size * plans.SILVER.price) + (goldenCount.size * plans.GOLDEN.price);
-    message += lang === "es"
-      ? `💰 **Ingresos Totales/mes:** $${totalRevenue}\n`
-      : `💰 **Total Revenue/month:** $${totalRevenue}\n`;
-    message += lang === "es"
-      ? `📈 **Ingresos Anuales:** $${totalRevenue * 12}\n\n`
-      : `📈 **Annual Revenue:** $${totalRevenue * 12}\n\n`;
-
-    message += lang === "es"
-      ? "Selecciona una opción:"
-      : "Select an option:";
-
-    await ctx.reply(message, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: lang === "es" ? "🥈 Ver Silver" : "🥈 View Silver",
-              callback_data: "admin_plan_view_silver",
-            },
-            {
-              text: lang === "es" ? "🥇 Ver Golden" : "🥇 View Golden",
-              callback_data: "admin_plan_view_golden",
-            },
-          ],
-          [
-            {
-              text: lang === "es" ? "✏️ Editar Silver" : "✏️ Edit Silver",
-              callback_data: "admin_plan_edit_silver",
-            },
-            {
-              text: lang === "es" ? "✏️ Editar Golden" : "✏️ Edit Golden",
-              callback_data: "admin_plan_edit_golden",
-            },
-          ],
-          [
-            {
-              text: lang === "es" ? "📊 Estadísticas" : "📊 Statistics",
-              callback_data: "admin_plan_stats",
-            },
-          ],
-          [
-            {
-              text: lang === "es" ? "« Volver" : "« Back",
-              callback_data: "admin_back",
-            },
-          ],
-        ],
-      },
-    });
-
-    logger.info(`Admin ${ctx.from.id} viewed plan management`);
+    await showPlanDashboard(ctx);
+    logger.info(`Admin ${ctx.from.id} opened plan management`);
   } catch (error) {
-    logger.error("Error in plan management:", error);
-    await ctx.reply(t("error", ctx.session.language || "en"));
+    logger.error('Error in plan management:', error);
+    await ctx.reply(t('error', ctx.session.language || 'en'));
   }
 }
+
 
 /**
  * View plan details
