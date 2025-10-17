@@ -131,14 +131,31 @@ class PlanService {
    * Get active plans only
    */
   async getActivePlans() {
-    const snapshot = await this.plansCollection
-      .where("active", "==", true)
-      .orderBy("price", "asc")
-      .get();
+    try {
+      const snapshot = await this.plansCollection
+        .where("active", "==", true)
+        .orderBy("price", "asc")
+        .get();
 
-    if (snapshot.empty) {
-      // Return static plans from config if Firestore is empty
-      logger.info("No active plans in Firestore, returning static plans");
+      if (snapshot.empty) {
+        // Return static plans from config if Firestore is empty
+        logger.info("No active plans in Firestore, returning static plans");
+        return Object.entries(this.staticPlans)
+          .filter(([key]) => key === key.toUpperCase())
+          .map(([key, plan]) => ({
+            id: key.toLowerCase(),
+            ...plan,
+            active: true,
+          }));
+      }
+
+      return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+    } catch (error) {
+      // If index is missing or query fails, fall back to static plans
+      logger.warn("Failed to query Firestore plans (may need index), using static plans:", error.message);
       return Object.entries(this.staticPlans)
         .filter(([key]) => key === key.toUpperCase())
         .map(([key, plan]) => ({
@@ -147,11 +164,6 @@ class PlanService {
           active: true,
         }));
     }
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
   }
 
   /**
