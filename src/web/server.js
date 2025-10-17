@@ -21,11 +21,7 @@ const {
   prepareLocationUpdate,
 } = require("../services/profileService");
 const { getMembershipInfo } = require("../utils/membershipManager");
-const {
-  listPlans,
-  getPlanById,
-  getPlanBySlug,
-} = require("../services/planService");
+const planService = require("../services/planService");
 const epayco = require("../config/epayco");
 const {
   authenticateTelegramUser,
@@ -430,7 +426,7 @@ app.get("/api/live/streams", async (req, res) => {
 app.get(
   "/api/plans",
   asyncHandler(async (req, res) => {
-    const plans = await listPlans();
+    const plans = await planService.listPlans();
     res.json({
       success: true,
       plans,
@@ -469,8 +465,8 @@ app.post(
     }
 
     const plan =
-      (await getPlanById(planIdentifier)) ||
-      (await getPlanBySlug(String(planIdentifier).toLowerCase()));
+      (await planService.getPlanById(planIdentifier)) ||
+      (await planService.getPlanBySlug(String(planIdentifier).toLowerCase()));
 
     if (!plan) {
       return res.status(400).json({
@@ -539,7 +535,7 @@ app.get(
   "/debug/test-payment",
   asyncHandler(async (req, res) => {
     try {
-      const plans = await listPlans();
+      const plans = await planService.listPlans();
 
       if (!plans || plans.length === 0) {
         return res.status(400).json({
