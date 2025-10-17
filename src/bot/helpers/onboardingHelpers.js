@@ -10,6 +10,8 @@ const { getMenu } = require('../../config/menus');
 
 const ONBOARDING_REWARD_XP = 100;
 const ONBOARDING_BADGE = "Trailblazer";
+const AGE_VERIFICATION_INTERVAL_HOURS = 72;
+const AGE_VERIFICATION_INTERVAL_MS = AGE_VERIFICATION_INTERVAL_HOURS * 60 * 60 * 1000;
 
 /**
  * Handle language selection
@@ -21,6 +23,7 @@ async function handleLanguageSelection(ctx) {
 
     ctx.session.language = lang;
     ctx.session.onboardingStep = "ageVerification";
+    ctx.session.ageVerified = false;
 
     logger.info(`User ${ctx.from.id} selected language: ${lang}`);
 
@@ -46,6 +49,10 @@ async function handleAgeConfirmation(ctx) {
     const lang = ctx.session.language || "en";
     ctx.session.ageVerified = true;
     ctx.session.onboardingStep = "terms";
+    ctx.session.ageVerifiedAt = new Date();
+    ctx.session.ageVerificationExpiresAt = new Date(
+      ctx.session.ageVerifiedAt.getTime() + AGE_VERIFICATION_INTERVAL_MS
+    );
 
     logger.info(`User ${ctx.from.id} confirmed age`);
 
@@ -115,46 +122,81 @@ async function handlePrivacyAcceptance(ctx) {
   try {
     const lang = ctx.session.language || "en";
     const userId = ctx.from.id.toString();
+    const now = new Date();
 
     ctx.session.privacyAccepted = true;
-    ctx.session.onboardingComplete = true;
-    ctx.session.xp = ONBOARDING_REWARD_XP;
-    ctx.session.badges = [ONBOARDING_BADGE];
-    ctx.session.tier = "Free";
 
-    // Create user profile in database
     const userRef = db.collection("users").doc(userId);
-    await userRef.set(
-      {
-        userId,
-        username: ctx.from.username || "Anonymous",
-        language: lang,
-        ageVerified: true,
-        termsAccepted: true,
-        privacyAccepted: true,
-        onboardingComplete: true,
-        createdAt: new Date(),
-        lastActive: new Date(),
-        xp: ONBOARDING_REWARD_XP,
-        badges: [ONBOARDING_BADGE],
-        tier: "Free",
-      },
-      { merge: true }
-    );
+    const existingSnapshot = await userRef.get();
+    const existingData = existingSnapshot.exists ? existingSnapshot.data() : null;
+    const isNewUser = !existingData || !existingData.onboardingComplete;
+
+    const ageVerifiedAt = ctx.session.ageVerifiedAt || now;
+    const ageVerificationExpiresAt =
+      ctx.session.ageVerificationExpiresAt ||
+      new Date(ageVerifiedAt.getTime() + AGE_VERIFICATION_INTERVAL_MS);
+
+    const baseUpdate = {
+      userId,
+      username: ctx.from.username || existingData?.username || "Anonymous",
+      firstName: ctx.from.first_name || existingData?.firstName || null,
+      lastName: ctx.from.last_name || existingData?.lastName || null,
+      language: lang,
+      ageVerified: true,
+      ageVerifiedAt,
+      ageVerificationExpiresAt,
+      termsAccepted: true,
+      privacyAccepted: true,
+      onboardingComplete: true,
+      lastActive: now,
+      ageVerificationIntervalHours: AGE_VERIFICATION_INTERVAL_HOURS,
+    };
+
+    if (!existingData?.createdAt) {
+      baseUpdate.createdAt = now;
+    }
+
+    if (isNewUser) {
+      baseUpdate.xp = existingData?.xp ?? ONBOARDING_REWARD_XP;
+      baseUpdate.badges =
+        Array.isArray(existingData?.badges) && existingData.badges.length > 0
+          ? existingData.badges
+          : [ONBOARDING_BADGE];
+      baseUpdate.tier = existingData?.tier || "Free";
+    }
+
+    await userRef.set(baseUpdate, { merge: true });
+
+    ctx.session.onboardingComplete = true;
+    ctx.session.ageVerified = true;
+    ctx.session.ageVerifiedAt = ageVerifiedAt;
+    ctx.session.ageVerificationExpiresAt = ageVerificationExpiresAt;
+
+    if (isNewUser) {
+      ctx.session.xp = baseUpdate.xp;
+      ctx.session.badges = baseUpdate.badges;
+      ctx.session.tier = baseUpdate.tier;
+    }
 
     logger.info(`User ${userId} completed onboarding`);
 
-    await ctx.editMessageText(t("profileCreated", lang), {
-      parse_mode: "Markdown",
-    });
+    if (isNewUser) {
+      await ctx.editMessageText(t("profileCreated", lang), {
+        parse_mode: "Markdown",
+      });
 
-    await ctx.reply(
-      t("onboardingReward", lang, {
-        xp: ONBOARDING_REWARD_XP,
-        badge: ONBOARDING_BADGE,
-      }),
-      { parse_mode: "Markdown" }
-    );
+      await ctx.reply(
+        t("onboardingReward", lang, {
+          xp: ONBOARDING_REWARD_XP,
+          badge: ONBOARDING_BADGE,
+        }),
+        { parse_mode: "Markdown" }
+      );
+    } else {
+      await ctx.editMessageText(t("ageVerificationSuccess", lang), {
+        parse_mode: "Markdown",
+      });
+    }
 
     // Show main menu
     const mainMenu = getMenu("main", lang);
@@ -185,6 +227,7 @@ async function handlePrivacyDecline(ctx) {
 module.exports = {
   ONBOARDING_REWARD_XP,
   ONBOARDING_BADGE,
+  AGE_VERIFICATION_INTERVAL_HOURS,
   handleLanguageSelection,
   handleAgeConfirmation,
   handleTermsAcceptance,

@@ -77,7 +77,12 @@ function isValidLocation(location) {
 
   const { latitude, longitude } = location;
 
-  if (typeof latitude !== "number" || typeof longitude !== "number") {
+  if (
+    typeof latitude !== "number" ||
+    typeof longitude !== "number" ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude)
+  ) {
     return false;
   }
 

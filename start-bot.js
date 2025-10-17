@@ -5,6 +5,7 @@
 
 require("./src/config/env");
 const logger = require("./src/utils/logger");
+const { startServer } = require("./src/web/server");
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 3000; // 3 seconds
@@ -28,14 +29,13 @@ async function launchBotWithRetry(retryCount = 0) {
     console.log("Bot username: @PNPtvbot");
     console.log("Start chatting: https://t.me/PNPtvbot\n");
 
-    // Initialize web server
+    // Start web server for Mini App
     try {
-      const { startServer } = require("./src/web/server");
       await startServer();
       logger.info("Web server started successfully");
     } catch (error) {
       logger.warn("Failed to start web server:", error.message);
-      console.log("Web server could not start. Mini app will not be available.");
+      console.log("Mini App server could not start. Bot will continue running.");
     }
 
     // Initialize scheduler for membership expiration

@@ -1,45 +1,75 @@
 const { formatMessage } = require("../../utils/formatters");
-const { t } = require("../../utils/i18n");
 const { ensureOnboarding } = require("../../utils/guards");
-const plans = require("../../config/plans");
+const planService = require("../../services/planService");
+const { Markup } = require("telegraf");
+
+async function showPlans(ctx) {
+  const plans = await planService.getActivePlans();
+
+  const buttons = plans.map((plan) => [
+    Markup.button.callback(
+      `${plan.name} - $${plan.price}`,
+      `select_plan:${plan.id}`
+    ),
+  ]);
+
+  return ctx.reply(ctx.i18n.t("selectPlan"), Markup.inlineKeyboard(buttons));
+}
 
 module.exports = async (ctx) => {
   if (!ensureOnboarding(ctx)) {
     return;
   }
 
-  const language = ctx.session.language || "en";
+  const lang = ctx.session.language || "en";
 
-  const intro =
-    language === "es" ? "Selecciona un plan para continuar.\n\n" : "Select a plan to continue.\n\n";
+  try {
+    const plans = await listPlans();
 
-  const message = formatMessage(
-    "Subscribe",
-    `${intro}${t("silverFeatures", language)}\n\n${t("goldenFeatures", language)}`,
-    language
-  );
+    if (!plans || plans.length === 0) {
+      const message =
+        lang === "es"
+          ? "Actualmente no hay planes disponibles. Por favor, inténtalo más tarde."
+          : "There are no plans available right now. Please try again later.";
+      await ctx.reply(message);
+      return;
+    }
 
-  const silverPrice = `$${(plans.silver.price / 100).toFixed(2)} ${plans.silver.currency}`;
-  const goldenPrice = `$${(plans.golden.price / 100).toFixed(2)} ${plans.golden.currency}`;
+    const intro =
+      lang === "es"
+        ? "Selecciona el plan que prefieras para continuar."
+        : "Select the plan you'd like to continue.";
 
-  await ctx.reply(message, {
-    parse_mode: "Markdown",
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: language === "es" ? `Silver · ${silverPrice}` : `Silver · ${silverPrice}`,
-            callback_data: "subscribe_silver",
-          },
-          {
-            text:
-              language === "es"
-                ? `Golden · ${goldenPrice} + 5 USDT`
-                : `Golden · ${goldenPrice} + 5 USDT`,
-            callback_data: "subscribe_golden",
-          },
-        ],
-      ],
-    },
-  });
+    const body = plans.map(formatPlanSummary).join("\n\n");
+    const message = formatMessage("Subscribe", `${intro}\n\n${body}`, lang);
+
+    const buttons = plans.map((plan) => [
+      {
+        text: `${
+          plan.displayName || plan.name
+        } • ${plan.priceInCOP.toLocaleString()} ${plan.currency || "COP"}`,
+        callback_data: `plan_select_${plan.id}`,
+      },
+    ]);
+
+    buttons.push([
+      {
+        text: lang === "es" ? "Atrás" : "Back",
+        callback_data: "back_to_main",
+      },
+    ]);
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: buttons,
+      },
+    });
+  } catch (error) {
+    await ctx.reply(
+      lang === "es"
+        ? "No se pudieron cargar los planes. Intenta más tarde."
+        : "Could not load subscription plans. Please try again later."
+    );
+  }
 };

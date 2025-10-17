@@ -1,13 +1,16 @@
 require("../config/env");
-const { Telegraf } = require("telegraf");
+const Telegraf = require("telegraf");
+const Stage = require("telegraf/stage");
 const { db } = require("../config/firebase");
 const { t } = require("../utils/i18n");
 const logger = require("../utils/logger");
 const epayco = require("../config/epayco");
-const plans = require("../config/plans");
 const { ensureOnboarding } = require("../utils/guards");
 const { isAdmin, adminMiddleware } = require("../config/admin");
 const { getMenu } = require("../config/menus");
+const { prepareTextLocationUpdate } = require("../services/profileService");
+const createPlanWizard = require("./scenes/createPlanWizard");
+const editPlanWizard = require("./scenes/editPlanWizard");
 
 // Middleware
 const session = require("./middleware/session");
@@ -24,7 +27,11 @@ const helpHandler = require("./handlers/help");
 const mapHandler = require("./handlers/map");
 const liveHandler = require("./handlers/live");
 const appHandler = require("./handlers/app");
-const { viewProfile, handleEditPhoto, handlePhotoMessage } = require("./handlers/profile");
+const {
+  viewProfile,
+  handleEditPhoto,
+  handlePhotoMessage,
+} = require("./handlers/profile");
 const subscribeHandler = require("./handlers/subscribe");
 const {
   adminPanel,
@@ -38,16 +45,28 @@ const {
   processExtendUserId,
   executeCustomExtension,
   executeModifyExpiration,
-  executePlanEdit
+  executePlanEdit,
 } = require("./handlers/admin");
 const { handleMapCallback, handleLocation } = require("./handlers/map");
 const { handleLiveCallback } = require("./handlers/live");
+const {
+  handlePlanManagement,
+  startPlanCreation,
+  listPlans,
+  handleEditPlan,
+  handleDeletePlan,
+  confirmDeletePlan,
+} = require("./handlers/admin/planManager");
 
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
 
+// Add scenes
+const stage = new Stage([createPlanWizard, editPlanWizard]);
+bot.use(session.middleware()); // Ensure session runs before stage
+bot.use(stage.middleware());
+
 // Apply middleware
-bot.use(session.middleware());
 bot.use(rateLimitMiddleware());
 
 // Error handling
@@ -62,6 +81,7 @@ bot.command("app", appHandler);
 bot.command("profile", viewProfile);
 bot.command("subscribe", subscribeHandler);
 bot.command("admin", adminMiddleware(), adminPanel);
+bot.command("plans", handlePlanManagement);
 
 // ===== ONBOARDING FLOW =====
 bot.action(/language_(.+)/, onboardingHelpers.handleLanguageSelection);
@@ -72,9 +92,10 @@ bot.action("accept_privacy", onboardingHelpers.handlePrivacyAcceptance);
 bot.action("decline_privacy", onboardingHelpers.handlePrivacyDecline);
 
 // ===== SUBSCRIPTION HANDLERS =====
-bot.action("subscribe_silver", (ctx) => subscriptionHelpers.handleSubscription(ctx, "silver"));
-bot.action("subscribe_golden", (ctx) => subscriptionHelpers.handleSubscription(ctx, "golden"));
-bot.action("subscribe_prime", (ctx) => subscriptionHelpers.handleSubscription(ctx, "golden"));
+bot.action(/^plan_select_(.+)$/, async (ctx) => {
+  const planId = ctx.match[1];
+  await subscriptionHelpers.handleSubscription(ctx, planId);
+});
 bot.action("upgrade_tier", (ctx) => subscribeHandler(ctx));
 
 // ===== PROFILE EDIT HANDLERS =====
@@ -130,7 +151,10 @@ bot.action(/^admin_/, handleAdminCallback);
 
 // ===== MAP CALLBACKS =====
 
-bot.action(/^(share_location|search_nearby(_[0-9]+)?|profile_view_map)$/, handleMapCallback);
+bot.action(
+  /^(share_location|search_nearby(_[0-9]+)?|profile_view_map)$/,
+  handleMapCallback
+);
 
 // ===== LIVE CALLBACKS =====
 
@@ -202,7 +226,15 @@ bot.on("text", async (ctx) => {
         return;
       }
 
-      await db.collection("users").doc(userId).update({ location });
+      const locationUpdate = prepareTextLocationUpdate(location);
+
+      await db
+        .collection("users")
+        .doc(userId)
+        .update({
+          ...locationUpdate,
+          lastActive: new Date(),
+        });
       ctx.session.waitingFor = null;
 
       await ctx.reply(t("locationUpdated", lang), { parse_mode: "Markdown" });
@@ -224,13 +256,19 @@ bot.on("text", async (ctx) => {
       if (isAdmin(ctx.from.id)) {
         await executeSearch(ctx, ctx.message.text);
       }
-    } else if (ctx.session.waitingFor && ctx.session.waitingFor.startsWith("admin_give_xp_")) {
+    } else if (
+      ctx.session.waitingFor &&
+      ctx.session.waitingFor.startsWith("admin_give_xp_")
+    ) {
       // Admin give XP
       if (isAdmin(ctx.from.id)) {
         const userId = ctx.session.waitingFor.replace("admin_give_xp_", "");
         await executeGiveXP(ctx, userId, ctx.message.text);
       }
-    } else if (ctx.session.waitingFor && ctx.session.waitingFor.startsWith("admin_message_")) {
+    } else if (
+      ctx.session.waitingFor &&
+      ctx.session.waitingFor.startsWith("admin_message_")
+    ) {
       // Admin send message to user
       if (isAdmin(ctx.from.id)) {
         const userId = ctx.session.waitingFor.replace("admin_message_", "");
@@ -251,24 +289,41 @@ bot.on("text", async (ctx) => {
       if (isAdmin(ctx.from.id)) {
         await processExtendUserId(ctx, ctx.message.text);
       }
-    } else if (ctx.session.waitingFor && ctx.session.waitingFor.startsWith("admin_extend_custom_days_")) {
+    } else if (
+      ctx.session.waitingFor &&
+      ctx.session.waitingFor.startsWith("admin_extend_custom_days_")
+    ) {
       // Admin custom extension - days input
       if (isAdmin(ctx.from.id)) {
-        const userId = ctx.session.waitingFor.replace("admin_extend_custom_days_", "");
+        const userId = ctx.session.waitingFor.replace(
+          "admin_extend_custom_days_",
+          ""
+        );
         await executeCustomExtension(ctx, userId, ctx.message.text);
       }
-    } else if (ctx.session.waitingFor && ctx.session.waitingFor.startsWith("admin_modify_expiration_")) {
+    } else if (
+      ctx.session.waitingFor &&
+      ctx.session.waitingFor.startsWith("admin_modify_expiration_")
+    ) {
       // Admin modify expiration - date input
       if (isAdmin(ctx.from.id)) {
-        const userId = ctx.session.waitingFor.replace("admin_modify_expiration_", "");
+        const userId = ctx.session.waitingFor.replace(
+          "admin_modify_expiration_",
+          ""
+        );
         await executeModifyExpiration(ctx, userId, ctx.message.text);
       }
-    } else if (ctx.session.waitingFor && ctx.session.waitingFor.startsWith("admin_plan_edit_")) {
+    } else if (
+      ctx.session.waitingFor &&
+      ctx.session.waitingFor.startsWith("admin_plan_edit_")
+    ) {
       // Admin plan edit - field input
       if (isAdmin(ctx.from.id)) {
         // Extract field and plan name from waitingFor
         // Format: admin_plan_edit_<field>_<planName>
-        const parts = ctx.session.waitingFor.replace("admin_plan_edit_", "").split("_");
+        const parts = ctx.session.waitingFor
+          .replace("admin_plan_edit_", "")
+          .split("_");
         const field = parts[0];
         const planName = parts[1];
         await executePlanEdit(ctx, planName, field, ctx.message.text);
@@ -293,24 +348,25 @@ bot.on("text", async (ctx) => {
         const webAppUrl = process.env.WEB_APP_URL;
 
         if (webAppUrl && webAppUrl.startsWith("https://")) {
-          // HTTPS configured - show Mini App button
-          await ctx.reply(
+          const promptMessage =
             lang === "es"
-              ? "🌐 Toca el botón para abrir la Mini App"
-              : "🌐 Tap the button to open the Mini App",
-            {
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text: lang === "es" ? "🚀 Abrir Mini App" : "🚀 Open Mini App",
-                      web_app: { url: webAppUrl },
-                    },
-                  ],
+              ? "Abre la Mini App desde este botón."
+              : "Tap the button to open the Mini App.";
+          const buttonLabel =
+            lang === "es" ? "Abrir Mini App" : "Open Mini App";
+
+          await ctx.reply(promptMessage, {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: buttonLabel,
+                    web_app: { url: webAppUrl },
+                  },
                 ],
-              },
-            }
-          );
+              ],
+            },
+          });
         } else {
           // No HTTPS - show demo link
           await ctx.reply(
@@ -333,5 +389,35 @@ bot.on("text", async (ctx) => {
 
 bot.on("location", handleLocation);
 
-module.exports = bot;
+// Add action handlers
+bot.action("create_plan", startPlanCreation);
+bot.action("list_plans", listPlans);
+bot.action("edit_plan", handleEditPlan);
+bot.action("delete_plan", handleDeletePlan);
+bot.action(/^confirm_delete:/, confirmDeletePlan);
+bot.action("cancel_delete", (ctx) =>
+  ctx.editMessageText("Operation cancelled")
+);
 
+// Find the problematic area around line 334 and fix closing brackets
+bot.action("show_map", async (ctx) => {
+  try {
+    await ctx.reply("Select your preferred distance:", {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "5km", callback_data: "map_distance_5" },
+            { text: "10km", callback_data: "map_distance_10" },
+            { text: "25km", callback_data: "map_distance_25" },
+          ],
+          [{ text: "🔙 Back", callback_data: "back_to_main" }],
+        ],
+      }, // Fix: Add missing closing brace
+    }); // Fix: Add missing closing parenthesis
+  } catch (error) {
+    console.error("Error showing map:", error);
+    await ctx.reply("Error showing map options. Please try again.");
+  }
+}); // Fix: Add missing closing parenthesis
+
+module.exports = bot;

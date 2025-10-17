@@ -8,6 +8,8 @@ const {
   isValidLocation,
   getBoundingBox,
 } = require("../../utils/geolocation");
+const { prepareLocationUpdate } = require("../../services/profileService");
+const geoService = require("../../services/geoService");
 
 /**
  * Map handler - shows nearby users with REAL distance calculation
@@ -257,11 +259,7 @@ async function searchNearbyUsers(ctx, radiusKm = 25) {
     const displayUsers = (users, emoji) => {
       users.slice(0, 5).forEach((user) => {
         const tierIcon =
-          user.tier === "Golden"
-            ? "🥇"
-            : user.tier === "Silver"
-            ? "🥈"
-            : "⚪";
+          user.tier === "Golden" ? "🥇" : user.tier === "Silver" ? "🥈" : "⚪";
         const bioText = user.bio ? user.bio.slice(0, 30) + "..." : "";
 
         message += `${emoji} @${user.username} ${tierIcon}\n`;
@@ -294,9 +292,7 @@ async function searchNearbyUsers(ctx, radiusKm = 25) {
 
     if (categories.region.length > 0) {
       message +=
-        lang === "es"
-          ? "🌍 **En tu región:**\n"
-          : "🌍 **In Your Region:**\n";
+        lang === "es" ? "🌍 **En tu región:**\n" : "🌍 **In Your Region:**\n";
       displayUsers(categories.region, "🌍");
     }
 
@@ -369,12 +365,14 @@ async function handleLocation(ctx) {
       }
     }
 
+    const locationUpdate = prepareLocationUpdate({
+      latitude: location.latitude,
+      longitude: location.longitude,
+    });
+
     await userRef.update({
-      location: {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        updatedAt: new Date(),
-      },
+      ...locationUpdate,
+      lastActive: new Date(),
     });
 
     let confirmMessage =
@@ -385,6 +383,10 @@ async function handleLocation(ctx) {
     confirmMessage += `📍 ${location.latitude.toFixed(
       4
     )}, ${location.longitude.toFixed(4)}`;
+
+    if (locationUpdate.locationName) {
+      confirmMessage += `\n🗺️ ${locationUpdate.locationName}`;
+    }
 
     if (distanceMoved !== null && distanceMoved > 0.1) {
       confirmMessage +=
@@ -428,3 +430,27 @@ async function handleLocation(ctx) {
 module.exports.handleMapCallback = handleMapCallback;
 module.exports.handleLocation = handleLocation;
 module.exports.searchNearbyUsers = searchNearbyUsers;
+
+/**
+ * Handle nearby users request
+ */
+async function handleNearbyUsers(ctx) {
+  const location = ctx.message.location;
+  const coordinates = { lat: location.latitude, lng: location.longitude };
+
+  const nearbyUsers = await geoService.getNearbyUsers(coordinates);
+
+  const message =
+    nearbyUsers.length > 0
+      ? nearbyUsers
+          .map(
+            (user) =>
+              `👤 @${user.username} - ${user.distance.toFixed(1)}km away`
+          )
+          .join("\n")
+      : "No users found nearby";
+
+  await ctx.reply(message);
+}
+
+module.exports.handleNearbyUsers = handleNearbyUsers;
