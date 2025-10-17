@@ -26,6 +26,18 @@ let isUpdatingLocation = false;
 let premiumPlansCache = [];
 let postComposerInitialized = false;
 let selectedPostFiles = [];
+const MAX_POST_MEDIA_FILES = 4;
+const POST_TEXT_LIMIT = 2000;
+const POST_PAGE_SIZE = 6;
+const POST_MEDIA_SIZE_LIMIT = 25 * 1024 * 1024; // 25MB per file
+const createDefaultPostsState = () => ({
+  items: [],
+  lastPostId: null,
+  hasMore: true,
+  loading: false,
+  error: null,
+});
+let userPostsState = createDefaultPostsState();
 
 // Performance caches
 const gradientCache = new Map();
@@ -113,6 +125,7 @@ async function initApp() {
   // Setup event listeners
   setupEventListeners();
   initPostComposer();
+  renderUserPosts();
 
   // Prefetch premium plans so data is ready when user opens the tab
   loadPremiumPlans().catch((error) =>
@@ -179,6 +192,12 @@ async function loadProfile() {
       updateProfileUI();
       updateRadiusSummary();
 
+      if (userPostsState.items.length === 0) {
+        loadUserPosts({ refresh: true });
+      } else {
+        renderUserPosts();
+      }
+
       if (currentPage === "map") {
         loadMapData();
       }
@@ -241,6 +260,334 @@ function updateProfileUI() {
   updateMembershipUI();
 }
 
+function updatePostTextCounter() {
+  const textInput = document.getElementById("post-text-input");
+  const counterEl = document.getElementById("post-text-counter");
+  if (!textInput || !counterEl) {
+    return;
+  }
+
+  const length = textInput.value.length;
+  counterEl.textContent = `${length} / ${POST_TEXT_LIMIT}`;
+  counterEl.classList.toggle("over-limit", length > POST_TEXT_LIMIT);
+}
+
+function setPostsFeedback(message = "", variant = "info") {
+  const feedbackEl = document.getElementById("posts-feedback");
+  if (!feedbackEl) {
+    return;
+  }
+
+  if (!message) {
+    feedbackEl.textContent = "";
+    feedbackEl.classList.add("hidden");
+    feedbackEl.classList.remove("error");
+    delete feedbackEl.dataset.variant;
+    return;
+  }
+
+  feedbackEl.textContent = message;
+  feedbackEl.classList.toggle("error", variant === "error");
+  feedbackEl.classList.remove("hidden");
+  feedbackEl.dataset.variant = variant;
+}
+
+function showPostsLoadingState() {
+  const list = document.getElementById("user-posts-list");
+  if (!list) {
+    return;
+  }
+
+  list.innerHTML = '<div class="posts-loading">Loading posts…</div>';
+}
+
+function toggleLoadMoreButton() {
+  const loadMoreBtn = document.getElementById("load-more-posts-btn");
+  if (!loadMoreBtn) {
+    return;
+  }
+
+  const shouldShow = userPostsState.hasMore && userPostsState.items.length > 0;
+  loadMoreBtn.classList.toggle("hidden", !shouldShow);
+  loadMoreBtn.disabled = userPostsState.loading;
+  loadMoreBtn.textContent = userPostsState.loading ? "Loading..." : "Load More";
+}
+
+function renderUserPosts() {
+  const list = document.getElementById("user-posts-list");
+  if (!list) {
+    return;
+  }
+
+  if (userPostsState.loading && userPostsState.items.length === 0) {
+    showPostsLoadingState();
+    return;
+  }
+
+  list.innerHTML = "";
+
+  if (userPostsState.error) {
+    setPostsFeedback(userPostsState.error, "error");
+  } else {
+    setPostsFeedback();
+  }
+
+  if (userPostsState.items.length === 0) {
+    const emptyState = document.createElement("p");
+    emptyState.className = "posts-empty";
+    emptyState.textContent =
+      "You haven't shared any posts yet. Tap the button below to create your first one.";
+    list.appendChild(emptyState);
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  userPostsState.items.forEach((post) => {
+    const card = createPostCard(post);
+    fragment.appendChild(card);
+  });
+  list.appendChild(fragment);
+}
+
+function createPostCard(post) {
+  const card = document.createElement("article");
+  card.className = "post-card";
+
+  const header = document.createElement("div");
+  header.className = "post-card__header";
+
+  const avatar = document.createElement("div");
+  avatar.className = "post-card__avatar";
+  avatar.textContent = (post.username || "user").charAt(0).toUpperCase();
+
+  const meta = document.createElement("div");
+  meta.className = "post-card__meta";
+
+  const usernameEl = document.createElement("span");
+  usernameEl.className = "post-card__username";
+  usernameEl.textContent = `@${post.username || "anonymous"}`;
+
+  const timestampEl = document.createElement("span");
+  timestampEl.className = "post-card__timestamp";
+  timestampEl.textContent = post.createdAt
+    ? formatRelativeTime(post.createdAt, formatDate(post.createdAt) || "Just now")
+    : "Just now";
+
+  meta.append(usernameEl, timestampEl);
+  header.append(avatar, meta);
+  card.appendChild(header);
+
+  if (post.content?.text) {
+    const textEl = document.createElement("p");
+    textEl.className = "post-card__text";
+    textEl.textContent = post.content.text;
+    card.appendChild(textEl);
+  }
+
+  if (Array.isArray(post.content?.media) && post.content.media.length > 0) {
+    const mediaContainer = document.createElement("div");
+    mediaContainer.className = "post-card__media";
+    post.content.media.forEach((media) => {
+      const element = createMediaElement(media);
+      if (element) {
+        mediaContainer.appendChild(element);
+      }
+    });
+    card.appendChild(mediaContainer);
+  }
+
+  const footer = document.createElement("div");
+  footer.className = "post-card__footer";
+  const engagement = post.engagement || {};
+  const stats = [
+    { label: "Likes", value: engagement.likes },
+    { label: "Comments", value: engagement.comments },
+    { label: "Shares", value: engagement.shares },
+    { label: "Views", value: engagement.views },
+  ];
+
+  stats.forEach(({ label, value }) => {
+    const statEl = document.createElement("span");
+    statEl.textContent = `${formatCount(value)} ${label}`;
+    footer.appendChild(statEl);
+  });
+  card.appendChild(footer);
+
+  return card;
+}
+
+function createMediaElement(media) {
+  if (!media || !media.url) {
+    return null;
+  }
+
+  if (media.type === "video") {
+    const video = document.createElement("video");
+    video.src = media.url;
+    video.controls = true;
+    video.playsInline = true;
+    video.muted = true;
+    return video;
+  }
+
+  const image = document.createElement("img");
+  image.src = media.url;
+  image.alt = media.fileName || "Post media";
+  return image;
+}
+
+function normalizeApiPost(post) {
+  if (!post) {
+    return null;
+  }
+
+  const content = post.content || {};
+  const engagement = post.engagement || {};
+  return {
+    ...post,
+    createdAt: parseTimestamp(post.createdAt),
+    updatedAt: parseTimestamp(post.updatedAt),
+    content: {
+      text: content.text || "",
+      media: Array.isArray(content.media)
+        ? content.media.map((item) => ({
+            type: item?.type || (item?.mimeType && item.mimeType.startsWith('video/') ? 'video' : 'image'),
+            url: item?.url,
+            thumbnailUrl: item?.thumbnailUrl || null,
+            fileName: item?.fileName || null,
+            mimeType: item?.mimeType || null,
+            size: item?.size || null,
+          }))
+        : [],
+    },
+    engagement: {
+      likes: engagement.likes || 0,
+      comments: engagement.comments || 0,
+      shares: engagement.shares || 0,
+      views: engagement.views || 0,
+    },
+  };
+}
+
+function parseTimestamp(value) {
+  if (!value) {
+    return null;
+  }
+  if (value instanceof Date) {
+    return value;
+  }
+  if (typeof value.toDate === "function") {
+    return value.toDate();
+  }
+  if (typeof value === "string") {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  if (typeof value === "number") {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  return null;
+}
+
+function formatCount(value) {
+  const count = Number(value) || 0;
+  if (count >= 1000000) {
+    return `${(count / 1000000).toFixed(1)}M`;
+  }
+  if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}K`;
+  }
+  return String(count);
+}
+
+async function loadUserPosts({ refresh = false } = {}) {
+  if (!userData || userPostsState.loading) {
+    return;
+  }
+
+  if (refresh) {
+    userPostsState = createDefaultPostsState();
+  }
+
+  userPostsState.loading = true;
+  toggleLoadMoreButton();
+
+  if (userPostsState.items.length === 0) {
+    showPostsLoadingState();
+  }
+
+  setPostsFeedback();
+
+  try {
+    const params = new URLSearchParams({
+      limit: POST_PAGE_SIZE,
+      userId: (userData && userData.userId) || userId,
+    });
+
+    if (!refresh && userPostsState.lastPostId) {
+      params.append("lastPostId", userPostsState.lastPostId);
+    }
+
+    const response = await apiRequest(`${API_BASE}/posts/feed?${params.toString()}`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to load posts (${response.status})`);
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.error || "Failed to load posts");
+    }
+
+    const posts = Array.isArray(data.posts)
+      ? data.posts.map(normalizeApiPost).filter(Boolean)
+      : [];
+
+    if (refresh) {
+      userPostsState.items = [];
+    }
+
+    if (posts.length > 0) {
+      userPostsState.items = refresh ? posts : [...userPostsState.items, ...posts];
+      userPostsState.lastPostId = posts[posts.length - 1].postId;
+
+      const deduped = new Map();
+      userPostsState.items.forEach((item) => {
+        if (item && item.postId) {
+          deduped.set(item.postId, item);
+        }
+      });
+      userPostsState.items = Array.from(deduped.values());
+    } else if (refresh) {
+      userPostsState.lastPostId = null;
+    }
+
+    userPostsState.hasMore = Boolean(data.hasMore);
+    userPostsState.error = null;
+  } catch (error) {
+    console.error('Failed to load posts:', error);
+    userPostsState.error = error.message;
+    setPostsFeedback(error.message, 'error');
+  } finally {
+    userPostsState.loading = false;
+    renderUserPosts();
+    toggleLoadMoreButton();
+  }
+}
+
+function prependUserPost(post) {
+  if (!post) {
+    return;
+  }
+
+  userPostsState.items = [post, ...userPostsState.items.filter((item) => item.postId !== post.postId)];
+  userPostsState.error = null;
+  setPostsFeedback();
+  renderUserPosts();
+  toggleLoadMoreButton();
+}
+
 /**
  * Setup navigation
  */
@@ -290,6 +637,14 @@ function showPage(pageName) {
     case "live":
       // Live streams - coming soon
       break;
+    default:
+      break;
+  }
+
+  if (pageName === "profile" && userData) {
+    if (!userPostsState.loading && userPostsState.items.length === 0 && !userPostsState.error) {
+      loadUserPosts({ refresh: true });
+    }
   }
 
   updateFabVisibility();
@@ -328,6 +683,24 @@ function setupEventListeners() {
     openSubscribeBtn.addEventListener('click', () => {
       showPage('premium');
       setActiveNav('premium');
+    });
+  }
+
+  const refreshPostsBtn = document.getElementById('refresh-posts-btn');
+  if (refreshPostsBtn) {
+    refreshPostsBtn.addEventListener('click', () => {
+      if (!userPostsState.loading) {
+        loadUserPosts({ refresh: true });
+      }
+    });
+  }
+
+  const loadMorePostsBtn = document.getElementById('load-more-posts-btn');
+  if (loadMorePostsBtn) {
+    loadMorePostsBtn.addEventListener('click', () => {
+      if (!userPostsState.loading) {
+        loadUserPosts();
+      }
     });
   }
 }
@@ -717,48 +1090,6 @@ function displayPremiumPlans(plans = []) {
   });
 }
 
-  // Filter out lowercase duplicates and only show Silver and Golden
-  const validPlans = {};
-  Object.entries(plans).forEach(([tier, plan]) => {
-    const tierKey = tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase();
-    if (tierKey === "Silver" || tierKey === "Golden") {
-      validPlans[tierKey] = plan;
-    }
-  });
-
-  Object.entries(validPlans).forEach(([tier, plan]) => {
-    const isCurrentTier = (userData?.tier || "Free") === tier;
-    const planCard = document.createElement("div");
-    planCard.className = `plan-card ${tier === "Silver" ? "recommended" : ""}`;
-
-    const features = plan.features
-      .map((f) => `<li>${sanitizeText(f)}</li>`)
-      .join("");
-
-    const priceDisplay = formatCurrency(plan.priceInCOP, plan.currency);
-    const buttonLabel = isCurrentTier ? "Current Plan" : `Subscribe - ${priceDisplay}`;
-    const buttonClass = isCurrentTier ? "btn-secondary" : "btn-premium";
-    const disabledAttr = isCurrentTier ? "disabled" : "";
-
-    planCard.innerHTML = `
-      <div class="plan-header">
-        <div class="plan-name">${tier}</div>
-        <div class="plan-icon">${plan.icon || (tier === "Golden" ? "??" : "??")}</div>
-      </div>
-      <div class="plan-price">${priceDisplay}/month</div>
-      <div class="plan-description">${sanitizeText(plan.description || "")}</div>
-      <ul class="plan-features">
-        ${features}
-      </ul>
-      <button class="btn ${buttonClass}" ${disabledAttr} data-tier="${tier}"
-              onclick="subscribeToPlan('${tier}')">
-        ${buttonLabel}
-      </button>
-    `;
-
-    container.appendChild(planCard);
-  });
-}
 
 /**
  * Subscribe to plan
@@ -1221,6 +1552,23 @@ function showWelcomeOverlay() {
   initTelegramLoginWidget('welcome-telegram-login');
 }
 
+/**
+ * Load public configuration from server
+ */
+async function loadPublicConfig() {
+  try {
+    const response = await fetch(`${API_BASE}/config/public`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        publicConfig = data;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load public config:', error);
+  }
+}
+
 // Modify bootstrap function to always check if we're in Telegram
 async function bootstrap() {
   console.log('Bootstrap starting, in Telegram:', !!tg); // Debug log
@@ -1276,8 +1624,9 @@ function initPostComposer() {
   const cancelBtn = document.getElementById('cancel-post-btn');
   const form = document.getElementById('new-post-form');
   const mediaInput = document.getElementById('post-media-input');
+  const textInput = document.getElementById('post-text-input');
 
-  if (!openBtn || !modal || !cancelBtn || !form || !mediaInput) {
+  if (!openBtn || !modal || !cancelBtn || !form || !mediaInput || !textInput) {
     return;
   }
 
@@ -1290,6 +1639,10 @@ function initPostComposer() {
   });
   form.addEventListener('submit', handlePostSubmit);
   mediaInput.addEventListener('change', handleMediaChange);
+  textInput.addEventListener('input', updatePostTextCounter);
+
+  updatePostTextCounter();
+  renderMediaPreview();
 
   postComposerInitialized = true;
   updateFabVisibility();
@@ -1300,6 +1653,9 @@ function showPostModal() {
   if (!modal) return;
 
   modal.classList.remove('hidden');
+  document.body.classList.add('modal-open');
+  updatePostTextCounter();
+
   const textarea = document.getElementById('post-text-input');
   if (textarea) {
     textarea.focus();
@@ -1311,6 +1667,7 @@ function hidePostModal() {
   if (!modal) return;
 
   modal.classList.add('hidden');
+  document.body.classList.remove('modal-open');
   clearPostComposer();
 }
 
@@ -1324,10 +1681,23 @@ async function handlePostSubmit(event) {
 
   const submitBtn = document.getElementById('submit-post-btn');
   const textInput = document.getElementById('post-text-input');
-  const postText = textInput ? textInput.value.trim() : '';
+
+  setPostsFeedback();
+  const postTextRaw = textInput ? textInput.value : '';
+  const postText = postTextRaw.trim();
 
   if (!postText && selectedPostFiles.length === 0) {
     showAlert('Add text or media before publishing.');
+    return;
+  }
+
+  if (postText.length > POST_TEXT_LIMIT) {
+    showAlert(`Post text cannot exceed ${POST_TEXT_LIMIT} characters.`);
+    return;
+  }
+
+  if (selectedPostFiles.length > MAX_POST_MEDIA_FILES) {
+    showAlert(`You can attach up to ${MAX_POST_MEDIA_FILES} files.`);
     return;
   }
 
@@ -1371,6 +1741,11 @@ async function handlePostSubmit(event) {
       throw new Error(data.error || 'Failed to publish post');
     }
 
+    const normalizedPost = normalizeApiPost(data.post);
+    if (normalizedPost) {
+      prependUserPost(normalizedPost);
+    }
+
     showAlert('Post published!');
     hidePostModal();
   } catch (error) {
@@ -1390,21 +1765,49 @@ function handleMediaChange(event) {
     return;
   }
 
-  let files = Array.from(input.files);
+  const warnings = [];
+  const acceptedFiles = [];
+  const incomingFiles = Array.from(input.files);
 
-  if (files.length > 4) {
-    showAlert('You can attach up to 4 files. Only the first 4 were added.');
-    files = files.slice(0, 4);
+  incomingFiles.forEach((file) => {
+    if (acceptedFiles.length >= MAX_POST_MEDIA_FILES) {
+      return;
+    }
+
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    if (!isImage && !isVideo) {
+      warnings.push(`File "${file.name}" is not a supported image or video.`);
+      return;
+    }
+
+    if (file.size > POST_MEDIA_SIZE_LIMIT) {
+      warnings.push(`File "${file.name}" is larger than 25MB and was skipped.`);
+      return;
+    }
+
+    acceptedFiles.push(file);
+  });
+
+  if (incomingFiles.length > MAX_POST_MEDIA_FILES) {
+    warnings.push(`Only the first ${MAX_POST_MEDIA_FILES} files were added.`);
   }
 
   if (typeof DataTransfer !== 'undefined') {
     const dataTransfer = new DataTransfer();
-    files.forEach((file) => dataTransfer.items.add(file));
+    acceptedFiles.forEach((file) => dataTransfer.items.add(file));
     input.files = dataTransfer.files;
+  } else if (acceptedFiles.length !== incomingFiles.length) {
+    input.value = "";
   }
 
-  selectedPostFiles = files;
+  selectedPostFiles = acceptedFiles;
   renderMediaPreview();
+
+  if (warnings.length > 0) {
+    showAlert(warnings.join('
+'));
+  }
 }
 
 function renderMediaPreview() {
@@ -1444,6 +1847,7 @@ function clearPostComposer() {
     mediaInput.value = '';
   }
 
+  updatePostTextCounter();
   renderMediaPreview();
 }
 
@@ -1455,6 +1859,7 @@ function updateFabVisibility() {
     currentPage === 'profile' &&
     !!userData &&
     postComposerInitialized &&
+    !userPostsState.loading &&
     !isLoginOverlayActive();
 
   fab.classList.toggle('hidden', !shouldShow);
@@ -1498,32 +1903,4 @@ if (document.readyState === "loading") {
   bootstrap();
 }
 
-async function loadNearbyUsers() {
-  if (!navigator.geolocation) {
-    alert('Geolocation is not supported by your browser');
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(async (position) => {
-    try {
-      const response = await fetch(`/api/map/nearby?lat=${position.coords.latitude}&lng=${position.coords.longitude}`);
-      const data = await response.json();
-      
-      displayNearbyUsers(data.users);
-    } catch (error) {
-      console.error('Error loading nearby users:', error);
-    }
-  });
-}
-
-function displayNearbyUsers(users) {
-  const container = document.getElementById('nearby-users');
-  container.innerHTML = users.map(user => `
-    <div class="user-card">
-      <img src="${user.photoUrl || '/default-avatar.png'}" alt="${user.username}">
-      <h3>${user.username}</h3>
-      <p>${user.distance.toFixed(1)} km away</p>
-    </div>
-  `).join('');
-}
 

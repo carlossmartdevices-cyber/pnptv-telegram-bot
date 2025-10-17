@@ -500,6 +500,18 @@ app.post(
   })
 );
 /**
+ * Posts Routes
+ */
+const postsRouter = require("./routes/posts");
+app.use("/api/posts", postsRouter);
+
+/**
+ * Admin Routes
+ */
+const adminRouter = require("./routes/admin");
+app.use("/api/admin", adminRouter);
+
+/**
  * ePayco Webhook Routes
  */
 const epaycoWebhook = require("./epaycoWebhook");

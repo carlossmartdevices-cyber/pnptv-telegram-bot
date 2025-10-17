@@ -42,10 +42,20 @@ if (rawFirebaseCredentials) {
 }
 
 if (!admin.apps.length) {
-  admin.initializeApp({
+  const config = {
     credential: admin.credential.cert(serviceAccount),
     projectId: process.env.FIREBASE_PROJECT_ID,
-  });
+  };
+
+  // Add storage bucket if available
+  if (process.env.FIREBASE_STORAGE_BUCKET) {
+    config.storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
+  } else if (serviceAccount.project_id) {
+    // Default to project_id.appspot.com
+    config.storageBucket = `${serviceAccount.project_id}.appspot.com`;
+  }
+
+  admin.initializeApp(config);
   console.log("Firebase ha sido inicializado correctamente.");
 } else {
   console.log("Firebase ya está inicializado.");
