@@ -227,7 +227,32 @@ bot.action("back_to_main", async (ctx) => {
 
 // ===== TEXT MESSAGE HANDLERS =====
 
-// ===== PHOTO MESSAGE HANDLER =====bot.on("photo", handlePhotoMessage);
+// ===== MEDIA MESSAGE HANDLERS =====
+bot.on("photo", async (ctx, next) => {
+  // Check if admin is uploading broadcast media
+  if (ctx.session.waitingFor === "broadcast_media" && isAdmin(ctx.from.id)) {
+    const { handleBroadcastMedia } = require("./handlers/admin");
+    await handleBroadcastMedia(ctx, "photo");
+  } else {
+    await handlePhotoMessage(ctx);
+  }
+});
+
+bot.on("video", async (ctx) => {
+  // Check if admin is uploading broadcast media
+  if (ctx.session.waitingFor === "broadcast_media" && isAdmin(ctx.from.id)) {
+    const { handleBroadcastMedia } = require("./handlers/admin");
+    await handleBroadcastMedia(ctx, "video");
+  }
+});
+
+bot.on("document", async (ctx) => {
+  // Check if admin is uploading broadcast media
+  if (ctx.session.waitingFor === "broadcast_media" && isAdmin(ctx.from.id)) {
+    const { handleBroadcastMedia } = require("./handlers/admin");
+    await handleBroadcastMedia(ctx, "document");
+  }
+});
 bot.on("text", async (ctx) => {
   try {
     if (await handlePlanTextResponse(ctx)) {
@@ -298,9 +323,20 @@ bot.on("text", async (ctx) => {
 
       logger.info(`User ${userId} updated location (text)`);
     } else if (ctx.session.waitingFor === "broadcast_message") {
-      // Admin broadcast message
+      // Admin broadcast message - step 4 text
       if (isAdmin(ctx.from.id)) {
         await sendBroadcast(ctx, ctx.message.text);
+      }
+    } else if (ctx.session.waitingFor === "broadcast_text") {
+      // Admin broadcast message - step 4 text (new wizard)
+      if (isAdmin(ctx.from.id)) {
+        await sendBroadcast(ctx, ctx.message.text);
+      }
+    } else if (ctx.session.waitingFor === "broadcast_buttons") {
+      // Admin broadcast buttons - step 5
+      if (isAdmin(ctx.from.id)) {
+        const { handleBroadcastButtons } = require("./handlers/admin");
+        await handleBroadcastButtons(ctx, ctx.message.text);
       }
     } else if (ctx.session.waitingFor === "admin_search") {
       // Admin user search

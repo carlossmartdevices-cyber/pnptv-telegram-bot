@@ -25,38 +25,33 @@ const PLAN_CREATION_STEPS = [
     errorMessage: 'Tier must be provided (e.g. Silver).'
   },
   {
+    key: 'currency',
+    prompt: 'Enter the currency (USD or COP):',
+    transform: (value) => value.trim().toUpperCase(),
+    validate: (value) => ['USD', 'COP'].includes(value),
+    errorMessage: 'Currency must be either USD or COP.'
+  },
+  {
     key: 'price',
-    prompt: 'Enter the price in USD:',
-    transform: (value) => parseFloat(value.replace(',', '.')),
+    prompt: 'Enter the price (in the currency you selected):',
+    transform: (value) => parseFloat(value.replace(/[^0-9.]/g, '')),
     validate: (value) => Number.isFinite(value) && value >= 0,
-    errorMessage: 'Please enter a valid number for the USD price.'
+    errorMessage: 'Please enter a valid number for the price.'
   },
   {
     key: 'priceInCOP',
-    prompt: 'Enter the price in COP (or type "skip" to auto-calculate):',
+    prompt: 'Enter the price in COP (or type "skip" to auto-calculate from USD):',
     optional: true,
     transform: (value) => {
       const trimmed = value.trim();
       if (!trimmed || trimmed.toLowerCase() === 'skip') {
         return undefined;
       }
-      const parsed = parseInt(trimmed.replace(/[^0-9.]/g, ''), 10);
+      const parsed = parseInt(trimmed.replace(/[^0-9]/g, ''), 10);
       if (!Number.isFinite(parsed) || parsed < 0) {
         throw new Error('Please enter a valid numeric COP amount or "skip".');
       }
       return parsed;
-    },
-  },
-  {
-    key: 'currency',
-    prompt: 'Enter the currency code (default USD, type "skip" to use USD):',
-    optional: true,
-    transform: (value) => {
-      const trimmed = value.trim();
-      if (!trimmed || trimmed.toLowerCase() === 'skip') {
-        return 'USD';
-      }
-      return trimmed.toUpperCase();
     },
   },
   {
@@ -65,6 +60,22 @@ const PLAN_CREATION_STEPS = [
     transform: (value) => parseInt(value, 10),
     validate: (value) => Number.isInteger(value) && value > 0,
     errorMessage: 'Duration must be a positive integer.'
+  },
+  {
+    key: 'paymentMethod',
+    prompt: 'Choose payment method (epayco or nequi):',
+    transform: (value) => value.trim().toLowerCase(),
+    validate: (value) => ['epayco', 'nequi'].includes(value),
+    errorMessage: 'Payment method must be either "epayco" or "nequi".'
+  },
+  {
+    key: 'paymentLink',
+    prompt: 'Enter the Nequi Negocios payment link:',
+    optional: true,
+    conditional: (data) => data.paymentMethod === 'nequi',
+    transform: (value) => value.trim(),
+    validate: (value) => value.length > 0,
+    errorMessage: 'Payment link is required for Nequi payment method.'
   },
   {
     key: 'description',
@@ -353,6 +364,11 @@ async function showPlanDetails(ctx, planId, options = {}) {
   if (plan.duration) {
     lines.push(`Duration: ${plan.duration} days`);
   }
+  lines.push(`Payment method: ${plan.paymentMethod || 'epayco'}`);
+  if (plan.paymentMethod === 'nequi' && plan.paymentLink) {
+    lines.push(`Payment link: ${plan.paymentLink}`);
+  }
+  lines.push(`Manual activation: ${plan.requiresManualActivation ? 'Yes' : 'No'}`);
   lines.push(`Status: ${plan.active === false ? 'Inactive' : 'Active'}`);
   lines.push(`Recommended: ${plan.recommended ? 'Yes' : 'No'}`);
   lines.push(`Description: ${plan.description || '—'}`);
@@ -403,13 +419,21 @@ async function showPlanDetails(ctx, planId, options = {}) {
 
 function promptCreationStep(ctx) {
   const state = ctx.session.planCreation;
-  const step = PLAN_CREATION_STEPS[state.stepIndex];
+  let step = PLAN_CREATION_STEPS[state.stepIndex];
+
+  // Skip conditional steps that don't apply
+  while (step && step.conditional && !step.conditional(state.data)) {
+    state.stepIndex++;
+    step = PLAN_CREATION_STEPS[state.stepIndex];
+  }
+
   if (!step) {
     return;
   }
+
   let prompt = step.prompt;
   prompt += '\n\nSend "cancel" to abort.';
-  if (step.optional) {
+  if (step.optional && !step.conditional) {
     prompt += ' Send "skip" to leave this field blank.';
   }
   ctx.reply(prompt);
@@ -498,11 +522,23 @@ async function handlePlanCreationResponse(ctx, text) {
         icon: state.data.icon || '💎',
         cryptoBonus: state.data.cryptoBonus || null,
         recommended: Boolean(state.data.recommended),
+        paymentMethod: state.data.paymentMethod || 'epayco',
+        paymentLink: state.data.paymentLink || null,
       };
 
       const newPlan = await planService.createPlan(payload);
       ctx.session.planCreation = null;
-      await ctx.reply(`✅ Plan "${newPlan.displayName || newPlan.name}" created successfully.`);
+
+      let successMsg = `✅ Plan "${newPlan.displayName || newPlan.name}" created successfully!\n\n`;
+      successMsg += `Payment method: ${newPlan.paymentMethod.toUpperCase()}\n`;
+      if (newPlan.paymentMethod === 'nequi') {
+        successMsg += `⚠️ Manual activation required for subscriptions.\n`;
+        successMsg += `Payment link: ${newPlan.paymentLink}`;
+      } else {
+        successMsg += `✓ Automatic activation via ePayco API`;
+      }
+
+      await ctx.reply(successMsg);
       await showPlanDashboard(ctx, { replace: false });
     } catch (error) {
       logger.error('Error creating plan:', error);

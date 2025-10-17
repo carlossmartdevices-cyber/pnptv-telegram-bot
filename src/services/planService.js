@@ -76,12 +76,25 @@ class PlanService {
     displayName,
     icon,
     cryptoBonus,
-    recommended = false
+    recommended = false,
+    paymentMethod = "epayco", // "epayco" or "nequi"
+    paymentLink = null, // For manual Nequi payments
+    requiresManualActivation = false
   }) {
     // Validate input
     const validation = this.validatePlanData({ name, price, duration, features, tier, description });
     if (!validation.isValid) {
       throw new Error(`Invalid plan data: ${validation.errors.join(", ")}`);
+    }
+
+    // Validate payment method
+    if (!["epayco", "nequi"].includes(paymentMethod)) {
+      throw new Error("Payment method must be either 'epayco' or 'nequi'");
+    }
+
+    // If Nequi, require payment link
+    if (paymentMethod === "nequi" && !paymentLink) {
+      throw new Error("Payment link is required for Nequi payment method");
     }
 
     // Check for duplicate plan names
@@ -104,13 +117,16 @@ class PlanService {
       icon: icon || "💎",
       cryptoBonus: cryptoBonus || null,
       recommended: Boolean(recommended),
+      paymentMethod: paymentMethod,
+      paymentLink: paymentLink || null,
+      requiresManualActivation: paymentMethod === "nequi" || requiresManualActivation,
       createdAt: Date.now(),
       updatedAt: Date.now(),
       active: true,
     };
 
     const docRef = await this.plansCollection.add(plan);
-    logger.info(`Plan created: ${name} (${docRef.id})`);
+    logger.info(`Plan created: ${name} (${docRef.id}) with ${paymentMethod} payment`);
     return { id: docRef.id, ...plan };
   }
 
