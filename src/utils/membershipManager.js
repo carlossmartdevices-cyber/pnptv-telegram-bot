@@ -3,19 +3,19 @@ const logger = require("./logger");
 
 /**
  * Calculate expiration date based on plan duration
- * @param {string} tier - Tier name (Silver or Golden)
- * @returns {Date} Expiration date
+ * @param {number} durationDays - Duration in days
+ * @returns {Date|null} Expiration date or null for non-expiring plans
  */
-function calculateExpirationDate(tier) {
-  const now = new Date();
-  const duration = tier === "Silver" || tier === "Golden" ? 30 : 0; // 30 days for premium tiers
+function calculateExpirationDate(durationDays = 0) {
+  const days = Number(durationDays || 0);
 
-  if (duration === 0) {
-    return null; // Free tier doesn't expire
+  if (!Number.isFinite(days) || days <= 0) {
+    return null;
   }
 
+  const now = new Date();
   const expirationDate = new Date(now);
-  expirationDate.setDate(expirationDate.getDate() + duration);
+  expirationDate.setDate(expirationDate.getDate() + Math.round(days));
   return expirationDate;
 }
 
@@ -33,30 +33,28 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
       throw new Error("userId and tier are required");
     }
 
-    if (!["Free", "Silver", "Golden"].includes(tier)) {
-      throw new Error(`Invalid tier: ${tier}`);
-    }
-
     const now = new Date();
-    let expirationDate = null;
-
-    // Calculate expiration for premium tiers
-    if (tier === "Silver" || tier === "Golden") {
-      expirationDate = new Date(now);
-      expirationDate.setDate(expirationDate.getDate() + durationDays);
-    }
+    const expirationDate = calculateExpirationDate(durationDays);
+    const isPremium = tier !== "Free" && expirationDate !== null;
 
     const updateData = {
-      tier: tier,
+      tier,
       tierUpdatedAt: now,
       tierUpdatedBy: activatedBy,
       membershipExpiresAt: expirationDate,
+      membershipIsPremium: isPremium,
       lastActive: now,
     };
 
     await db.collection("users").doc(userId).update(updateData);
 
-    logger.info(`Membership activated for user ${userId}: ${tier} until ${expirationDate ? expirationDate.toISOString() : "never"}`);
+    logger.info(
+      `Membership activated for user ${userId}: ${tier} until ${expirationDate ? expirationDate.toISOString() : "never"}`,
+      {
+        durationDays,
+        activatedBy,
+      }
+    );
 
     return {
       success: true,
@@ -82,7 +80,7 @@ async function checkAndExpireMemberships() {
     const expiredUsersSnapshot = await db
       .collection("users")
       .where("membershipExpiresAt", "<=", now)
-      .where("tier", "in", ["Silver", "Golden"])
+      .where("membershipIsPremium", "==", true)
       .get();
 
     if (expiredUsersSnapshot.empty) {
@@ -108,6 +106,8 @@ async function checkAndExpireMemberships() {
           tierUpdatedBy: "system",
           previousTier: userData.tier,
           membershipExpiredAt: now,
+          membershipIsPremium: false,
+          membershipExpiresAt: null,
         });
 
         expiredCount++;
@@ -193,7 +193,7 @@ async function getExpiringMemberships(daysThreshold = 7) {
       .collection("users")
       .where("membershipExpiresAt", "<=", thresholdDate)
       .where("membershipExpiresAt", ">", now)
-      .where("tier", "in", ["Silver", "Golden"])
+      .where("membershipIsPremium", "==", true)
       .get();
 
     const expiringUsers = [];

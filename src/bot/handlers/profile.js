@@ -1,6 +1,7 @@
 const { db } = require("../../config/firebase");
 const { t } = require("../../utils/i18n");
 const logger = require("../../utils/logger");
+const { getLocationDisplay } = require("../../services/profileService");
 
 /**
  * View user profile with photo support
@@ -21,14 +22,24 @@ async function viewProfile(ctx) {
 
     if (!doc.exists) {
       // Create new profile
+      const now = new Date();
+
       await userRef.set({
         userId,
         username: ctx.from.username || "Anonymous",
-        createdAt: new Date(),
+        firstName: ctx.from.first_name || null,
+        lastName: ctx.from.last_name || null,
+        language: lang,
+        createdAt: now,
+        lastActive: now,
         xp: 0,
         badges: [],
         tier: "Free",
         photoFileId: null,
+        bio: null,
+        location: null,
+        locationName: null,
+        locationGeohash: null,
       });
 
       logger.info(`Created new profile for user ${userId}`);
@@ -37,31 +48,63 @@ async function viewProfile(ctx) {
     }
 
     // Get profile data
-    const userData = doc.data();
-    const fallbackUsername =
+    const userData = doc.data() || {};
+
+    const updates = {};
+    const now = new Date();
+    const telegramUsername = ctx.from.username || null;
+
+    if (userData.username !== telegramUsername) {
+      updates.username = telegramUsername;
+    }
+
+    if (userData.firstName !== ctx.from.first_name) {
+      updates.firstName = ctx.from.first_name || null;
+    }
+
+    if (userData.lastName !== ctx.from.last_name) {
+      updates.lastName = ctx.from.last_name || null;
+    }
+
+    updates.lastActive = now;
+
+    if (Object.keys(updates).length > 0) {
+      await userRef.update(updates);
+      Object.assign(userData, updates);
+    }
+
+    userData.userId = userData.userId || userId;
+
+    const usernameDisplay =
       userData.username ||
       ctx.from.username ||
       (lang === "es" ? "No disponible" : "Not set");
-    const fallbackBadges =
-      userData.badges && userData.badges.length > 0
-        ? userData.badges.join(", ")
+
+    const badgesList = Array.isArray(userData.badges) ? userData.badges : [];
+    const badgesDisplay =
+      badgesList.length > 0
+        ? badgesList.join(", ")
         : lang === "es"
         ? "Ninguna"
         : "None";
-    const fallbackLocation =
-      userData.location || (lang === "es" ? "No establecida" : "Not set");
-    const fallbackBio =
-      userData.bio || (lang === "es" ? "No definida" : "Not set");
+
+    const locationDisplay = getLocationDisplay(userData, lang);
+    const bioDisplay =
+      typeof userData.bio === "string" && userData.bio.trim().length > 0
+        ? userData.bio.trim()
+        : lang === "es"
+        ? "No definida"
+        : "Not set";
 
     // Build profile text
     const profileText = t("profileInfo", lang, {
       userId: userData.userId,
-      username: fallbackUsername,
+      username: usernameDisplay,
       xp: userData.xp || 0,
-      badges: fallbackBadges,
+      badges: badgesDisplay,
       tier: userData.tier || "Free",
-      location: fallbackLocation,
-      bio: fallbackBio,
+      location: locationDisplay,
+      bio: bioDisplay,
     });
 
     // Send photo if exists

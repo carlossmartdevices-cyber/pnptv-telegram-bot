@@ -1,0 +1,428 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PNPtv Mini App - Demo Mode</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .demo-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-banner">
+        🎭 Demo Mode - No Telegram Required
+    </div>
+
+    <div id="app">
+        <!-- Loading Screen -->
+        <div id="loading" class="screen active">
+            <div class="loader"></div>
+            <p>Loading PNPtv Demo...</p>
+        </div>
+
+        <!-- Main Navigation -->
+        <nav id="main-nav" class="hidden">
+            <button class="nav-btn active" data-page="profile">
+                <span class="icon">👤</span>
+                <span>Profile</span>
+            </button>
+            <button class="nav-btn" data-page="map">
+                <span class="icon">🗺️</span>
+                <span>Map</span>
+            </button>
+            <button class="nav-btn" data-page="live">
+                <span class="icon">📺</span>
+                <span>Live</span>
+            </button>
+            <button class="nav-btn" data-page="premium">
+                <span class="icon">⭐</span>
+                <span>Premium</span>
+            </button>
+        </nav>
+
+        <button id="new-post-btn" class="fab hidden" type="button">
+            <span class="fab-icon">＋</span>
+            <span class="fab-label">New Post</span>
+        </button>
+
+        <!-- Profile Page -->
+        <div id="profile-page" class="page hidden">
+            <div class="page-header">
+                <h1>My Profile</h1>
+            </div>
+                    <div class="profile-content">
+            <div class="profile-photo-wrapper">
+                <div id="profile-photo" class="profile-photo">
+                    <span class="photo-placeholder">??</span>
+                </div>
+            </div>
+            <div class="profile-info">
+                <h2 id="profile-username">Loading...</h2>
+                <div class="profile-tier" id="profile-tier"></div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-label">XP</span>
+                        <span class="stat-value" id="profile-xp">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Badges</span>
+                        <span class="stat-value" id="profile-badges">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-meta">
+                <div class="meta-row">
+                    <span class="meta-label">Member since</span>
+                    <span class="meta-value" id="profile-joined-text">-</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Last active</span>
+                    <span class="meta-value" id="profile-last-active-text">-</span>
+                </div>
+            </div>
+            <div class="profile-bio">
+                <h3>Bio</h3>
+                <p id="profile-bio-text">No bio set</p>
+                <button id="edit-bio-btn" class="btn btn-secondary">Edit Bio</button>
+            </div>
+            <div class="profile-location">
+                <h3>Location</h3>
+                <p id="profile-location-text">Not set</p>
+                <p id="profile-coordinates-text" class="location-coordinates hidden">-</p>
+                <button id="edit-location-btn" class="btn btn-secondary">Update Location</button>
+            </div>
+            <div class="membership-card">
+                <div class="membership-card__header">
+                    <h3>Membership</h3>
+                    <span class="membership-status" id="membership-status">Free</span>
+                </div>
+                <div class="membership-card__body">
+                    <div class="membership-row">
+                        <span class="membership-label">Tier</span>
+                        <span class="membership-value" id="membership-tier-value">Free</span>
+                    </div>
+                    <div class="membership-row">
+                        <span class="membership-label">Expires</span>
+                        <span class="membership-value" id="membership-expires-value">-</span>
+                    </div>
+                    <div class="membership-row">
+                        <span class="membership-label">Status</span>
+                        <span class="membership-value" id="membership-days-remaining">Unlimited</span>
+                    </div>
+                </div>
+                <button id="open-subscribe-btn" class="btn btn-secondary membership-cta">
+                    Manage Membership
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Page -->
+        <div id="map-page" class="page hidden">
+            <div class="page-header">
+                <h1>Nearby Users</h1>
+                <div class="radius-selector">
+                    <button class="radius-btn active" data-radius="5">5km</button>
+                    <button class="radius-btn" data-radius="10">10km</button>
+                    <button class="radius-btn" data-radius="25">25km</button>
+                    <button class="radius-btn" data-radius="50">50km</button>
+                </div>
+            </div>
+            <div class="map-content">
+            <button id="share-location-btn" class="btn btn-primary">
+                📍 Share My Location
+            </button>
+            <div id="map-summary" class="map-summary hidden">
+                <span class="map-location" id="map-location-label">Location not set</span>
+                <span class="map-radius">Radius: <strong id="map-radius-label">25 km</strong></span>
+            </div>
+            <div id="users-list" class="users-list">
+                <p class="empty-state">Share your location to see nearby users</p>
+            </div>
+        </div>
+        </div>
+
+        <!-- Live Streams Page -->
+        <div id="live-page" class="page hidden">
+            <div class="page-header">
+                <h1>Live Streams</h1>
+            </div>
+            <div class="live-content">
+                <div class="coming-soon">
+                    <span class="icon-large">📺</span>
+                    <h2>Live Streaming</h2>
+                    <p>Coming Soon!</p>
+                    <p class="description">Watch and stream live content with the PNPtv community</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium Page -->
+        <div id="premium-page" class="page hidden">
+            <div class="page-header">
+                <h1>Premium Plans</h1>
+            </div>
+            <div class="premium-content">
+                <div id="plans-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Post Modal -->
+    <div id="new-post-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Create Post</h2>
+            <form id="new-post-form">
+                <textarea id="post-text-input" placeholder="Share something with the community..." maxlength="2000"></textarea>
+                <div class="media-upload">
+                    <label for="post-media-input" class="btn btn-secondary">Add Photos or Videos</label>
+                    <input id="post-media-input" type="file" accept="image/*,video/*" multiple hidden>
+                    <p class="media-hint">You can attach up to 4 files.</p>
+                    <ul id="media-preview-list" class="media-preview-list hidden"></ul>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="cancel-post-btn" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" id="submit-post-btn" class="btn btn-primary">Publish</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Bio Modal -->
+    <div id="bio-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Edit Bio</h2>
+            <textarea id="bio-input" placeholder="Tell us about yourself..." maxlength="200"></textarea>
+            <div class="modal-actions">
+                <button id="cancel-bio-btn" class="btn btn-secondary">Cancel</button>
+                <button id="save-bio-btn" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    <script>
+    <script>
+    <script>
+        // Mock Telegram WebApp API for demo
+        window.Telegram = {
+            WebApp: {
+                initDataUnsafe: { user: { id: "demo123" } },
+                themeParams: {},
+                expand: () => console.log("Demo: expand called"),
+                showAlert: (msg) => alert(msg),
+                showConfirm: (msg, callback) => callback(confirm(msg)),
+                close: () => console.log("Demo: close called"),
+                BackButton: {
+                    show: () => console.log("Demo: BackButton show"),
+                    hide: () => console.log("Demo: BackButton hide"),
+                    onClick: () => {}
+                },
+                onEvent: () => {}
+            }
+        };
+
+        window.DEMO_MODE = true;
+
+        const demoProfile = {
+            userId: "demo123",
+            username: "demo_user",
+            tier: "Free",
+            xp: 150,
+            badges: ["Trailblazer", "Explorer"],
+            bio: "Welcome to PNPtv! This is a demo profile.",
+            location: { latitude: 37.7749, longitude: -122.4194 },
+            locationName: "San Francisco, CA",
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 45).toISOString(),
+            lastActive: new Date().toISOString(),
+            membership: {
+                tier: "Free",
+                status: "free",
+                expiresAt: null,
+                daysRemaining: null,
+                updatedAt: null,
+                updatedBy: null
+            }
+        };
+
+        const demoNearbyUsers = [
+            {
+                userId: "alice",
+                username: "alice_wonder",
+                tier: "Golden",
+                bio: "Coffee enthusiast ☕",
+                xp: 820,
+                location: { latitude: 37.7755, longitude: -122.4183 },
+                locationName: "Downtown, SF",
+                distance: 0.6,
+                distanceFormatted: "600m",
+                distanceCategory: "Very close (< 1km)",
+                lastActive: new Date(Date.now() - 1000 * 60 * 15).toISOString()
+            },
+            {
+                userId: "bob",
+                username: "bob_builder",
+                tier: "Silver",
+                bio: "Tech lover 💻",
+                xp: 640,
+                location: { latitude: 37.768, longitude: -122.429 },
+                locationName: "Mission District",
+                distance: 2.3,
+                distanceFormatted: "2.3 km",
+                distanceCategory: "Close (1-5km)",
+                lastActive: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
+            },
+            {
+                userId: "charlie",
+                username: "charlie_cool",
+                tier: "Free",
+                bio: "Music & art 🎵",
+                xp: 210,
+                location: { latitude: 37.804, longitude: -122.41 },
+                locationName: "Oakland",
+                distance: 5.1,
+                distanceFormatted: "5.1 km",
+                distanceCategory: "Nearby (5-10km)",
+                lastActive: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString()
+            },
+            {
+                userId: "diana",
+                username: "diana_dev",
+                tier: "Silver",
+                bio: "Full-stack developer",
+                xp: 540,
+                location: { latitude: 37.6879, longitude: -122.4702 },
+                locationName: "Daly City",
+                distance: 12.4,
+                distanceFormatted: "12.4 km",
+                distanceCategory: "In your area (10-25km)",
+                lastActive: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString()
+            }
+        ];
+
+        const demoPlans = {
+            Free: {
+                price: 0,
+                icon: "🙂",
+                features: ["Basic profile", "View nearby users (5km)", "Standard support"]
+            },
+            Silver: {
+                price: 15,
+                icon: "🥈",
+                features: [
+                    "Enhanced profile",
+                    "View nearby users (50km)",
+                    "Priority support",
+                    "Ad-free experience"
+                ]
+            },
+            Golden: {
+                price: 40,
+                icon: "💎",
+                features: [
+                    "Premium profile",
+                    "Unlimited radius",
+                    "VIP support",
+                    "Ad-free",
+                    "Live streaming",
+                    "Analytics"
+                ]
+            }
+        };
+
+        window.requestDemoLocation = (callback) => {
+            setTimeout(() => {
+                callback({
+                    coords: {
+                        latitude: demoProfile.location.latitude + (Math.random() - 0.5) * 0.01,
+                        longitude: demoProfile.location.longitude + (Math.random() - 0.5) * 0.01
+                    }
+                });
+            }, 400);
+        };
+
+        navigator.geolocation = {
+            getCurrentPosition(success) {
+                window.requestDemoLocation((position) => {
+                    if (typeof success === "function") {
+                        success(position);
+                    }
+                });
+            }
+        };
+
+        const originalFetch = window.fetch.bind(window);
+        window.fetch = async (input, init = {}) => {
+            const url = typeof input === "string" ? input : input.url;
+            if (!url) {
+                return originalFetch(input, init);
+            }
+
+            if (url.includes("/api/profile/")) {
+                if (init.method === "PUT" && init.body) {
+                    try {
+                        const payload = JSON.parse(init.body);
+                        if (typeof payload.bio === "string") {
+                            demoProfile.bio = payload.bio;
+                        }
+                        if (payload.location) {
+                            demoProfile.location = {
+                                latitude: Number(payload.location.latitude) || demoProfile.location.latitude,
+                                longitude: Number(payload.location.longitude) || demoProfile.location.longitude
+                            };
+                            demoProfile.locationName = "San Francisco, CA";
+                        }
+                    } catch (error) {
+                        console.warn("Demo payload parse failed:", error);
+                    }
+
+                    return new Response(
+                        JSON.stringify({ success: true, message: "Profile updated", user: demoProfile }),
+                        { status: 200, headers: { "Content-Type": "application/json" } }
+                    );
+                }
+
+                return new Response(
+                    JSON.stringify({ success: true, user: demoProfile }),
+                    { status: 200, headers: { "Content-Type": "application/json" } }
+                );
+            }
+
+            if (url.includes("/api/plans")) {
+                return new Response(
+                    JSON.stringify({ success: true, plans: demoPlans }),
+                    { status: 200, headers: { "Content-Type": "application/json" } }
+                );
+            }
+
+            if (url.includes("/api/map/nearby")) {
+                return new Response(
+                    JSON.stringify({ success: true, users: demoNearbyUsers }),
+                    { status: 200, headers: { "Content-Type": "application/json" } }
+                );
+            }
+
+            if (url.includes("/api/posts") && (init.method || "GET").toUpperCase() === "POST") {
+                return new Response(
+                    JSON.stringify({ success: true, message: "Demo post created" }),
+                    { status: 200, headers: { "Content-Type": "application/json" } }
+                );
+            }
+
+            return originalFetch(input, init);
+        };
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
