@@ -224,9 +224,45 @@ function optionalAuth(req, res, next) {
   next();
 }
 
+/**
+ * Check if a user ID is an admin
+ * @param {string} userId - The Telegram user ID to check
+ * @returns {boolean} - True if user is admin
+ */
+function isAdmin(userId) {
+  const adminIds = (process.env.ADMIN_IDS || '').split(',').map(id => id.trim());
+  return adminIds.includes(String(userId));
+}
+
+/**
+ * Middleware to require admin authentication
+ * Must be used after authenticateTelegramUser
+ */
+function requireAdmin(req, res, next) {
+  if (!req.telegramUser) {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required',
+    });
+  }
+
+  if (!isAdmin(req.telegramUser.id)) {
+    logger.warn(`Unauthorized admin access attempt by user ${req.telegramUser.id}`);
+    return res.status(403).json({
+      success: false,
+      error: 'Forbidden. Admin access required.',
+    });
+  }
+
+  logger.info(`Admin action by user ${req.telegramUser.id} - ${req.method} ${req.path}`);
+  next();
+}
+
 module.exports = {
   authenticateTelegramUser,
   optionalAuth,
   validateTelegramWebAppData,
   validateTelegramLoginPayload,
+  requireAdmin,
+  isAdmin,
 };

@@ -166,6 +166,23 @@
               Manage Membership
             </button>
           </div>
+          <section class="posts-section">
+            <div class="section-header">
+              <h3>My Posts</h3>
+              <button id="refresh-posts-btn" class="btn btn-secondary btn-compact">
+                Refresh
+              </button>
+            </div>
+            <div id="posts-feedback" class="posts-feedback hidden"></div>
+            <div id="user-posts-list" class="posts-list">
+              <p class="posts-empty">
+                You haven't shared any posts yet. Tap the button below to create your first one.
+              </p>
+            </div>
+            <button id="load-more-posts-btn" class="btn btn-secondary posts-load-more hidden">
+              Load More
+            </button>
+          </section>
         </div>
       </div>
 
@@ -237,6 +254,10 @@
             placeholder="Share something with the community..."
             maxlength="2000"
           ></textarea>
+          <div class="textarea-meta">
+            <span id="post-text-counter" class="char-counter">0 / 2000</span>
+            <span class="char-hint">Keep it friendly and relevant.</span>
+          </div>
           <div class="media-upload">
             <label for="post-media-input" class="btn btn-secondary"
               >Add Photos or Videos</label

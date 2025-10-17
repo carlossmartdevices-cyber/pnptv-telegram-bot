@@ -2335,24 +2335,20 @@ async function startPlanEdit(ctx, planName, field) {
 async function executePlanEdit(ctx, planName, field, newValue) {
   try {
     const lang = ctx.session.language || "en";
-    const fs = require("fs");
-    const path = require("path");
-    const plansPath = path.join(__dirname, "../../config/plans.js");
+    const planService = require("../../services/planService");
 
-    // Read current plans
-    delete require.cache[require.resolve("../../config/plans")];
-    const plans = require("../../config/plans");
-    const planKey = planName.toUpperCase();
-    const planKeyLower = planName.toLowerCase();
+    // Find plan by tier name
+    const plan = await planService.getPlanBySlug(planName);
 
-    if (!plans[planKey]) {
+    if (!plan) {
       await ctx.reply(lang === "es" ? "❌ Plan no encontrado." : "❌ Plan not found.");
       return;
     }
 
-    // Update plan based on field
-    let updateSuccess = false;
+    // Prepare update data based on field
+    let updateData = {};
     let displayValue = newValue;
+    let isValid = true;
 
     switch (field) {
       case "price":
@@ -2361,10 +2357,8 @@ async function executePlanEdit(ctx, planName, field, newValue) {
           await ctx.reply(lang === "es" ? "❌ Precio inválido." : "❌ Invalid price.");
           return;
         }
-        plans[planKey].price = price;
-        plans[planKeyLower].price = price;
+        updateData.price = price;
         displayValue = `$${price}`;
-        updateSuccess = true;
         break;
 
       case "cop":
@@ -2373,10 +2367,8 @@ async function executePlanEdit(ctx, planName, field, newValue) {
           await ctx.reply(lang === "es" ? "❌ Precio inválido." : "❌ Invalid price.");
           return;
         }
-        plans[planKey].priceInCOP = copPrice;
-        plans[planKeyLower].priceInCOP = copPrice;
+        updateData.priceInCOP = copPrice;
         displayValue = `${copPrice.toLocaleString()} COP`;
-        updateSuccess = true;
         break;
 
       case "duration":
@@ -2385,24 +2377,17 @@ async function executePlanEdit(ctx, planName, field, newValue) {
           await ctx.reply(lang === "es" ? "❌ Duración inválida." : "❌ Invalid duration.");
           return;
         }
-        plans[planKey].duration = duration;
-        plans[planKey].durationDays = duration;
-        plans[planKeyLower].duration = duration;
-        plans[planKeyLower].durationDays = duration;
+        updateData.duration = duration;
+        updateData.durationDays = duration;
         displayValue = `${duration} ${lang === "es" ? "días" : "days"}`;
-        updateSuccess = true;
         break;
 
       case "crypto":
-        plans[planKey].cryptoBonus = newValue;
-        plans[planKeyLower].cryptoBonus = newValue;
-        updateSuccess = true;
+        updateData.cryptoBonus = newValue;
         break;
 
       case "desc":
-        plans[planKey].description = newValue;
-        plans[planKeyLower].description = newValue;
-        updateSuccess = true;
+        updateData.description = newValue;
         break;
 
       case "features":
@@ -2411,20 +2396,18 @@ async function executePlanEdit(ctx, planName, field, newValue) {
           await ctx.reply(lang === "es" ? "❌ Características inválidas." : "❌ Invalid features.");
           return;
         }
-        plans[planKey].features = features;
-        plans[planKeyLower].features = features;
+        updateData.features = features;
         displayValue = features.join(", ");
-        updateSuccess = true;
+        break;
+
+      default:
+        isValid = false;
         break;
     }
 
-    if (updateSuccess) {
-      // Write updated plans to file
-      const fileContent = `const plans = ${JSON.stringify(plans, null, 2)};\n\nmodule.exports = plans;\n`;
-      fs.writeFileSync(plansPath, fileContent, "utf8");
-
-      // Clear require cache
-      delete require.cache[require.resolve("../../config/plans")];
+    if (isValid && Object.keys(updateData).length > 0) {
+      // Update plan in Firestore
+      await planService.updatePlan(plan.id, updateData);
 
       const icon = planName.toLowerCase() === "silver" ? "🥈" : "🥇";
       const tierName = planName.charAt(0).toUpperCase() + planName.slice(1);
@@ -2439,8 +2422,8 @@ async function executePlanEdit(ctx, planName, field, newValue) {
       };
 
       const message = lang === "es"
-        ? `✅ **Plan ${tierName} Actualizado**\n\n${icon} **${fieldNames[field]}** actualizado a:\n${displayValue}\n\n✨ Los cambios han sido guardados.`
-        : `✅ **${tierName} Plan Updated**\n\n${icon} **${fieldNames[field]}** updated to:\n${displayValue}\n\n✨ Changes have been saved.`;
+        ? `✅ **Plan ${tierName} Actualizado**\n\n${icon} **${fieldNames[field]}** actualizado a:\n${displayValue}\n\n✨ Los cambios han sido guardados en Firestore.`
+        : `✅ **${tierName} Plan Updated**\n\n${icon} **${fieldNames[field]}** updated to:\n${displayValue}\n\n✨ Changes have been saved to Firestore.`;
 
       await ctx.reply(message, {
         parse_mode: "Markdown",
@@ -2462,7 +2445,7 @@ async function executePlanEdit(ctx, planName, field, newValue) {
         },
       });
 
-      logger.info(`Admin ${ctx.from.id} updated ${field} for ${planName} to: ${displayValue}`);
+      logger.info(`Admin ${ctx.from.id} updated ${field} for ${planName} (${plan.id}) to: ${displayValue}`);
     }
 
     ctx.session.waitingFor = null;

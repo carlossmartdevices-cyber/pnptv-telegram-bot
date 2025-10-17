@@ -26,7 +26,10 @@
       "Bash(heroku logs:*)",
       "Bash(npm run lint)",
       "Bash(tree:*)",
-      "Bash(heroku whoami:*)"
+      "Bash(heroku whoami:*)",
+      "Bash(sed:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm run dev)"
     ],
     "deny": [],
     "ask": []

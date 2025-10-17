@@ -12,8 +12,93 @@ const path = require('path');
 
 const router = express.Router();
 
-// Initialize Firebase Storage
-const bucket = admin.storage().bucket();
+function serializeTimestamp(value) {
+  if (!value) {
+    return null;
+  }
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  if (typeof value.toDate === 'function') {
+    return value.toDate().toISOString();
+  }
+  if (typeof value === 'number') {
+    return new Date(value).toISOString();
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return null;
+}
+
+function normalizeMediaItem(media = {}) {
+  if (!media || typeof media !== 'object') {
+    return null;
+  }
+
+  return {
+    type: media.type || (media.mimeType && media.mimeType.startsWith('video/') ? 'video' : 'image'),
+    url: media.url,
+    thumbnailUrl: media.thumbnailUrl || null,
+    fileName: media.fileName || null,
+    mimeType: media.mimeType || null,
+    size: media.size || null,
+  };
+}
+
+function normalizePostForResponse(post) {
+  if (!post) {
+    return null;
+  }
+
+  const content = post.content || {};
+  const engagement = post.engagement || {};
+  const postId = post.postId || post.id;
+
+  const normalizedMedia = Array.isArray(content.media)
+    ? content.media.map(normalizeMediaItem).filter(Boolean)
+    : [];
+
+  return {
+    postId,
+    userId: post.userId,
+    username: post.username || null,
+    userPhotoFileId: post.userPhotoFileId || null,
+    content: {
+      text: content.text || '',
+      media: normalizedMedia,
+    },
+    engagement: {
+      likes: engagement.likes || 0,
+      comments: engagement.comments || 0,
+      shares: engagement.shares || 0,
+      views: engagement.views || 0,
+    },
+    visibility: post.visibility || 'public',
+    isActive: post.isActive !== false,
+    isPinned: post.isPinned || false,
+    location: post.location || null,
+    locationName: post.locationName || null,
+    tags: Array.isArray(post.tags) ? post.tags : [],
+    createdAt: serializeTimestamp(post.createdAt),
+    updatedAt: serializeTimestamp(post.updatedAt),
+  };
+}
+
+function assertStorageBucket() {
+  if (!bucket) {
+    throw new Error('Firebase Storage bucket is not configured.');
+  }
+}
+
+// Initialize Firebase Storage (only if bucket is configured)
+let bucket = null;
+try {
+  bucket = admin.storage().bucket();
+} catch (error) {
+  logger.warn('Firebase Storage bucket not configured. File uploads will be disabled.');
+  logger.warn('To enable file uploads, set FIREBASE_STORAGE_BUCKET in your environment variables.');
+}
 
 // Configure multer for file uploads (memory storage)
 const upload = multer({
@@ -46,6 +131,8 @@ const upload = multer({
  * Helper: Upload file to Firebase Storage
  */
 async function uploadToStorage(file, userId, postId) {
+  assertStorageBucket();
+
   const fileExtension = path.extname(file.originalname);
   const fileName = `posts/${userId}/${postId}/${Date.now()}${fileExtension}`;
   const fileUpload = bucket.file(fileName);
@@ -107,11 +194,20 @@ router.post('/', upload.array('media', 4), async (req, res) => {
       });
     }
 
+    const trimmedText = typeof text === 'string' ? text.trim() : '';
+
     // Validate content
-    if (!text && (!req.files || req.files.length === 0)) {
+    if (!trimmedText && (!req.files || req.files.length === 0)) {
       return res.status(400).json({
         success: false,
         error: 'Post must contain text or media'
+      });
+    }
+
+    if (req.files && req.files.length > 0 && !bucket) {
+      return res.status(503).json({
+        success: false,
+        error: 'File uploads are currently unavailable',
       });
     }
 
@@ -165,7 +261,7 @@ router.post('/', upload.array('media', 4), async (req, res) => {
       userId,
       username,
       userPhotoFileId,
-      text,
+      text: trimmedText,
       media: mediaArray,
       visibility: visibility || 'public',
       location: parsedLocation,
@@ -174,7 +270,7 @@ router.post('/', upload.array('media', 4), async (req, res) => {
 
     res.json({
       success: true,
-      post
+      post: normalizePostForResponse(post)
     });
 
     logger.info(`Post created by user ${userId}, postId: ${post.postId}`);
@@ -212,9 +308,13 @@ router.get('/feed', async (req, res) => {
       tags: parsedTags
     });
 
+    const normalizedPosts = posts
+      .map(normalizePostForResponse)
+      .filter(Boolean);
+
     res.json({
       success: true,
-      posts,
+      posts: normalizedPosts,
       hasMore: posts.length === parseInt(limit)
     });
 
@@ -240,9 +340,13 @@ router.get('/user/:userId', async (req, res) => {
 
     const posts = await PostModel.getUserPosts(userId, parseInt(limit));
 
+    const normalizedPosts = posts
+      .map(normalizePostForResponse)
+      .filter(Boolean);
+
     res.json({
       success: true,
-      posts
+      posts: normalizedPosts
     });
 
     logger.info(`User posts fetched for ${userId}: ${posts.length} posts`);
@@ -278,9 +382,13 @@ router.get('/nearby', async (req, res) => {
       parseInt(limit)
     );
 
+    const normalizedPosts = posts
+      .map(normalizePostForResponse)
+      .filter(Boolean);
+
     res.json({
       success: true,
-      posts
+      posts: normalizedPosts
     });
 
     logger.info(`Nearby posts fetched: ${posts.length} posts within ${radius}km`);
@@ -316,7 +424,7 @@ router.get('/:postId', async (req, res) => {
 
     res.json({
       success: true,
-      post
+      post: normalizePostForResponse(post)
     });
 
     logger.info(`Post fetched: ${postId}`);
@@ -349,7 +457,7 @@ router.put('/:postId', async (req, res) => {
 
     res.json({
       success: true,
-      post: updatedPost
+      post: normalizePostForResponse(updatedPost)
     });
 
     logger.info(`Post updated: ${postId}`);

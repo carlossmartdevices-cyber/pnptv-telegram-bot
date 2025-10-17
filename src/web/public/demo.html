@@ -125,6 +125,17 @@
                     Manage Membership
                 </button>
             </div>
+            <section class="posts-section">
+                <div class="section-header">
+                    <h3>My Posts</h3>
+                    <button id="refresh-posts-btn" class="btn btn-secondary btn-compact">Refresh</button>
+                </div>
+                <div id="posts-feedback" class="posts-feedback hidden"></div>
+                <div id="user-posts-list" class="posts-list">
+                    <p class="posts-empty">You haven't shared any posts yet. Tap the button below to create your first one.</p>
+                </div>
+                <button id="load-more-posts-btn" class="btn btn-secondary posts-load-more hidden">Load More</button>
+            </section>
         </div>
     </div>
 
@@ -185,6 +196,10 @@
             <h2>Create Post</h2>
             <form id="new-post-form">
                 <textarea id="post-text-input" placeholder="Share something with the community..." maxlength="2000"></textarea>
+                <div class="textarea-meta">
+                    <span id="post-text-counter" class="char-counter">0 / 2000</span>
+                    <span class="char-hint">Keep it friendly and relevant.</span>
+                </div>
                 <div class="media-upload">
                     <label for="post-media-input" class="btn btn-secondary">Add Photos or Videos</label>
                     <input id="post-media-input" type="file" accept="image/*,video/*" multiple hidden>
@@ -311,6 +326,90 @@
             }
         ];
 
+        const demoPosts = [
+            {
+                postId: "demo-post-1",
+                userId: "demo123",
+                username: "demo_user",
+                userPhotoFileId: null,
+                content: {
+                    text: "Exploring San Francisco today! Any recommendations?",
+                    media: []
+                },
+                engagement: {
+                    likes: 18,
+                    comments: 5,
+                    shares: 2,
+                    views: 230
+                },
+                visibility: "public",
+                isActive: true,
+                isPinned: false,
+                location: demoProfile.location,
+                locationName: demoProfile.locationName,
+                tags: ["travel", "sf"],
+                createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+                updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString()
+            },
+            {
+                postId: "demo-post-2",
+                userId: "demo123",
+                username: "demo_user",
+                userPhotoFileId: null,
+                content: {
+                    text: "Sunset views hit different 🌇",
+                    media: [
+                        {
+                            type: "image",
+                            url: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80",
+                            thumbnailUrl: null,
+                            fileName: "sunset.jpg",
+                            mimeType: "image/jpeg",
+                            size: 512000
+                        }
+                    ]
+                },
+                engagement: {
+                    likes: 42,
+                    comments: 8,
+                    shares: 3,
+                    views: 540
+                },
+                visibility: "public",
+                isActive: true,
+                isPinned: false,
+                location: null,
+                locationName: null,
+                tags: ["sunset", "photography"],
+                createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+                updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
+            },
+            {
+                postId: "demo-post-3",
+                userId: "demo123",
+                username: "demo_user",
+                userPhotoFileId: null,
+                content: {
+                    text: "Quick reminder to stay hydrated!",
+                    media: []
+                },
+                engagement: {
+                    likes: 7,
+                    comments: 1,
+                    shares: 0,
+                    views: 95
+                },
+                visibility: "public",
+                isActive: true,
+                isPinned: false,
+                location: null,
+                locationName: null,
+                tags: [],
+                createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+                updatedAt: new Date(Date.now() - 1000 * 60 * 15).toISOString()
+            }
+        ];
+
         const demoPlans = {
             Free: {
                 price: 0,
@@ -413,9 +512,63 @@
                 );
             }
 
-            if (url.includes("/api/posts") && (init.method || "GET").toUpperCase() === "POST") {
+            if (url.includes("/api/posts/feed")) {
+                const urlObj = new URL(url, window.location.origin);
+                const limit = Number(urlObj.searchParams.get("limit")) || 6;
+                const lastPostId = urlObj.searchParams.get("lastPostId");
+
+                let startIndex = 0;
+                if (lastPostId) {
+                    const foundIndex = demoPosts.findIndex((post) => post.postId === lastPostId);
+                    if (foundIndex >= 0) {
+                        startIndex = foundIndex + 1;
+                    }
+                }
+
+                const slice = demoPosts.slice(startIndex, startIndex + limit);
+                const hasMore = startIndex + limit < demoPosts.length;
+
                 return new Response(
-                    JSON.stringify({ success: true, message: "Demo post created" }),
+                    JSON.stringify({ success: true, posts: slice, hasMore }),
+                    { status: 200, headers: { "Content-Type": "application/json" } }
+                );
+            }
+
+            if (url.includes("/api/posts") && (init.method || "GET").toUpperCase() === "POST") {
+                let text = "";
+                if (init.body instanceof FormData) {
+                    text = (init.body.get("text") || "").toString();
+                }
+
+                const newPost = {
+                    postId: `demo-${Date.now()}`,
+                    userId: demoProfile.userId,
+                    username: demoProfile.username,
+                    userPhotoFileId: null,
+                    content: {
+                        text,
+                        media: [],
+                    },
+                    engagement: {
+                        likes: 0,
+                        comments: 0,
+                        shares: 0,
+                        views: 0,
+                    },
+                    visibility: "public",
+                    isActive: true,
+                    isPinned: false,
+                    location: demoProfile.location,
+                    locationName: demoProfile.locationName,
+                    tags: [],
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                };
+
+                demoPosts.unshift(newPost);
+
+                return new Response(
+                    JSON.stringify({ success: true, post: newPost }),
                     { status: 200, headers: { "Content-Type": "application/json" } }
                 );
             }
