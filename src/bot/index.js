@@ -50,6 +50,8 @@ const {
   viewProfile,
   handleEditPhoto,
   handlePhotoMessage,
+  showSettings,
+  toggleAdsOptOut,
 } = require("./handlers/profile");
 const subscribeHandler = require("./handlers/subscribe");
 const {
@@ -180,6 +182,11 @@ bot.action("edit_location", async (ctx) => {
 
 // Edit photo
 bot.action("edit_photo", handleEditPhoto);
+
+// Profile settings
+bot.action("profile_settings", showSettings);
+bot.action("settings_toggle_ads", toggleAdsOptOut);
+bot.action("settings_back", viewProfile);
 
 // ===== ADMIN CALLBACKS =====
 

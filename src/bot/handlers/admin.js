@@ -594,13 +594,60 @@ async function broadcastMessage(ctx) {
   try {
     const lang = ctx.session.language || "en";
 
-    ctx.session.waitingFor = "broadcast_message";
-
+    // Show segmentation options menu
     const message = lang === "es"
-      ? "📢 **Mensaje Masivo**\n\nEnvía el mensaje que quieres enviar a todos los usuarios:"
-      : "📢 **Broadcast Message**\n\nSend the message you want to broadcast to all users:";
+      ? "📢 **Mensaje Masivo**\n\nSelecciona cómo segmentar el mensaje:"
+      : "📢 **Broadcast Message**\n\nSelect how to segment the message:";
 
-    await ctx.reply(message, { parse_mode: "Markdown" });
+    const keyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: lang === "es" ? "🌍 Todos los usuarios" : "🌍 All Users",
+            callback_data: "broadcast_segment_all"
+          }
+        ],
+        [
+          {
+            text: lang === "es" ? "🇺🇸 Solo inglés" : "🇺🇸 English only",
+            callback_data: "broadcast_segment_lang_en"
+          },
+          {
+            text: lang === "es" ? "🇪🇸 Solo español" : "🇪🇸 Spanish only",
+            callback_data: "broadcast_segment_lang_es"
+          }
+        ],
+        [
+          {
+            text: lang === "es" ? "💎 Suscriptores activos" : "💎 Active Subscribers",
+            callback_data: "broadcast_segment_subscribers"
+          }
+        ],
+        [
+          {
+            text: lang === "es" ? "🆓 Solo nivel gratuito" : "🆓 Free tier only",
+            callback_data: "broadcast_segment_free"
+          }
+        ],
+        [
+          {
+            text: lang === "es" ? "⏰ Suscripciones expiradas" : "⏰ Expired subscriptions",
+            callback_data: "broadcast_segment_churned"
+          }
+        ],
+        [
+          {
+            text: lang === "es" ? "« Cancelar" : "« Cancel",
+            callback_data: "admin_back"
+          }
+        ]
+      ]
+    };
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: keyboard
+    });
 
     logger.info(`Admin ${ctx.from.id} initiated broadcast`);
   } catch (error) {
@@ -610,11 +657,106 @@ async function broadcastMessage(ctx) {
 }
 
 /**
- * Send broadcast message to all users
+ * Handle broadcast segment selection
+ */
+async function handleBroadcastSegment(ctx, segment) {
+  try {
+    const lang = ctx.session.language || "en";
+
+    // Store the segment in session
+    ctx.session.broadcastSegment = segment;
+    ctx.session.waitingFor = "broadcast_message";
+
+    let segmentLabel = "";
+    switch (segment) {
+      case "all":
+        segmentLabel = lang === "es" ? "todos los usuarios" : "all users";
+        break;
+      case "lang_en":
+        segmentLabel = lang === "es" ? "usuarios de habla inglesa" : "English-speaking users";
+        break;
+      case "lang_es":
+        segmentLabel = lang === "es" ? "usuarios de habla hispana" : "Spanish-speaking users";
+        break;
+      case "subscribers":
+        segmentLabel = lang === "es" ? "suscriptores activos" : "active subscribers";
+        break;
+      case "free":
+        segmentLabel = lang === "es" ? "usuarios del nivel gratuito" : "free tier users";
+        break;
+      case "churned":
+        segmentLabel = lang === "es" ? "suscripciones expiradas" : "expired subscriptions";
+        break;
+    }
+
+    const message = lang === "es"
+      ? `📢 **Mensaje Masivo**\n\nSegmento: ${segmentLabel}\n\nEnvía el mensaje que quieres enviar:`
+      : `📢 **Broadcast Message**\n\nSegment: ${segmentLabel}\n\nSend the message you want to broadcast:`;
+
+    await ctx.editMessageText(message, { parse_mode: "Markdown" });
+    await ctx.answerCbQuery();
+
+    logger.info(`Admin ${ctx.from.id} selected broadcast segment: ${segment}`);
+  } catch (error) {
+    logger.error("Error handling broadcast segment:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Filter users based on broadcast segment
+ */
+function filterUsersBySegment(users, segment) {
+  const now = new Date();
+
+  return users.filter(user => {
+    const userData = user.data();
+
+    // Always filter out users who opted out of ads
+    if (userData.adsOptOut === true) {
+      return false;
+    }
+
+    switch (segment) {
+      case "all":
+        return true;
+
+      case "lang_en":
+        return userData.language === "en";
+
+      case "lang_es":
+        return userData.language === "es";
+
+      case "subscribers":
+        // Active subscribers with Silver or Golden tier and not expired
+        if (!userData.tier || userData.tier === "Free") return false;
+        if (!userData.expiresAt) return false;
+        const expiresAt = userData.expiresAt.toDate();
+        return expiresAt > now;
+
+      case "free":
+        return !userData.tier || userData.tier === "Free";
+
+      case "churned":
+        // Users who had a subscription but it expired
+        if (!userData.tier || userData.tier === "Free") return false;
+        if (!userData.expiresAt) return false;
+        const expired = userData.expiresAt.toDate();
+        return expired <= now;
+
+      default:
+        return true;
+    }
+  });
+}
+
+/**
+ * Send broadcast message to segmented users
  */
 async function sendBroadcast(ctx, message) {
   try {
     const lang = ctx.session.language || "en";
+    const segment = ctx.session.broadcastSegment || "all";
 
     const statusMsg = await ctx.reply(
       lang === "es"
@@ -623,10 +765,16 @@ async function sendBroadcast(ctx, message) {
     );
 
     const usersSnapshot = await db.collection("users").get();
+    const allUsers = usersSnapshot.docs;
+
+    // Filter users based on segment
+    const filteredUsers = filterUsersBySegment(allUsers, segment);
+
     let sentCount = 0;
     let failedCount = 0;
+    let skippedCount = allUsers.length - filteredUsers.length;
 
-    for (const doc of usersSnapshot.docs) {
+    for (const doc of filteredUsers) {
       try {
         const userId = doc.id;
         await ctx.telegram.sendMessage(userId, message, {
@@ -650,16 +798,16 @@ async function sendBroadcast(ctx, message) {
       // Ignore
     }
 
-    await ctx.reply(
-      lang === "es"
-        ? `✅ Mensaje enviado exitosamente.\n\n✉️ Enviados: ${sentCount}\n❌ Fallidos: ${failedCount}`
-        : `✅ Broadcast sent successfully.\n\n✉️ Sent: ${sentCount}\n❌ Failed: ${failedCount}`,
-      { parse_mode: "Markdown" }
-    );
+    const resultMessage = lang === "es"
+      ? `✅ Mensaje enviado exitosamente.\n\n✉️ Enviados: ${sentCount}\n❌ Fallidos: ${failedCount}\n⏭️ Omitidos: ${skippedCount}`
+      : `✅ Broadcast sent successfully.\n\n✉️ Sent: ${sentCount}\n❌ Failed: ${failedCount}\n⏭️ Skipped: ${skippedCount}`;
 
-    logger.info(`Admin ${ctx.from.id} sent broadcast to ${sentCount} users`);
+    await ctx.reply(resultMessage, { parse_mode: "Markdown" });
+
+    logger.info(`Admin ${ctx.from.id} sent broadcast to ${sentCount} users (segment: ${segment})`);
 
     ctx.session.waitingFor = null;
+    ctx.session.broadcastSegment = null;
   } catch (error) {
     logger.error("Error sending broadcast:", error);
     await ctx.reply(t("error", ctx.session.language || "en"));
@@ -2922,6 +3070,9 @@ async function handleAdminCallback(ctx) {
       await showStats(ctx);
     } else if (action === "admin_broadcast") {
       await broadcastMessage(ctx);
+    } else if (action.startsWith("broadcast_segment_")) {
+      const segment = action.replace("broadcast_segment_", "");
+      await handleBroadcastSegment(ctx, segment);
     } else if (action === "admin_users") {
       await listUsers(ctx);
     } else if (action === "admin_list_all") {
