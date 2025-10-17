@@ -431,40 +431,9 @@ bot.on("text", async (ctx) => {
         await subscribeHandler(ctx);
       } else if (text.includes("help") || text.includes("ayuda")) {
         await helpHandler(ctx);
-      } else if (text.includes("mini app") || text.includes("abrir mini")) {
-        // Handle Mini App keyboard button
-        const lang = ctx.session?.language || "en";
-        const webAppUrl = process.env.WEB_APP_URL;
-
-        if (webAppUrl && webAppUrl.startsWith("https://")) {
-          const promptMessage =
-            lang === "es"
-              ? "Abre la Mini App desde este botón."
-              : "Tap the button to open the Mini App.";
-          const buttonLabel =
-            lang === "es" ? "Abrir Mini App" : "Open Mini App";
-
-          await ctx.reply(promptMessage, {
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: buttonLabel,
-                    web_app: { url: webAppUrl },
-                  },
-                ],
-              ],
-            },
-          });
-        } else {
-          // No HTTPS - show demo link
-          await ctx.reply(
-            lang === "es"
-              ? "💡 *Mini App Demo*\n\nAbre en tu navegador:\n`http://localhost:3000/demo.html`\n\n📱 Para usar en Telegram, necesitas configurar HTTPS con ngrok"
-              : "💡 *Mini App Demo*\n\nOpen in your browser:\n`http://localhost:3000/demo.html`\n\n📱 To use in Telegram, you need HTTPS with ngrok",
-            { parse_mode: "Markdown" }
-          );
-        }
+      } else if (text.includes("pnptv app") || text.includes("app pnptv") || text.includes("mini app") || text.includes("abrir mini")) {
+        // Handle PNPTv App / Mini App keyboard button
+        await appHandler(ctx);
       }
     }
   } catch (error) {
