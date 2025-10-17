@@ -33,7 +33,18 @@ const MAX_NEARBY_USERS = 100;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // For form data
-app.use(express.static(path.join(__dirname, "public")));
+
+// Cache-busting middleware for static files
+app.use(express.static(path.join(__dirname, "public"), {
+  setHeaders: (res, path) => {
+    // Disable caching for HTML, CSS, and JS files to ensure users always get latest version
+    if (path.endsWith('.html') || path.endsWith('.css') || path.endsWith('.js')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // CORS for Telegram Mini Apps
 app.use((req, res, next) => {
