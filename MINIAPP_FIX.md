@@ -23,7 +23,7 @@ ngrok http 3000
 
 **Production (Railway/Heroku/VPS):**
 - Use your deployed URL (e.g., `https://yourdomain.com`)
-- Or Railway provides: `https://your-app.up.railway.app`
+- Or Railway provides: `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com`
 
 ### Step 2: Configure Mini App in BotFather
 
@@ -84,7 +84,7 @@ keyboard: [
 ### Railway
 
 1. Deploy your bot to Railway
-2. Get your Railway URL: `https://your-app.up.railway.app`
+2. Get your Railway URL: `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com`
 3. Set in BotFather as explained above
 4. Add environment variables in Railway dashboard
 

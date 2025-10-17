@@ -8,21 +8,21 @@ This guide helps you test the ePayco payment webhooks locally and in production.
 
 Your bot has three ePayco endpoints:
 
-1. **Confirmation Webhook** (GET): `https://pnptv-telegram-bot-production.up.railway.app/epayco/confirmation`
+1. **Confirmation Webhook** (GET): `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation`
    - Called by ePayco when payment is confirmed
    - Server-to-server callback
    - Must respond with HTTP 200
 
-2. **Confirmation Webhook** (POST): `https://pnptv-telegram-bot-production.up.railway.app/epayco/confirmation`
+2. **Confirmation Webhook** (POST): `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation`
    - Alternative endpoint if ePayco sends POST instead of GET
    - Same functionality as GET endpoint
 
-3. **Response Page** (GET): `https://pnptv-telegram-bot-production.up.railway.app/epayco/response`
+3. **Response Page** (GET): `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/response`
    - User is redirected here after payment
    - Shows success/failure page
    - Provides visual feedback
 
-4. **Health Check**: `https://pnptv-telegram-bot-production.up.railway.app/epayco/health`
+4. **Health Check**: `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/health`
    - Check if webhook service is running
    - Returns: `{"status":"ok","service":"epayco-webhook","timestamp":"..."}`
 
@@ -93,14 +93,14 @@ Watch your console for webhook logs:
 Verify in Railway dashboard that these are set:
 
 ```env
-EPAYCO_RESPONSE_URL=https://pnptv-telegram-bot-production.up.railway.app/epayco/response
-EPAYCO_CONFIRMATION_URL=https://pnptv-telegram-bot-production.up.railway.app/epayco/confirmation
+EPAYCO_RESPONSE_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/response
+EPAYCO_CONFIRMATION_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation
 ```
 
 ### 2. Test Health Check
 
 ```bash
-curl https://pnptv-telegram-bot-production.up.railway.app/epayco/health
+curl https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/health
 ```
 
 Expected response:
@@ -133,7 +133,7 @@ In Railway dashboard:
 ### Test Confirmation Endpoint (GET)
 
 ```bash
-curl "https://pnptv-telegram-bot-production.up.railway.app/epayco/confirmation?ref_payco=TEST123&x_cod_response=1&x_response=Aceptada"
+curl "https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation?ref_payco=TEST123&x_cod_response=1&x_response=Aceptada"
 ```
 
 **Note**: This will fail verification because `TEST123` is not a real transaction. You need a real `ref_payco` from ePayco.
@@ -141,7 +141,7 @@ curl "https://pnptv-telegram-bot-production.up.railway.app/epayco/confirmation?r
 ### Test Confirmation Endpoint (POST)
 
 ```bash
-curl -X POST https://pnptv-telegram-bot-production.up.railway.app/epayco/confirmation \
+curl -X POST https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation \
   -H "Content-Type: application/json" \
   -d '{
     "ref_payco": "TEST123",
@@ -154,7 +154,7 @@ curl -X POST https://pnptv-telegram-bot-production.up.railway.app/epayco/confirm
 
 Open in browser:
 ```
-https://pnptv-telegram-bot-production.up.railway.app/epayco/response?ref_payco=TEST123&x_cod_response=1&x_response=Aceptada
+https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/response?ref_payco=TEST123&x_cod_response=1&x_response=Aceptada
 ```
 
 ## Webhook Flow Diagram

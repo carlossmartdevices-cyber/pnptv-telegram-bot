@@ -51,10 +51,10 @@ EPAYCO_TEST_MODE=true
 ### 4. Webhook URLs
 
 ```
-EPAYCO_RESPONSE_URL=https://pnptv-telegram-bot-production.up.railway.app/epayco/response
-EPAYCO_CONFIRMATION_URL=https://pnptv-telegram-bot-production.up.railway.app/epayco/confirmation
-BOT_URL=https://pnptv-telegram-bot-production.up.railway.app
-WEB_APP_URL=https://pnptv-telegram-bot-production.up.railway.app
+EPAYCO_RESPONSE_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/response
+EPAYCO_CONFIRMATION_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation
+BOT_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
+WEB_APP_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 ```
 
 **Important:** Replace `pnptv-telegram-bot-production.up.railway.app` with your actual Railway domain if it's different.
@@ -155,7 +155,7 @@ Expected: Bot responds with welcome message.
 ### Test 2: Check health endpoint
 
 ```bash
-curl https://pnptv-telegram-bot-production.up.railway.app/epayco/health
+curl https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/health
 ```
 
 Expected response:
@@ -172,7 +172,7 @@ Expected response:
 ### Test 3: Check debug endpoint
 
 ```bash
-curl https://pnptv-telegram-bot-production.up.railway.app/debug/test-payment
+curl https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/debug/test-payment
 ```
 
 Expected: JSON response with payment URL or error details.
@@ -302,10 +302,10 @@ EPAYCO_P_KEY=e76ae8e9551df6e3b353434c4de34ef2dafa41bf
 EPAYCO_TEST_MODE=true
 
 # Webhook URLs (update domain if different)
-EPAYCO_RESPONSE_URL=https://pnptv-telegram-bot-production.up.railway.app/epayco/response
-EPAYCO_CONFIRMATION_URL=https://pnptv-telegram-bot-production.up.railway.app/epayco/confirmation
-BOT_URL=https://pnptv-telegram-bot-production.up.railway.app
-WEB_APP_URL=https://pnptv-telegram-bot-production.up.railway.app
+EPAYCO_RESPONSE_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/response
+EPAYCO_CONFIRMATION_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation
+BOT_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
+WEB_APP_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 
 # Server
 PORT=3000

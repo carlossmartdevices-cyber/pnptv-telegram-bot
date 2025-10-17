@@ -135,11 +135,11 @@ EPAYCO_P_KEY=tu_p_key_aqui
 EPAYCO_TEST_MODE=true
 
 # URL base de tu aplicación (requerido para webhooks)
-BOT_URL=https://tu-app.railway.app
+BOT_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 
 # URLs de webhook (opcional, se generan automáticamente desde BOT_URL)
-EPAYCO_RESPONSE_URL=https://tu-app.railway.app/epayco/response
-EPAYCO_CONFIRMATION_URL=https://tu-app.railway.app/epayco/confirmation
+EPAYCO_RESPONSE_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/response
+EPAYCO_CONFIRMATION_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation
 ```
 
 ### Paso 4: Reemplazar los Valores de Ejemplo
@@ -150,7 +150,7 @@ EPAYCO_PUBLIC_KEY=tu_public_key_aqui
 EPAYCO_PRIVATE_KEY=tu_private_key_aqui
 EPAYCO_P_CUST_ID=tu_customer_id_aqui
 EPAYCO_P_KEY=tu_p_key_aqui
-BOT_URL=https://tu-app.railway.app
+BOT_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 ```
 
 **Después (ejemplo):**
@@ -159,7 +159,7 @@ EPAYCO_PUBLIC_KEY=881ddf8418549218fe2f227458f2f59c
 EPAYCO_PRIVATE_KEY=80174d93a6f8d760f5cca2b2cc6ee48b
 EPAYCO_P_CUST_ID=1555482
 EPAYCO_P_KEY=e76ae8e9551df6e3b353434c4de34ef2dafa41bf
-BOT_URL=https://pnptv-bot.railway.app
+BOT_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 ```
 
 ### 📝 Notas Importantes:
@@ -262,7 +262,7 @@ Los webhooks permiten que ePayco notifique a tu aplicación cuando se completa u
 Asegúrate de que `BOT_URL` en tu `.env` sea la URL pública de tu aplicación:
 
 ```env
-BOT_URL=https://tu-app.railway.app
+BOT_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 ```
 
 ⚠️ **Importante:**
@@ -274,8 +274,8 @@ BOT_URL=https://tu-app.railway.app
 
 Tu aplicación genera automáticamente estas URLs:
 
-- **URL de Confirmación:** `https://tu-app.railway.app/epayco/confirmation`
-- **URL de Respuesta:** `https://tu-app.railway.app/epayco/response`
+- **URL de Confirmación:** `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation`
+- **URL de Respuesta:** `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/response`
 
 ### Paso 3: Configurar en el Dashboard de ePayco (Opcional)
 
@@ -283,7 +283,7 @@ Tu aplicación genera automáticamente estas URLs:
 2. Navega a **Configuración** → **Webhooks**
 3. Agrega la URL de confirmación:
    ```
-   https://tu-app.railway.app/epayco/confirmation
+   https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation
    ```
 4. Selecciona los eventos: **Transacción Aprobada**
 5. Guarda los cambios
@@ -292,7 +292,7 @@ Tu aplicación genera automáticamente estas URLs:
 
 ```bash
 # Probar endpoint de salud
-curl https://tu-app.railway.app/epayco/health
+curl https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/health
 
 # Resultado esperado:
 # {"status":"ok","service":"epayco-webhook","timestamp":"..."}
@@ -308,7 +308,7 @@ curl https://tu-app.railway.app/epayco/health
 
 Visita el endpoint de debug:
 ```
-https://tu-app.railway.app/debug/test-payment
+https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/debug/test-payment
 ```
 
 Copia el `paymentUrl` del resultado.
@@ -477,7 +477,7 @@ Error: Missing required parameters: amount, userId
 2. Verifica que `BOT_URL` use HTTPS
 3. Prueba el endpoint manualmente:
    ```bash
-   curl https://tu-app.railway.app/epayco/health
+   curl https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/health
    ```
 4. Verifica configuración en dashboard de ePayco
 5. Revisa logs de ePayco en su dashboard

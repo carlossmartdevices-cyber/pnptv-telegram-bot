@@ -139,14 +139,14 @@ EPAYCO_TEST_MODE=false
 EPAYCO_STRICT_SIGNATURE_MODE=true
 
 # URLs (Railway te proporciona esto)
-BOT_URL=https://tu-proyecto.up.railway.app
-WEB_APP_URL=https://tu-proyecto.up.railway.app
-WEBAPP_URL=https://tu-proyecto.up.railway.app
+BOT_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
+WEB_APP_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
+WEBAPP_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 PORT=3000
 
 # Webhook URLs (se generan automáticamente)
-EPAYCO_RESPONSE_URL=https://tu-proyecto.up.railway.app/epayco/response
-EPAYCO_CONFIRMATION_URL=https://tu-proyecto.up.railway.app/epayco/confirmation
+EPAYCO_RESPONSE_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/response
+EPAYCO_CONFIRMATION_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation
 ```
 
 **⚠️ Importante:**
@@ -208,7 +208,7 @@ railway up
 
 ```bash
 # Reemplaza con tu token y URL
-curl -X POST "https://api.telegram.org/bot<TU_TOKEN>/setWebhook?url=https://tu-proyecto.up.railway.app/webhook"
+curl -X POST "https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/webhook"
 
 # Verificar
 curl "https://api.telegram.org/bot<TU_TOKEN>/getWebhookInfo"
@@ -219,7 +219,7 @@ curl "https://api.telegram.org/bot<TU_TOKEN>/getWebhookInfo"
 {
   "ok": true,
   "result": {
-    "url": "https://tu-proyecto.up.railway.app/webhook",
+    "url": "https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/webhook",
     "has_custom_certificate": false,
     "pending_update_count": 0
   }
@@ -373,10 +373,10 @@ heroku logs -n 100
 
 ```bash
 # Health check
-curl https://tu-app.railway.app/epayco/health
+curl https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/health
 
 # Test de configuración
-curl https://tu-app.railway.app/debug/test-payment
+curl https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/debug/test-payment
 
 # Info de webhook de Telegram
 curl "https://api.telegram.org/bot<TOKEN>/getWebhookInfo"
@@ -404,7 +404,7 @@ heroku domains
 Railway y Heroku proporcionan SSL automáticamente. Verifica:
 
 ```bash
-curl -I https://tu-app.railway.app
+curl -I https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 # Debe mostrar: HTTP/2 200
 ```
 
@@ -427,7 +427,7 @@ Si es el primer despliegue, inicializa datos:
 #### ✅ Infraestructura
 ```bash
 # Verificar app está corriendo
-curl https://tu-app.railway.app/epayco/health
+curl https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/health
 # Esperado: {"status":"ok"}
 
 # Verificar logs no tienen errores
@@ -455,7 +455,7 @@ Verifica:
 #### ✅ Configuración de ePayco
 ```bash
 # Probar endpoint de debug
-curl https://tu-app.railway.app/debug/test-payment | json_pp
+curl https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/debug/test-payment | json_pp
 ```
 
 Verifica:
@@ -508,7 +508,7 @@ heroku logs --tail | grep -i epayco
 **Logs de Inicio:**
 ```
 Web server running on port 3000
-Mini App available at: https://tu-app.railway.app
+Mini App available at: https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 Firebase initialized successfully
 ePayco credentials validated successfully
 ```
@@ -713,7 +713,7 @@ Antes de considerar el despliegue completo:
 ## Recursos Adicionales
 
 ### Documentación de Plataformas
-- **Railway:** https://docs.railway.app/
+- **Railway:** https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/
 - **Heroku:** https://devcenter.heroku.com/
 - **Telegram Bots:** https://core.telegram.org/bots
 

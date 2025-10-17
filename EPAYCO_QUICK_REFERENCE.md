@@ -17,11 +17,11 @@ EPAYCO_P_KEY=your_p_key_here
 EPAYCO_TEST_MODE=true
 
 # Bot URL (Required for webhooks)
-BOT_URL=https://your-app.railway.app
+BOT_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 
 # Optional: Override webhook URLs
-EPAYCO_RESPONSE_URL=https://your-app.railway.app/epayco/response
-EPAYCO_CONFIRMATION_URL=https://your-app.railway.app/epayco/confirmation
+EPAYCO_RESPONSE_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/response
+EPAYCO_CONFIRMATION_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation
 ```
 
 ### 2. Verify Configuration
@@ -176,7 +176,7 @@ railway logs
 ### 4. Verify Webhook URLs
 ```bash
 # Test confirmation endpoint
-curl https://your-app.railway.app/epayco/health
+curl https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/health
 ```
 
 ### 5. Test Payment Flow
@@ -197,13 +197,13 @@ BOT_URL=http://localhost:3000
 ### Staging
 ```env
 EPAYCO_TEST_MODE=true
-BOT_URL=https://your-app-staging.railway.app
+BOT_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 ```
 
 ### Production
 ```env
 EPAYCO_TEST_MODE=false
-BOT_URL=https://your-app.railway.app
+BOT_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 ```
 
 ## Security Checklist
