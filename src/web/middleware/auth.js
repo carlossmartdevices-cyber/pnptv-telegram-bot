@@ -151,7 +151,7 @@ function validateTelegramLoginPayload(payload, botToken) {
 function authenticateTelegramUser(req, res, next) {
   try {
     // Get initData from header or body
-    const initData = req.headers['x-telegram-init-data'] || req.body.initData;
+    const initData = req.headers['x-telegram-init-data'] || (req.body && req.body.initData);
 
     if (!initData) {
       logger.warn('[Auth] Missing initData', {
@@ -229,7 +229,7 @@ function authenticateTelegramUser(req, res, next) {
  * Optional authentication - allows unauthenticated requests but validates if data is present
  */
 function optionalAuth(req, res, next) {
-  const initData = req.headers['x-telegram-init-data'] || req.body.initData;
+  const initData = req.headers['x-telegram-init-data'] || (req.body && req.body.initData);
 
   if (!initData) {
     // No auth data provided, continue without user
