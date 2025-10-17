@@ -295,14 +295,14 @@ async function showPlanDashboard(ctx, options = {}) {
 
   const buttons = [
     [
-      Markup.button.callback('➕ Create Plan', 'plan:create'),
-      Markup.button.callback('🔄 Refresh', 'plan:refresh'),
+      { text: '➕ Create Plan', callback_data: 'plan:create' },
+      { text: '🔄 Refresh', callback_data: 'plan:refresh' },
     ],
   ];
 
   plans.forEach((plan) => {
     const label = `${plan.icon || '📋'} ${plan.displayName || plan.name || 'Plan'}`;
-    buttons.push([Markup.button.callback(label, `plan:view:${plan.id}`)]);
+    buttons.push([{ text: label, callback_data: `plan:view:${plan.id}` }]);
   });
 
   const keyboard = Markup.inlineKeyboard(buttons);
@@ -374,17 +374,17 @@ async function showPlanDetails(ctx, planId, options = {}) {
 
   const buttons = [];
   if (isEditable) {
-    buttons.push([Markup.button.callback('✏️ Edit', `plan:edit:${plan.id}`)]);
+    buttons.push([{ text: '✏️ Edit', callback_data: `plan:edit:${plan.id}` }]);
     if (plan.active === false) {
-      buttons.push([Markup.button.callback('♻️ Activate', `plan:toggle:${plan.id}:activate`)]);
+      buttons.push([{ text: '♻️ Activate', callback_data: `plan:toggle:${plan.id}:activate` }]);
     } else {
-      buttons.push([Markup.button.callback('🗑️ Archive', `plan:toggle:${plan.id}:archive`)]);
+      buttons.push([{ text: '🗑️ Archive', callback_data: `plan:toggle:${plan.id}:archive` }]);
     }
   } else {
-    buttons.push([Markup.button.callback('ℹ️ Read-only plan', 'plan:refresh')]);
+    buttons.push([{ text: 'ℹ️ Read-only plan', callback_data: 'plan:refresh' }]);
   }
 
-  buttons.push([Markup.button.callback('⬅️ Back to Plans', 'plan:refresh')]);
+  buttons.push([{ text: '⬅️ Back to Plans', callback_data: 'plan:refresh' }]);
 
   const keyboard = Markup.inlineKeyboard(buttons);
   const message = lines.join('\n');
@@ -667,30 +667,30 @@ async function showPlanEditMenu(ctx, planId) {
 
   const buttons = [
     [
-      Markup.button.callback('Name', `plan:editField:${planId}:name`),
-      Markup.button.callback('Display name', `plan:editField:${planId}:displayName`),
+      { text: 'Name', callback_data: `plan:editField:${planId}:name` },
+      { text: 'Display name', callback_data: `plan:editField:${planId}:displayName` },
     ],
     [
-      Markup.button.callback('Tier', `plan:editField:${planId}:tier`),
-      Markup.button.callback('Duration', `plan:editField:${planId}:duration`),
+      { text: 'Tier', callback_data: `plan:editField:${planId}:tier` },
+      { text: 'Duration', callback_data: `plan:editField:${planId}:duration` },
     ],
     [
-      Markup.button.callback('Price (USD)', `plan:editField:${planId}:price`),
-      Markup.button.callback('Price (COP)', `plan:editField:${planId}:priceInCOP`),
+      { text: 'Price (USD)', callback_data: `plan:editField:${planId}:price` },
+      { text: 'Price (COP)', callback_data: `plan:editField:${planId}:priceInCOP` },
     ],
     [
-      Markup.button.callback('Currency', `plan:editField:${planId}:currency`),
-      Markup.button.callback('Recommended', `plan:editField:${planId}:recommended`),
+      { text: 'Currency', callback_data: `plan:editField:${planId}:currency` },
+      { text: 'Recommended', callback_data: `plan:editField:${planId}:recommended` },
     ],
     [
-      Markup.button.callback('Description', `plan:editField:${planId}:description`),
-      Markup.button.callback('Features', `plan:editField:${planId}:features`),
+      { text: 'Description', callback_data: `plan:editField:${planId}:description` },
+      { text: 'Features', callback_data: `plan:editField:${planId}:features` },
     ],
     [
-      Markup.button.callback('Icon', `plan:editField:${planId}:icon`),
-      Markup.button.callback('Crypto bonus', `plan:editField:${planId}:cryptoBonus`),
+      { text: 'Icon', callback_data: `plan:editField:${planId}:icon` },
+      { text: 'Crypto bonus', callback_data: `plan:editField:${planId}:cryptoBonus` },
     ],
-    [Markup.button.callback('⬅️ Back', `plan:view:${planId}`)],
+    [{ text: '⬅️ Back', callback_data: `plan:view:${planId}` }],
   ];
 
   await ctx.editMessageText('Select the field you want to modify:', {
