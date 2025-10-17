@@ -154,6 +154,10 @@ function authenticateTelegramUser(req, res, next) {
     const initData = req.headers['x-telegram-init-data'] || req.body.initData;
 
     if (!initData) {
+      logger.warn('[Auth] Missing initData', {
+        headers: Object.keys(req.headers),
+        path: req.path
+      });
       return res.status(401).json({
         success: false,
         error: 'Authentication required. Missing Telegram init data.',
@@ -162,9 +166,22 @@ function authenticateTelegramUser(req, res, next) {
 
     // Validate the data
     const botToken = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+
+    if (!botToken) {
+      logger.error('[Auth] Bot token not configured');
+      return res.status(500).json({
+        success: false,
+        error: 'Server configuration error',
+      });
+    }
+
     const userData = validateTelegramWebAppData(initData, botToken);
 
     if (!userData) {
+      logger.warn('[Auth] Invalid Telegram data', {
+        path: req.path,
+        params: req.params
+      });
       return res.status(401).json({
         success: false,
         error: 'Invalid authentication. Telegram data verification failed.',
@@ -176,6 +193,10 @@ function authenticateTelegramUser(req, res, next) {
 
     // For route params like /api/profile/:userId, verify it matches authenticated user
     if (req.params.userId && req.params.userId !== userData.id) {
+      logger.warn('[Auth] User ID mismatch', {
+        requested: req.params.userId,
+        authenticated: userData.id
+      });
       return res.status(403).json({
         success: false,
         error: 'Forbidden. You can only access your own data.',
@@ -184,6 +205,10 @@ function authenticateTelegramUser(req, res, next) {
 
     // For body params, verify userId matches authenticated user
     if (req.body.userId && req.body.userId !== userData.id) {
+      logger.warn('[Auth] Body user ID mismatch', {
+        requested: req.body.userId,
+        authenticated: userData.id
+      });
       return res.status(403).json({
         success: false,
         error: 'Forbidden. User ID mismatch.',
@@ -193,7 +218,7 @@ function authenticateTelegramUser(req, res, next) {
     next();
   } catch (error) {
     logger.error('Authentication middleware error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Internal authentication error',
     });
