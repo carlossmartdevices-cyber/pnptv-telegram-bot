@@ -348,7 +348,8 @@
         "language": "en",
         "ageVerified": false,
         "termsAccepted": false,
-        "privacyAccepted": false
+        "privacyAccepted": false,
+        "waitingFor": null
       }
     },
     {

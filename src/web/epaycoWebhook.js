@@ -4,19 +4,118 @@
  */
 
 const express = require("express");
+const crypto = require("crypto");
 const { db } = require("../config/firebase");
 const { verifyTransaction } = require("../config/epayco");
 const { activateMembership } = require("../utils/membershipManager");
 const logger = require("../utils/logger");
 const { getPlanById, getPlanBySlug } = require("../services/planService");
+const { webhookRateLimit } = require("./middleware/webhookRateLimit");
 
 const router = express.Router();
+
+/**
+ * Validate ePayco webhook signature
+ * @param {Object} data - Webhook data
+ * @returns {boolean} - True if signature is valid
+ */
+function validateWebhookSignature(data) {
+  try {
+    const {
+      x_ref_payco,
+      x_transaction_id,
+      x_amount,
+      x_currency_code,
+      x_signature,
+    } = data;
+
+    // STRICT MODE: Reject webhooks without signature
+    if (!x_signature) {
+      logger.error("[WEBHOOK SECURITY] Webhook rejected: No signature provided", {
+        reference: x_ref_payco,
+        transactionId: x_transaction_id,
+      });
+
+      // Check if we're in strict mode (production)
+      const strictMode = process.env.EPAYCO_STRICT_SIGNATURE_MODE !== "false";
+
+      if (strictMode) {
+        return false; // Reject unsigned webhooks in production
+      } else {
+        logger.warn("[WEBHOOK SECURITY] Running in permissive mode - allowing unsigned webhook");
+        return true; // Allow in development for testing
+      }
+    }
+
+    // ePayco signature format: p_cust_id_cliente^p_key^x_ref_payco^x_transaction_id^x_amount^x_currency_code
+    // Generate expected signature
+    const signatureString = `${process.env.EPAYCO_P_CUST_ID}^${process.env.EPAYCO_P_KEY}^${x_ref_payco}^${x_transaction_id}^${x_amount}^${x_currency_code}`;
+    const expectedSignature = crypto
+      .createHash("sha256")
+      .update(signatureString)
+      .digest("hex");
+
+    const isValid = expectedSignature === x_signature;
+
+    if (!isValid) {
+      logger.error("[WEBHOOK SECURITY] Invalid signature detected", {
+        reference: x_ref_payco,
+        transactionId: x_transaction_id,
+        receivedSignature: x_signature,
+        expectedSignature,
+      });
+    } else {
+      logger.info("[WEBHOOK SECURITY] Signature validated successfully", {
+        reference: x_ref_payco,
+      });
+    }
+
+    return isValid;
+  } catch (error) {
+    logger.error("[WEBHOOK SECURITY] Error validating signature:", error);
+    return false;
+  }
+}
+
+/**
+ * Middleware to validate webhook IP whitelist (optional additional security)
+ * ePayco webhooks should come from their servers
+ * @param {Object} req - Express request
+ * @param {Object} res - Express response
+ * @param {Function} next - Next middleware
+ */
+function validateWebhookIP(req, res, next) {
+  const clientIp = req.ip || req.connection.remoteAddress;
+
+  // ePayco IP ranges (you should verify these with ePayco documentation)
+  // This is an example - update with actual ePayco IPs
+  const allowedIPs = process.env.EPAYCO_WEBHOOK_IPS
+    ? process.env.EPAYCO_WEBHOOK_IPS.split(",")
+    : [];
+
+  if (allowedIPs.length === 0) {
+    // If no IP whitelist is configured, log and continue
+    logger.debug("[WEBHOOK SECURITY] No IP whitelist configured, skipping IP validation");
+    return next();
+  }
+
+  if (!allowedIPs.includes(clientIp)) {
+    logger.warn("[WEBHOOK SECURITY] Webhook request from unauthorized IP", {
+      clientIp,
+      allowedIPs,
+    });
+    // Log but don't block for now - you can enable blocking in production
+    // return res.status(403).json({ error: "Forbidden" });
+  }
+
+  next();
+}
 
 /**
  * ePayco confirmation webhook
  * Called by ePayco when payment is processed
  */
-router.get("/confirmation", async (req, res) => {
+router.get("/confirmation", webhookRateLimit, validateWebhookIP, async (req, res) => {
   const startTime = Date.now();
 
   try {
@@ -52,6 +151,16 @@ router.get("/confirmation", async (req, res) => {
       x_extra1,
       x_extra2,
     });
+
+    // SECURITY: Validate webhook signature
+    const isSignatureValid = validateWebhookSignature(req.query);
+    if (!isSignatureValid) {
+      logger.error("[WEBHOOK SECURITY] Webhook rejected due to invalid signature");
+      return res.status(401).json({
+        success: false,
+        error: "Unauthorized: Invalid webhook signature"
+      });
+    }
 
     // Validate required parameters
     if (!reference) {
@@ -406,13 +515,31 @@ router.get("/response", async (req, res) => {
  * POST webhook (alternative endpoint)
  * ePayco may send webhooks as POST instead of GET
  */
-router.post("/confirmation", async (req, res) => {
+router.post("/confirmation", webhookRateLimit, validateWebhookIP, async (req, res) => {
   try {
     logger.info("[WEBHOOK POST] ePayco POST confirmation received", {
       body: req.body,
       contentType: req.get('content-type'),
       ip: req.ip,
     });
+
+    // Validate req.body exists
+    if (!req.body) {
+      return res.status(400).json({
+        success: false,
+        error: "Request body is required"
+      });
+    }
+
+    // SECURITY: Validate webhook signature for POST requests
+    const isSignatureValid = validateWebhookSignature(req.body);
+    if (!isSignatureValid) {
+      logger.error("[WEBHOOK POST SECURITY] Webhook rejected due to invalid signature");
+      return res.status(401).json({
+        success: false,
+        error: "Unauthorized: Invalid webhook signature"
+      });
+    }
 
     // Extract data from POST body
     const { ref_payco, x_transaction_id } = req.body;

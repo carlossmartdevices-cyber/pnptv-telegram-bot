@@ -187,6 +187,14 @@ async function uploadToStorage(file, userId, postId) {
  */
 router.post('/', upload.array('media', 4), async (req, res) => {
   try {
+    // Validate req.body exists
+    if (!req.body) {
+      return res.status(400).json({
+        success: false,
+        error: 'Request body is required'
+      });
+    }
+
     const { userId, username, userPhotoFileId, text, visibility, tags, location } = req.body;
 
     // Validate required fields
@@ -447,6 +455,14 @@ router.get('/:postId', async (req, res) => {
  */
 router.put('/:postId', async (req, res) => {
   try {
+    // Validate req.body exists
+    if (!req.body) {
+      return res.status(400).json({
+        success: false,
+        error: 'Request body is required'
+      });
+    }
+
     const { postId } = req.params;
     const { text, visibility, tags, isPinned } = req.body;
 
@@ -480,6 +496,14 @@ router.put('/:postId', async (req, res) => {
  */
 router.delete('/:postId', async (req, res) => {
   try {
+    // Validate req.body exists
+    if (!req.body || !req.body.userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Request body with userId is required'
+      });
+    }
+
     const { postId } = req.params;
     const { userId } = req.body;
 

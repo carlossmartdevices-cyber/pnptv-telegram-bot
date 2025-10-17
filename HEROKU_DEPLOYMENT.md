@@ -96,7 +96,7 @@ git add .
 git commit -m "Initial deployment with improvements"
 
 # Add Heroku remote
-heroku git:remote -a your-pnptv-bot
+
 
 # Push to Heroku (use your branch name: main or master)
 git push heroku main

@@ -35,7 +35,9 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(timeout 30 heroku logs:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []

@@ -8,6 +8,13 @@ const { ensureOnboarding } = require("../utils/guards");
 const { isAdmin, adminMiddleware } = require("../config/admin");
 const { getMenu } = require("../config/menus");
 const { prepareTextLocationUpdate } = require("../services/profileService");
+const { initSentry, captureException, setUser } = require("../config/sentry");
+
+// Initialize Sentry for bot error tracking
+initSentry({
+  environment: process.env.NODE_ENV || "production",
+  release: process.env.npm_package_version,
+});
 
 const {
   showPlanDashboard,
@@ -15,9 +22,18 @@ const {
   handlePlanTextResponse,
 } = require('./handlers/admin/planManager');
 // Middleware
-const session = require("./middleware/session");
+// MIGRATED TO FIRESTORE: Using scalable Firestore sessions instead of local JSON
+const { createFirestoreSession } = require("./middleware/firestoreSession");
+const session = createFirestoreSession({
+  collectionName: "bot_sessions",
+  ttl: 30 * 24 * 60 * 60 * 1000, // 30 days
+});
 const rateLimitMiddleware = require("./middleware/rateLimit");
 const errorHandler = require("./middleware/errorHandler");
+
+// Start session cleanup service
+const { sessionCleanup } = require("../utils/sessionCleanup");
+sessionCleanup.start();
 
 // Helpers
 const onboardingHelpers = require("./helpers/onboardingHelpers");
@@ -27,6 +43,7 @@ const subscriptionHelpers = require("./helpers/subscriptionHelpers");
 const startHandler = require("./handlers/start");
 const helpHandler = require("./handlers/help");
 const mapHandler = require("./handlers/map");
+const nearbyHandler = require("./handlers/nearby");
 const liveHandler = require("./handlers/live");
 const appHandler = require("./handlers/app");
 const {
@@ -50,24 +67,49 @@ const {
   executePlanEdit,
 } = require("./handlers/admin");
 const { handleMapCallback, handleLocation } = require("./handlers/map");
+const { handleNearbyCallback } = require("./handlers/nearby");
 const { handleLiveCallback } = require("./handlers/live");
 
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
 
-// Add scenes
-bot.use(session.middleware()); // Ensure session runs before other middleware
+// Add session middleware
+bot.use(session); // Firestore session middleware
 
 // Apply middleware
 bot.use(rateLimitMiddleware());
 
-// Error handling
-bot.catch(errorHandler);
+// Middleware to set Sentry user context
+bot.use(async (ctx, next) => {
+  if (ctx.from) {
+    setUser({
+      id: ctx.from.id,
+      username: ctx.from.username,
+    });
+  }
+  return next();
+});
+
+// Error handling with Sentry integration
+bot.catch((error, ctx) => {
+  // Capture error in Sentry with context
+  captureException(error, {
+    userId: ctx.from?.id,
+    username: ctx.from?.username,
+    chatId: ctx.chat?.id,
+    updateType: ctx.updateType,
+    command: ctx.message?.text || ctx.callbackQuery?.data,
+  });
+
+  // Call original error handler
+  return errorHandler(error, ctx);
+});
 
 // ===== COMMANDS =====
 bot.start(startHandler);
 bot.command("help", helpHandler);
 bot.command("map", mapHandler);
+bot.command("nearby", nearbyHandler);
 bot.command("live", liveHandler);
 bot.command("app", appHandler);
 bot.command("profile", viewProfile);
@@ -150,6 +192,10 @@ bot.action(
   /^(share_location|search_nearby(_[0-9]+)?|profile_view_map)$/,
   handleMapCallback
 );
+
+// ===== NEARBY CALLBACKS =====
+
+bot.action(/^open_nearby_app$/, handleNearbyCallback);
 
 // ===== LIVE CALLBACKS =====
 
@@ -334,6 +380,8 @@ bot.on("text", async (ctx) => {
         await viewProfile(ctx);
       } else if (text.includes("map") || text.includes("mapa")) {
         await mapHandler(ctx);
+      } else if (text.includes("nearby") || text.includes("cercano") || text.includes("cerca")) {
+        await nearbyHandler(ctx);
       } else if (text.includes("live") || text.includes("vivo")) {
         await liveHandler(ctx);
       } else if (text.includes("subscribe") || text.includes("suscri")) {

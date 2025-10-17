@@ -1,9 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const geoService = require("../../services/geoService");
-const { authMiddleware } = require("../middleware/auth");
+// Use authenticateTelegramUser from auth middleware
+const { authenticateTelegramUser } = require("../middleware/auth");
 
-router.get("/nearby", authMiddleware, async (req, res) => {
+// Protect the nearby users endpoint with Telegram authentication.  This was
+// previously using an `authMiddleware` import which did not exist in
+// middleware/auth.js, causing a runtime error.  Use the exported
+// `authenticateTelegramUser` function instead.
+router.get("/nearby", authenticateTelegramUser, async (req, res) => {
   try {
     const { lat, lng, distance } = req.query;
     const coordinates = { lat: parseFloat(lat), lng: parseFloat(lng) };
