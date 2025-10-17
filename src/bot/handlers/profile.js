@@ -138,6 +138,10 @@ async function viewProfile(ctx) {
                   text: t("viewMap", lang),
                   callback_data: "profile_view_map",
                 },
+                {
+                  text: lang === "es" ? "⚙️ Configuración" : "⚙️ Settings",
+                  callback_data: "profile_settings",
+                },
               ],
             ],
           },
@@ -172,6 +176,10 @@ async function viewProfile(ctx) {
             ],
             [
               { text: t("viewMap", lang), callback_data: "profile_view_map" },
+              {
+                text: lang === "es" ? "⚙️ Configuración" : "⚙️ Settings",
+                callback_data: "profile_settings",
+              },
             ],
           ],
         },
@@ -204,7 +212,13 @@ async function sendProfileWithoutPhoto(ctx, profileText, lang) {
           },
           { text: t("upgradeTier", lang), callback_data: "subscribe_prime" },
         ],
-        [{ text: t("viewMap", lang), callback_data: "profile_view_map" }],
+        [
+          { text: t("viewMap", lang), callback_data: "profile_view_map" },
+          {
+            text: lang === "es" ? "⚙️ Configuración" : "⚙️ Settings",
+            callback_data: "profile_settings",
+          },
+        ],
       ],
     },
   });
@@ -332,9 +346,103 @@ async function deletePhoto(ctx) {
   }
 }
 
+/**
+ * Show user settings
+ */
+async function showSettings(ctx) {
+  const userId = ctx.from.id.toString();
+  const lang = ctx.session.language || "en";
+
+  try {
+    const userRef = db.collection("users").doc(userId);
+    const doc = await userRef.get();
+
+    if (!doc.exists) {
+      await ctx.reply(t("error", lang));
+      return;
+    }
+
+    const userData = doc.data() || {};
+    const adsOptOut = userData.adsOptOut || false;
+
+    const message = lang === "es"
+      ? `⚙️ **Configuración**\n\n📢 Mensajes publicitarios: ${adsOptOut ? "❌ Desactivados" : "✅ Activados"}\n\n${adsOptOut ? "No recibirás mensajes de difusión del administrador." : "Recibirás mensajes de difusión del administrador."}`
+      : `⚙️ **Settings**\n\n📢 Advertisement messages: ${adsOptOut ? "❌ Disabled" : "✅ Enabled"}\n\n${adsOptOut ? "You will not receive broadcast messages from admins." : "You will receive broadcast messages from admins."}`;
+
+    await ctx.editMessageText(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: adsOptOut
+                ? (lang === "es" ? "✅ Activar mensajes" : "✅ Enable messages")
+                : (lang === "es" ? "❌ Desactivar mensajes" : "❌ Disable messages"),
+              callback_data: "settings_toggle_ads",
+            },
+          ],
+          [
+            {
+              text: lang === "es" ? "« Volver al perfil" : "« Back to profile",
+              callback_data: "settings_back",
+            },
+          ],
+        ],
+      },
+    });
+
+    logger.info(`User ${userId} viewed settings`);
+  } catch (error) {
+    logger.error("Error showing settings:", error);
+    await ctx.reply(t("error", lang));
+  }
+}
+
+/**
+ * Toggle ads opt-out setting
+ */
+async function toggleAdsOptOut(ctx) {
+  const userId = ctx.from.id.toString();
+  const lang = ctx.session.language || "en";
+
+  try {
+    const userRef = db.collection("users").doc(userId);
+    const doc = await userRef.get();
+
+    if (!doc.exists) {
+      await ctx.answerCbQuery(t("error", lang));
+      return;
+    }
+
+    const userData = doc.data() || {};
+    const currentOptOut = userData.adsOptOut || false;
+    const newOptOut = !currentOptOut;
+
+    await userRef.update({
+      adsOptOut: newOptOut,
+    });
+
+    await ctx.answerCbQuery(
+      newOptOut
+        ? (lang === "es" ? "Mensajes publicitarios desactivados" : "Advertisement messages disabled")
+        : (lang === "es" ? "Mensajes publicitarios activados" : "Advertisement messages enabled")
+    );
+
+    // Refresh settings view
+    await showSettings(ctx);
+
+    logger.info(`User ${userId} toggled ads opt-out to ${newOptOut}`);
+  } catch (error) {
+    logger.error("Error toggling ads opt-out:", error);
+    await ctx.answerCbQuery(t("error", lang));
+  }
+}
+
 module.exports = {
   viewProfile,
   handleEditPhoto,
   handlePhotoMessage,
   deletePhoto,
+  showSettings,
+  toggleAdsOptOut,
 };
