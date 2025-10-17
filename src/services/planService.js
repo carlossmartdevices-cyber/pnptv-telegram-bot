@@ -146,15 +146,8 @@ class PlanService {
       );
 
       if (snapshot.empty) {
-        // Return static plans from config if Firestore is empty
-        logger.info("No plans in Firestore, returning static plans");
-        return Object.entries(this.staticPlans)
-          .filter(([key]) => key === key.toUpperCase()) // Only SILVER, GOLDEN (not lowercase aliases)
-          .map(([key, plan]) => ({
-            id: key.toLowerCase(),
-            ...plan,
-            active: true,
-          }));
+        logger.info("No plans in Firestore");
+        return [];
       }
 
       return snapshot.docs.map((doc) => ({
@@ -162,15 +155,8 @@ class PlanService {
         ...doc.data(),
       }));
     } catch (error) {
-      logger.error('Failed to fetch plans from Firestore, falling back to static plans:', error.message);
-      // Fallback to static plans on error
-      return Object.entries(this.staticPlans)
-        .filter(([key]) => key === key.toUpperCase())
-        .map(([key, plan]) => ({
-          id: key.toLowerCase(),
-          ...plan,
-          active: true,
-        }));
+      logger.error('Failed to fetch plans from Firestore:', error.message);
+      return [];
     }
   }
 
@@ -193,15 +179,8 @@ class PlanService {
       );
 
       if (snapshot.empty) {
-        // Return static plans from config if Firestore is empty
-        logger.info("No active plans in Firestore, returning static plans");
-        return Object.entries(this.staticPlans)
-          .filter(([key]) => key === key.toUpperCase())
-          .map(([key, plan]) => ({
-            id: key.toLowerCase(),
-            ...plan,
-            active: true,
-          }));
+        logger.info("No active plans in Firestore");
+        return [];
       }
 
       return snapshot.docs.map((doc) => ({
@@ -209,15 +188,8 @@ class PlanService {
         ...doc.data(),
       }));
     } catch (error) {
-      // If index is missing or query fails, fall back to static plans
-      logger.warn("Failed to query Firestore plans (may need index), using static plans:", error.message);
-      return Object.entries(this.staticPlans)
-        .filter(([key]) => key === key.toUpperCase())
-        .map(([key, plan]) => ({
-          id: key.toLowerCase(),
-          ...plan,
-          active: true,
-        }));
+      logger.warn("Failed to query Firestore plans:", error.message);
+      return [];
     }
   }
 
@@ -246,16 +218,6 @@ class PlanService {
         };
       }
 
-      // Check static plans as fallback
-      const staticPlan = this.staticPlans[planId.toUpperCase()];
-      if (staticPlan) {
-        return {
-          id: planId.toLowerCase(),
-          ...staticPlan,
-          active: true,
-        };
-      }
-
       return null;
     } catch (error) {
       logger.error(`Error getting plan by ID ${planId}:`, error);
@@ -272,16 +234,6 @@ class PlanService {
     }
 
     const normalizedSlug = slug.toLowerCase().trim();
-
-    // Check static plans first (for SILVER, GOLDEN, etc.)
-    const staticPlan = this.staticPlans[normalizedSlug] || this.staticPlans[slug.toUpperCase()];
-    if (staticPlan) {
-      return {
-        id: normalizedSlug,
-        ...staticPlan,
-        active: true,
-      };
-    }
 
     // Search Firestore
     try {
