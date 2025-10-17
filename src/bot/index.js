@@ -23,6 +23,7 @@ const startHandler = require("./handlers/start");
 const helpHandler = require("./handlers/help");
 const mapHandler = require("./handlers/map");
 const liveHandler = require("./handlers/live");
+const appHandler = require("./handlers/app");
 const { viewProfile, handleEditPhoto, handlePhotoMessage } = require("./handlers/profile");
 const subscribeHandler = require("./handlers/subscribe");
 const {
@@ -57,6 +58,7 @@ bot.start(startHandler);
 bot.command("help", helpHandler);
 bot.command("map", mapHandler);
 bot.command("live", liveHandler);
+bot.command("app", appHandler);
 bot.command("profile", viewProfile);
 bot.command("subscribe", subscribeHandler);
 bot.command("admin", adminMiddleware(), adminPanel);

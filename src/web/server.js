@@ -1,594 +1,459 @@
 /**
- * Web Server for Telegram Mini App
- * Serves the Mini App interface and API endpoints
+ * PNPtv Web Server
+ * Serves the mini app and provides API endpoints
  */
 
-const express = require("express");
-const path = require("path");
-const { db } = require("../config/firebase");
-const logger = require("../utils/logger");
-const {
-  findUsersWithinRadius,
-  getDistanceCategory,
-  getBoundingBox,
-  isInBoundingBox,
-  approximateLocation,
-  isValidLocation,
-  simpleGeohash,
-  getGeohashNeighbors,
-  getGeohashPrecision,
-} = require("../utils/geolocation");
-const { getMembershipInfo } = require("../utils/membershipManager");
-const { authenticateTelegramUser } = require("./middleware/auth");
-const { errorHandler, asyncHandler } = require("../utils/errorHandler");
+const express = require('express');
+const path = require('path');
+const { db } = require('../config/firebase');
+const logger = require('../utils/logger');
+const { authenticateTelegramUser } = require('./middleware/auth');
 
 const app = express();
-// Railway sets PORT automatically, fallback to WEB_PORT or 3000
 const PORT = process.env.PORT || process.env.WEB_PORT || 3000;
-
-// Constants
-const MAX_BIO_LENGTH = 500;
-const MAX_NEARBY_USERS = 100;
 
 // Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // For form data
+app.use(express.urlencoded({ extended: true }));
 
 // Cache-busting middleware for static files
-app.use(express.static(path.join(__dirname, "public"), {
-  setHeaders: (res, path) => {
-    // Disable caching for HTML, CSS, and JS files to ensure users always get latest version
-    if (path.endsWith('.html') || path.endsWith('.css') || path.endsWith('.js')) {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html') || filePath.endsWith('.css') || filePath.endsWith('.js')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+        }
     }
-  }
 }));
 
 // CORS for Telegram Mini Apps
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Telegram-Init-Data');
+    next();
 });
 
-/**
- * Helpers
- */
+// ========================================
+// Helper Functions
+// ========================================
+
 function serializeDate(value) {
-  if (!value) return null;
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-  if (typeof value.toDate === "function") {
-    return value.toDate().toISOString();
-  }
-  return null;
+    if (!value) return null;
+    if (value instanceof Date) return value.toISOString();
+    if (typeof value.toDate === 'function') return value.toDate().toISOString();
+    return null;
 }
 
-function buildUserResponse(userId, userData, membershipInfo = null) {
-  const location =
-    userData.location && isValidLocation(userData.location)
-      ? userData.location
-      : null;
+// ========================================
+// Posts API
+// ========================================
 
-  const locationName =
-    userData.locationName ||
-    (location
-      ? approximateLocation(location.latitude, location.longitude)
-      : null);
+/**
+ * Get community posts
+ */
+app.get('/api/posts', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 50;
+        const postsSnapshot = await db.collection('posts')
+            .orderBy('createdAt', 'desc')
+            .limit(limit)
+            .get();
 
-  return {
-    userId: userId,
-    username: userData.username || "Anonymous",
-    bio: userData.bio || null,
-    location,
-    locationName,
-    tier: userData.tier || "Free",
-    xp: userData.xp || 0,
-    badges: userData.badges || [],
-    photoFileId: userData.photoFileId || null,
-    createdAt: serializeDate(userData.createdAt),
-    lastActive: serializeDate(userData.lastActive),
-    locationUpdatedAt: serializeDate(userData.locationUpdatedAt),
-    membership: membershipInfo
-      ? {
-          tier: membershipInfo.tier,
-          status: membershipInfo.status,
-          expiresAt: serializeDate(membershipInfo.expiresAt),
-          daysRemaining: membershipInfo.daysRemaining,
-          updatedAt: serializeDate(membershipInfo.updatedAt),
-          updatedBy: membershipInfo.updatedBy || null,
+        const posts = [];
+        for (const doc of postsSnapshot.docs) {
+            const postData = doc.data();
+
+            // Get user info
+            let username = 'Anonymous';
+            try {
+                const userDoc = await db.collection('users').doc(postData.userId).get();
+                if (userDoc.exists) {
+                    username = userDoc.data().username || 'Anonymous';
+                }
+            } catch (err) {
+                logger.warn(`Failed to get username for user ${postData.userId}`);
+            }
+
+            posts.push({
+                id: doc.id,
+                userId: postData.userId,
+                username,
+                content: postData.content,
+                imageUrl: postData.imageUrl || null,
+                createdAt: serializeDate(postData.createdAt),
+                likes: postData.likes || 0,
+                comments: postData.comments || 0
+            });
         }
-      : null,
-  };
+
+        res.json({ success: true, posts });
+        logger.info('Posts fetched successfully');
+    } catch (error) {
+        logger.error('Error fetching posts:', error);
+        res.status(500).json({ error: 'Failed to fetch posts' });
+    }
+});
+
+/**
+ * Create a new post
+ */
+app.post('/api/posts', authenticateTelegramUser, async (req, res) => {
+    try {
+        const { userId, content, imageUrl } = req.body;
+
+        if (!content || content.trim().length === 0) {
+            return res.status(400).json({ error: 'Content is required' });
+        }
+
+        if (content.length > 1000) {
+            return res.status(400).json({ error: 'Content too long (max 1000 characters)' });
+        }
+
+        const postData = {
+            userId,
+            content: content.trim(),
+            imageUrl: imageUrl || null,
+            createdAt: new Date(),
+            likes: 0,
+            comments: 0,
+            likedBy: []
+        };
+
+        const postRef = await db.collection('posts').add(postData);
+
+        // Update user's post count
+        try {
+            const userRef = db.collection('users').doc(userId);
+            await userRef.update({
+                postsCount: (await userRef.get()).data()?.postsCount + 1 || 1
+            });
+        } catch (err) {
+            logger.warn(`Failed to update post count for user ${userId}`);
+        }
+
+        res.json({
+            success: true,
+            post: {
+                id: postRef.id,
+                ...postData,
+                createdAt: postData.createdAt.toISOString()
+            }
+        });
+
+        logger.info(`Post created by user ${userId}`);
+    } catch (error) {
+        logger.error('Error creating post:', error);
+        res.status(500).json({ error: 'Failed to create post' });
+    }
+});
+
+/**
+ * Like a post
+ */
+app.post('/api/posts/:postId/like', authenticateTelegramUser, async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const { userId } = req.body;
+
+        const postRef = db.collection('posts').doc(postId);
+        const postDoc = await postRef.get();
+
+        if (!postDoc.exists) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        const postData = postDoc.data();
+        const likedBy = postData.likedBy || [];
+
+        if (likedBy.includes(userId)) {
+            // Unlike
+            await postRef.update({
+                likes: (postData.likes || 1) - 1,
+                likedBy: likedBy.filter(id => id !== userId)
+            });
+            res.json({ success: true, liked: false });
+        } else {
+            // Like
+            await postRef.update({
+                likes: (postData.likes || 0) + 1,
+                likedBy: [...likedBy, userId]
+            });
+            res.json({ success: true, liked: true });
+        }
+
+        logger.info(`Post ${postId} liked/unliked by user ${userId}`);
+    } catch (error) {
+        logger.error('Error liking post:', error);
+        res.status(500).json({ error: 'Failed to like post' });
+    }
+});
+
+// ========================================
+// Contact API
+// ========================================
+
+/**
+ * Submit contact form
+ */
+app.post('/api/contact', async (req, res) => {
+    try {
+        const { name, email, subject, message } = req.body;
+
+        if (!name || !email || !subject || !message) {
+            return res.status(400).json({ error: 'All fields are required' });
+        }
+
+        const contactData = {
+            name,
+            email,
+            subject,
+            message,
+            createdAt: new Date(),
+            status: 'new'
+        };
+
+        await db.collection('contact_messages').add(contactData);
+
+        res.json({ success: true, message: 'Message sent successfully' });
+        logger.info(`Contact message received from ${email}`);
+    } catch (error) {
+        logger.error('Error submitting contact form:', error);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+// ========================================
+// Active Users API
+// ========================================
+
+/**
+ * Get recently active users
+ */
+app.get('/api/users/active', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 10;
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+
+        const usersSnapshot = await db.collection('users')
+            .where('lastActive', '>=', fiveMinutesAgo)
+            .orderBy('lastActive', 'desc')
+            .limit(limit)
+            .get();
+
+        const users = usersSnapshot.docs.map(doc => ({
+            userId: doc.id,
+            username: doc.data().username || 'Anonymous',
+            lastActive: serializeDate(doc.data().lastActive)
+        }));
+
+        res.json({ success: true, users });
+    } catch (error) {
+        logger.error('Error fetching active users:', error);
+        res.status(500).json({ error: 'Failed to fetch active users' });
+    }
+});
+
+// ========================================
+// Profile API
+// ========================================
+
+/**
+ * Get user profile
+ */
+app.get('/api/profile/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const userRef = db.collection('users').doc(userId);
+        const userDoc = await userRef.get();
+
+        if (!userDoc.exists) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const userData = userDoc.data();
+
+        res.json({
+            success: true,
+            user: {
+                userId,
+                username: userData.username || 'Anonymous',
+                bio: userData.bio || null,
+                role: userData.role || 'member',
+                tier: userData.tier || 'Free',
+                postsCount: userData.postsCount || 0,
+                followers: userData.followers || 0,
+                createdAt: serializeDate(userData.createdAt),
+                lastActive: serializeDate(userData.lastActive)
+            }
+        });
+
+        logger.info(`Profile fetched for user ${userId}`);
+    } catch (error) {
+        logger.error('Error fetching profile:', error);
+        res.status(500).json({ error: 'Failed to fetch profile' });
+    }
+});
+
+/**
+ * Update user profile
+ */
+app.put('/api/profile/:userId', authenticateTelegramUser, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { bio } = req.body;
+
+        const userRef = db.collection('users').doc(userId);
+        const updateData = {};
+
+        if (bio !== undefined) {
+            if (bio.length > 500) {
+                return res.status(400).json({ error: 'Bio too long (max 500 characters)' });
+            }
+            updateData.bio = bio.trim();
+        }
+
+        updateData.updatedAt = new Date();
+
+        await userRef.update(updateData);
+
+        res.json({ success: true, message: 'Profile updated' });
+        logger.info(`Profile updated for user ${userId}`);
+    } catch (error) {
+        logger.error('Error updating profile:', error);
+        res.status(500).json({ error: 'Failed to update profile' });
+    }
+});
+
+// ========================================
+// AI Chatbot API (Cristina)
+// ========================================
+
+/**
+ * Chat with AI assistant
+ */
+app.post('/api/chat', async (req, res) => {
+    try {
+        const { message, userId } = req.body;
+
+        if (!message) {
+            return res.status(400).json({ error: 'Message is required' });
+        }
+
+        // Save chat message
+        await db.collection('chat_history').add({
+            userId,
+            message,
+            timestamp: new Date()
+        });
+
+        // In production, integrate with actual LLM API (OpenAI, Anthropic, etc.)
+        // For now, return a simple response
+        const response = generateSimpleResponse(message);
+
+        res.json({
+            success: true,
+            response,
+            timestamp: new Date().toISOString()
+        });
+
+        logger.info(`Chat message processed for user ${userId}`);
+    } catch (error) {
+        logger.error('Error processing chat:', error);
+        res.status(500).json({ error: 'Failed to process chat' });
+    }
+});
+
+function generateSimpleResponse(message) {
+    const lowerMessage = message.toLowerCase();
+
+    const responses = {
+        'hello': 'Hi there! How can I help you today?',
+        'help': 'I can help you with questions about PNPtv features, your account, or general support. What would you like to know?',
+        'feature': 'PNPtv offers community feeds, live streaming, user profiles, and premium memberships. Which feature interests you?',
+        'profile': 'You can customize your profile by going to the Profile tab and tapping the edit button.',
+        'post': 'To create a post, tap the + button on the Feed page. You can share text and images with the community.',
+        'premium': 'Premium members get exclusive features like priority support, advanced customization, and ad-free experience.',
+        'contact': 'You can reach us through the Contact tab, or I can help answer your questions right here!',
+        'default': 'I understand you\'re asking about that. Could you provide more details so I can better assist you?'
+    };
+
+    for (const [keyword, response] of Object.entries(responses)) {
+        if (keyword !== 'default' && lowerMessage.includes(keyword)) {
+            return response;
+        }
+    }
+
+    return responses.default;
 }
 
-function prepareLocationUpdate(rawLocation) {
-  if (rawLocation === undefined) {
-    return {};
-  }
-
-  if (rawLocation === null) {
-    return {
-      location: null,
-      locationName: null,
-      locationGeohash: null,
-      locationUpdatedAt: new Date(),
-    };
-  }
-
-  if (
-    typeof rawLocation !== "object" ||
-    rawLocation === null ||
-    typeof rawLocation.latitude === "undefined" ||
-    typeof rawLocation.longitude === "undefined"
-  ) {
-    throw new Error("Location must include latitude and longitude");
-  }
-
-  const parsedLocation = {
-    latitude: Number(rawLocation.latitude),
-    longitude: Number(rawLocation.longitude),
-  };
-
-  if (!isValidLocation(parsedLocation)) {
-    throw new Error("Invalid location coordinates");
-  }
-
-  return {
-    location: parsedLocation,
-    locationName: approximateLocation(
-      parsedLocation.latitude,
-      parsedLocation.longitude
-    ),
-    locationGeohash: simpleGeohash(
-      parsedLocation.latitude,
-      parsedLocation.longitude
-    ),
-    locationUpdatedAt: new Date(),
-  };
-}
+// ========================================
+// Main Routes
+// ========================================
 
 /**
- * API: Get user profile
+ * Serve new mini app
  */
-app.get("/api/profile/:userId", authenticateTelegramUser, async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const userRef = db.collection("users").doc(userId);
-    const doc = await userRef.get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const userData = doc.data();
-
-    let membershipInfo = null;
-    try {
-      membershipInfo = await getMembershipInfo(userId);
-    } catch (membershipError) {
-      logger.warn(
-        `API: Failed to load membership info for user ${userId}:`,
-        membershipError.message
-      );
-    }
-
-    res.json({
-      success: true,
-      user: buildUserResponse(userId, userData, membershipInfo),
-    });
-
-    logger.info(`API: Profile fetched for user ${userId}`);
-  } catch (error) {
-    logger.error("API Error fetching profile:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
+app.get('/new-app', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'new-app.html'));
 });
 
 /**
- * API: Update user profile
+ * Serve main app (default)
  */
-app.put("/api/profile/:userId", authenticateTelegramUser, async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { bio, location } = req.body;
-    const userRef = db.collection("users").doc(userId);
-    const doc = await userRef.get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const updateData = {};
-
-    if (bio !== undefined) {
-      if (typeof bio !== "string" || bio.length > MAX_BIO_LENGTH) {
-        return res
-          .status(400)
-          .json({ error: `Bio must be a string of up to ${MAX_BIO_LENGTH} characters` });
-      }
-      updateData.bio = bio.trim();
-    }
-
-    if (location !== undefined) {
-      try {
-        Object.assign(updateData, prepareLocationUpdate(location));
-      } catch (locationError) {
-        return res.status(400).json({ error: locationError.message });
-      }
-    }
-
-    if (Object.keys(updateData).length === 0) {
-      return res
-        .status(400)
-        .json({ error: "No valid fields provided for update" });
-    }
-
-    updateData.updatedAt = new Date();
-
-    await userRef.update(updateData);
-
-    const updatedDoc = await userRef.get();
-    const updatedData = updatedDoc.data();
-
-    let membershipInfo = null;
-    try {
-      membershipInfo = await getMembershipInfo(userId);
-    } catch (membershipError) {
-      logger.warn(
-        `API: Failed to refresh membership info for user ${userId}:`,
-        membershipError.message
-      );
-    }
-
-    res.json({
-      success: true,
-      message: "Profile updated",
-      user: buildUserResponse(userId, updatedData, membershipInfo),
-    });
-    logger.info(`API: Profile updated for user ${userId}`);
-  } catch (error) {
-    logger.error("API Error updating profile:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'new-app.html'));
 });
 
-/**
- * API: Get nearby users
- */
-app.post("/api/map/nearby", authenticateTelegramUser, async (req, res) => {
-  try {
-    const { userId, latitude, longitude, radius = 25 } = req.body;
-
-    const userLocation = {
-      latitude: Number(latitude),
-      longitude: Number(longitude),
-    };
-
-    if (!isValidLocation(userLocation)) {
-      return res.status(400).json({ error: "Valid latitude and longitude required" });
-    }
-
-    const searchRadius = Number(radius) || 25;
-
-    // OPTIMIZED: Use geohash-based querying for better performance
-    const precision = getGeohashPrecision(searchRadius);
-    const centerHash = simpleGeohash(
-      userLocation.latitude,
-      userLocation.longitude,
-      precision
-    );
-    const searchHashes = getGeohashNeighbors(centerHash, precision);
-
-    // Query users with matching geohashes (up to 10 due to Firestore 'in' limit)
-    const usersSnapshot = await db
-      .collection("users")
-      .where("locationGeohash", "in", searchHashes.slice(0, 10))
-      .limit(MAX_NEARBY_USERS * 2) // Get more for filtering
-      .get();
-
-    const candidates = [];
-    usersSnapshot.forEach((doc) => {
-      if (doc.id === userId) {
-        return;
-      }
-
-      const data = doc.data();
-      if (!isValidLocation(data.location)) {
-        return;
-      }
-
-      const locationName =
-        data.locationName ||
-        approximateLocation(
-          data.location.latitude,
-          data.location.longitude
-        );
-
-      const lastActive = data.lastActive?.toDate
-        ? data.lastActive.toDate()
-        : data.lastActive || null;
-
-      candidates.push({
-        userId: doc.id,
-        username: data.username || "Anonymous",
-        tier: data.tier || "Free",
-        location: data.location,
-        locationName,
-        bio: data.bio || null,
-        xp: data.xp || 0,
-        photoFileId: data.photoFileId || null,
-        lastActive,
-      });
-    });
-
-    const nearbyUsers = findUsersWithinRadius(
-      userLocation,
-      candidates,
-      searchRadius
-    )
-      .slice(0, MAX_NEARBY_USERS)
-      .map((user) => ({
-        userId: user.userId,
-        username: user.username,
-        tier: user.tier,
-        bio: user.bio,
-        xp: user.xp,
-        photoFileId: user.photoFileId,
-        location: user.location,
-        locationName: user.locationName,
-        distance: user.distance,
-        distanceFormatted: user.distanceFormatted,
-        distanceCategory: getDistanceCategory(user.distance),
-        lastActive: serializeDate(user.lastActive),
-      }));
-
-    res.json({
-      success: true,
-      users: nearbyUsers,
-    });
-
-    logger.info(
-      `API: Nearby users fetched for ${userId || "unknown"} within ${searchRadius}km`
-    );
-  } catch (error) {
-    logger.error("API Error fetching nearby users:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-/**
- * API: Get live streams (placeholder for now)
- */
-app.get("/api/live/streams", async (req, res) => {
-  try {
-    // Placeholder - will be implemented with actual streaming functionality
-    res.json({
-      success: true,
-      streams: [],
-      message: "Live streaming coming soon!",
-    });
-
-    logger.info("API: Live streams fetched");
-  } catch (error) {
-    logger.error("API Error fetching streams:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-/**
- * API: Get subscription plans
- */
-app.get("/api/plans", (req, res) => {
-  const plans = require("../config/plans");
-  res.json({ success: true, plans });
-});
-
-/**
- * API: Create payment link for subscription
- */
-app.post("/api/payment/create", authenticateTelegramUser, async (req, res) => {
-  try {
-    const { userId, planType } = req.body;
-
-    logger.info(`[API] Payment link creation requested`, {
-      userId,
-      planType,
-    });
-
-    // Validate inputs
-    if (!userId || !planType) {
-      return res.status(400).json({
-        success: false,
-        error: "Missing required parameters: userId, planType",
-      });
-    }
-
-    // Get user data
-    const userDoc = await db.collection("users").doc(userId).get();
-    if (!userDoc.exists) {
-      return res.status(404).json({
-        success: false,
-        error: "User not found",
-      });
-    }
-
-    const userData = userDoc.data();
-    const userEmail = userData.email || `${userId}@telegram.user`;
-    const userName = userData.username || `User${userId}`;
-
-    // Get plan configuration
-    const plans = require("../config/plans");
-    const planKey = planType.toUpperCase();
-    const plan = plans[planKey];
-
-    if (!plan) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid plan type: ${planType}`,
-      });
-    }
-
-    // Check if user already has this tier
-    if (userData.tier === plan.tier) {
-      return res.status(400).json({
-        success: false,
-        error: `You already have the ${plan.tier} plan`,
-      });
-    }
-
-    // Create payment link
-    const epayco = require("../config/epayco");
-    const paymentData = await epayco.createPaymentLink({
-      name: plan.name,
-      description: plan.description,
-      amount: plan.priceInCOP,
-      currency: "COP",
-      userId: userId,
-      userEmail: userEmail,
-      userName: userName,
-      plan: planType.toLowerCase(),
-    });
-
-    logger.info(`[API] Payment link created successfully`, {
-      userId,
-      planType,
-      reference: paymentData.reference,
-    });
-
-    res.json({
-      success: true,
-      paymentUrl: paymentData.paymentUrl,
-      reference: paymentData.reference,
-      plan: {
-        name: plan.name,
-        price: plan.priceInCOP,
-        currency: "COP",
-        tier: plan.tier,
-      },
-    });
-  } catch (error) {
-    logger.error("[API] Error creating payment link:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to create payment link",
-      message: error.message,
-    });
-  }
-});
-
-/**
- * ePayco Webhook Routes
- */
-const epaycoWebhook = require("./epaycoWebhook");
-app.use("/epayco", epaycoWebhook);
-
-/**
- * Debug: Test ePayco payment link creation
- */
-app.get("/debug/test-payment", async (req, res) => {
-  try {
-    const epayco = require("../config/epayco");
-    const plans = require("../config/plans");
-
-    const testUserId = "123456789";
-    const plan = plans.SILVER;
-
-    logger.info("[DEBUG] Testing ePayco payment link creation");
-    logger.info("[DEBUG] Environment check:", {
-      publicKey: !!process.env.EPAYCO_PUBLIC_KEY,
-      privateKey: !!process.env.EPAYCO_PRIVATE_KEY,
-      testMode: process.env.EPAYCO_TEST_MODE,
-    });
-
-    const paymentData = await epayco.createPaymentLink({
-      name: plan.name,
-      description: plan.description || `${plan.name} subscription`,
-      amount: plan.priceInCOP,
-      currency: "COP",
-      userId: testUserId,
-      userEmail: "test@telegram.user",
-      userName: "Test User",
-      plan: "silver",
-    });
-
-    res.json({
-      success: true,
-      message: "Payment link created successfully",
-      data: {
-        paymentUrl: paymentData.paymentUrl,
-        reference: paymentData.reference,
-        invoiceId: paymentData.invoiceId,
-      },
-    });
-
-    logger.info("[DEBUG] Payment link test successful");
-  } catch (error) {
-    logger.error("[DEBUG] Payment link test failed:", error);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      stack: error.stack,
-    });
-  }
-});
-
-/**
- * Serve Mini App main page
- */
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// 404 handler for unknown routes
+// 404 handler
 app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Route not found',
-    path: req.path,
-  });
+    res.status(404).json({
+        success: false,
+        error: 'Route not found',
+        path: req.path
+    });
 });
 
-// Global error handler (must be last)
-app.use(errorHandler);
+// Global error handler
+app.use((err, req, res, next) => {
+    logger.error('Server error:', err);
+    res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+    });
+});
 
-// Track if server is already running
+// Track server instance
 let serverInstance = null;
 
 /**
- * Start server (only once)
+ * Start server
  */
 function startServer() {
-  return new Promise((resolve, reject) => {
-    // Prevent duplicate server instances
-    if (serverInstance) {
-      logger.info("Web server already running, skipping duplicate start");
-      return resolve(serverInstance);
-    }
+    return new Promise((resolve, reject) => {
+        if (serverInstance) {
+            logger.info('Web server already running');
+            return resolve(serverInstance);
+        }
 
-    const server = app.listen(PORT, () => {
-      logger.info(`Web server running on port ${PORT}`);
-      console.log(`🌐 Mini App available at: http://localhost:${PORT}`);
-      serverInstance = server;
-      resolve(server);
-    });
+        const server = app.listen(PORT, () => {
+            logger.info(`Web server running on port ${PORT}`);
+            console.log(`🌐 Mini App available at: http://localhost:${PORT}`);
+            serverInstance = server;
+            resolve(server);
+        });
 
-    server.on("error", (error) => {
-      if (error.code === "EADDRINUSE") {
-        logger.warn(`Port ${PORT} already in use, server may already be running`);
-        // Don't reject, just resolve null
-        resolve(null);
-      } else {
-        logger.error("Failed to start web server:", error);
-        reject(error);
-      }
+        server.on('error', (error) => {
+            if (error.code === 'EADDRINUSE') {
+                logger.warn(`Port ${PORT} already in use`);
+                resolve(null);
+            } else {
+                logger.error('Failed to start web server:', error);
+                reject(error);
+            }
+        });
     });
-  });
 }
 
-// Export for use in bot
 module.exports = { app, startServer };
