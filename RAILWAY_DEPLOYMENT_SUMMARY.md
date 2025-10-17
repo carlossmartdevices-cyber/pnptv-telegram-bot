@@ -50,11 +50,11 @@ Follow this super quick guide: **[RAILWAY_QUICKSTART.md](RAILWAY_QUICKSTART.md)*
 
 4. **Generate Domain**
    - Settings → Networking → Generate Domain
-   - Copy URL (e.g., `https://pnptv-production.up.railway.app`)
+   - Copy URL (e.g., `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com`)
 
 5. **Add Web App URL**
    ```env
-   WEB_APP_URL=https://your-app.up.railway.app
+   WEB_APP_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
    ```
 
 6. **Deploy!**
@@ -143,11 +143,11 @@ Firebase ha sido inicializado correctamente
 5. Should open inside Telegram! 🎉
 
 ### 4. Test Demo Page
-Visit: `https://your-app.up.railway.app/demo.html`
+Visit: `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/demo.html`
 
 ### 5. Test API
 ```bash
-curl https://your-app.up.railway.app/api/plans
+curl https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/api/plans
 ```
 
 ## 🔄 How to Update
@@ -236,7 +236,7 @@ After deploying:
 
 **Your bot will be live at:**
 ```
-https://your-app.up.railway.app
+https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 ```
 
 **Mini App will work in Telegram with HTTPS!** 🎉

@@ -21,12 +21,12 @@ EPAYCO_PRIVATE_KEY=80174d93a6f8d760f5cca2b2cc6ee48b
 EPAYCO_P_CUST_ID=1555482
 EPAYCO_P_KEY=e76ae8e9551df6e3b353434c4de34ef2dafa41bf
 EPAYCO_TEST_MODE=true
-EPAYCO_RESPONSE_URL=https://pnptv-telegram-bot-production.up.railway.app/epayco/response
-EPAYCO_CONFIRMATION_URL=https://pnptv-telegram-bot-production.up.railway.app/epayco/confirmation
+EPAYCO_RESPONSE_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/response
+EPAYCO_CONFIRMATION_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation
 
 # Bot URLs
-BOT_URL=https://pnptv-telegram-bot-production.up.railway.app
-WEB_APP_URL=https://pnptv-telegram-bot-production.up.railway.app
+BOT_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
+WEB_APP_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 
 # Web Server
 PORT=3000
@@ -74,11 +74,11 @@ Currently set to: `EPAYCO_TEST_MODE=true`
 
 Your webhook endpoints are configured as:
 
-- **Response URL**: `https://pnptv-telegram-bot-production.up.railway.app/epayco/response`
+- **Response URL**: `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/response`
   - Called when user completes/cancels payment
   - User is redirected here
 
-- **Confirmation URL**: `https://pnptv-telegram-bot-production.up.railway.app/epayco/confirmation`
+- **Confirmation URL**: `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation`
   - Called by ePayco server-to-server
   - Must be publicly accessible
   - Must respond with status 200

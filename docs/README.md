@@ -248,7 +248,7 @@ npm start  # Los logs aparecen en terminal
 - **Telegram Bots:** https://core.telegram.org/bots
 - **Telegram Mini Apps:** https://core.telegram.org/bots/webapps
 - **Firebase:** https://firebase.google.com/docs
-- **Railway:** https://docs.railway.app/
+- **Railway:** https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/
 - **Heroku:** https://devcenter.heroku.com/
 
 #### APIs de Pago

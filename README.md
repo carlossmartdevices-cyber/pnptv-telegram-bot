@@ -203,26 +203,26 @@ To test the web interface without Telegram:
 http://localhost:3000/demo.html
 ```
 
-## 🚂 Deploy to Railway (Recommended for Testing)
+## 🚀 Deployment
 
-Deploy your bot with HTTPS in 5 minutes!
+### Heroku (Production)
 
-**Quick Deploy:**
+Your bot is currently deployed on Heroku:
+- **URL:** https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
+- Mini App with HTTPS enabled
+- Automatic deployments from main branch
+
+See **[HEROKU_DEPLOYMENT.md](HEROKU_DEPLOYMENT.md)** for deployment guide.
+
+### Railway (Alternative)
+
+You can also deploy to Railway for testing:
 1. Push to GitHub
 2. Connect to Railway: https://railway.app/new
 3. Add environment variables
 4. Get free HTTPS domain
-5. Mini App works in Telegram!
 
 See complete guide: **[RAILWAY_QUICKSTART.md](RAILWAY_QUICKSTART.md)**
-
-**Full documentation:** [DEPLOY_RAILWAY.md](DEPLOY_RAILWAY.md)
-
-**What you get:**
-- ✅ Free HTTPS domain
-- ✅ $5/month free credit
-- ✅ Automatic deployments
-- ✅ Mini App working in Telegram
 
 ## 🛠️ Available Commands
 

@@ -4,7 +4,7 @@ Railway is perfect for testing your Mini App! It's free, gives you HTTPS automat
 
 ## ✨ What You'll Get
 
-- ✅ **Free HTTPS domain** (e.g., `https://pnptv-production.up.railway.app`)
+- ✅ **Free HTTPS domain** (e.g., `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com`)
 - ✅ **Both bot and web server** running
 - ✅ **Mini App working in Telegram** (no ngrok needed!)
 - ✅ **$5/month free credit** (enough for testing)
@@ -67,7 +67,7 @@ NODE_ENV=production
 1. In Railway dashboard, go to **"Settings"** tab
 2. Scroll to **"Networking"** section
 3. Click **"Generate Domain"**
-4. You'll get a URL like: `https://pnptv-production.up.railway.app`
+4. You'll get a URL like: `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com`
 5. **Copy this URL!**
 
 ### Step 5: Add Web App URL
@@ -75,7 +75,7 @@ NODE_ENV=production
 1. Go back to **"Variables"** tab
 2. Add new variable:
    ```
-   WEB_APP_URL=https://pnptv-production.up.railway.app
+   WEB_APP_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
    ```
 3. Replace with YOUR actual Railway URL
 
@@ -305,14 +305,14 @@ https://t.me/PNPtvbot
 
 **Mini App URL (for sharing):**
 ```
-https://your-app.up.railway.app/demo.html
+https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/demo.html
 ```
 
 **API Endpoints:**
 ```
-https://your-app.up.railway.app/api/profile/:userId
-https://your-app.up.railway.app/api/map/nearby
-https://your-app.up.railway.app/api/plans
+https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/api/profile/:userId
+https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/api/map/nearby
+https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/api/plans
 ```
 
 ## 🎉 Success Checklist
@@ -326,7 +326,7 @@ https://your-app.up.railway.app/api/plans
 - [ ] Deployment successful (green checkmark)
 - [ ] Bot responds in Telegram
 - [ ] Mini App opens with "🚀 Open Mini App" button
-- [ ] Can access `https://your-app.up.railway.app/demo.html`
+- [ ] Can access `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/demo.html`
 
 ## 🚀 Next Steps After Deployment
 
@@ -369,7 +369,7 @@ npm start
 ## 🆘 Need Help?
 
 **Railway Docs:**
-https://docs.railway.app
+https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 
 **Railway Discord:**
 https://discord.gg/railway
@@ -407,7 +407,7 @@ git push
 **Result:** Working Mini App with HTTPS!
 
 **Your Mini App will be live at:**
-`https://your-app.up.railway.app`
+`https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com`
 
 ---
 

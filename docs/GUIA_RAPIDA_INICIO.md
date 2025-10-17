@@ -325,7 +325,7 @@ npm start
 - **Telegram Bots:** https://core.telegram.org/bots
 - **Firebase:** https://firebase.google.com/docs
 - **ePayco:** https://docs.epayco.co/
-- **Railway:** https://docs.railway.app/
+- **Railway:** https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/
 
 ### Debugging
 ```bash
@@ -411,7 +411,7 @@ Antes de continuar con desarrollo:
 - **ePayco API:** https://docs.epayco.co/
 
 ### Para DevOps
-- **Railway Guide:** https://docs.railway.app/
+- **Railway Guide:** https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/
 - **Heroku Guide:** https://devcenter.heroku.com/
 - **Monitoring:** https://betterstack.com/
 

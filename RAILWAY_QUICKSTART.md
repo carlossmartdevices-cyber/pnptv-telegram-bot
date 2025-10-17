@@ -41,10 +41,10 @@ NODE_ENV=production
 ### 4. Generate Domain & Add URL (30 sec)
 
 1. **Settings** tab → **Networking** → **Generate Domain**
-2. Copy URL (e.g., `https://pnptv-production.up.railway.app`)
+2. Copy URL (e.g., `https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com`)
 3. **Variables** tab → Add:
    ```
-   WEB_APP_URL=https://pnptv-production.up.railway.app
+   WEB_APP_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
    ```
 
 ### 5. Test! (Instant)
@@ -78,17 +78,17 @@ Look for:
 
 **Mini App:**
 ```
-https://your-app.up.railway.app
+https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
 ```
 
 **Demo Page:**
 ```
-https://your-app.up.railway.app/demo.html
+https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/demo.html
 ```
 
 **API:**
 ```
-https://your-app.up.railway.app/api/plans
+https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/api/plans
 ```
 
 ## 🔄 Update Code

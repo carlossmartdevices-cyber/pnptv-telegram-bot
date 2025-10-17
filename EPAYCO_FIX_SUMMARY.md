@@ -145,9 +145,9 @@ EPAYCO_P_KEY=your_p_key
 EPAYCO_TEST_MODE=true  # Use true for testing
 
 # Webhook URLs
-BOT_URL=https://your-app.railway.app
-EPAYCO_RESPONSE_URL=https://your-app.railway.app/epayco/response
-EPAYCO_CONFIRMATION_URL=https://your-app.railway.app/epayco/confirmation
+BOT_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com
+EPAYCO_RESPONSE_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/response
+EPAYCO_CONFIRMATION_URL=https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/epayco/confirmation
 ```
 
 ### 2. Run Automated Tests
@@ -167,7 +167,7 @@ http://localhost:3000/debug/test-payment
 
 Or in production:
 ```
-https://your-app.railway.app/debug/test-payment
+https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/debug/test-payment
 ```
 
 **Expected response:**
