@@ -204,7 +204,7 @@ function authenticateTelegramUser(req, res, next) {
     }
 
     // For body params, verify userId matches authenticated user
-    if (req.body.userId && req.body.userId !== userData.id) {
+    if (req.body && req.body.userId && req.body.userId !== userData.id) {
       logger.warn('[Auth] Body user ID mismatch', {
         requested: req.body.userId,
         authenticated: userData.id

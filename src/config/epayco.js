@@ -17,6 +17,76 @@ const epayco = epaycoSdk({
 });
 
 /**
+ * Validate ePayco credentials are properly configured
+ * @throws {Error} If any required credential is missing
+ */
+function validateCredentials() {
+  const requiredCredentials = {
+    EPAYCO_PUBLIC_KEY: process.env.EPAYCO_PUBLIC_KEY,
+    EPAYCO_PRIVATE_KEY: process.env.EPAYCO_PRIVATE_KEY,
+    EPAYCO_P_CUST_ID: process.env.EPAYCO_P_CUST_ID,
+    EPAYCO_P_KEY: process.env.EPAYCO_P_KEY,
+  };
+
+  const missingCredentials = [];
+  for (const [key, value] of Object.entries(requiredCredentials)) {
+    if (!value || value.trim() === "") {
+      missingCredentials.push(key);
+    }
+  }
+
+  if (missingCredentials.length > 0) {
+    const errorMessage = `Missing ePayco credentials: ${missingCredentials.join(", ")}. Please configure these in your .env file.`;
+    logger.error(errorMessage);
+    throw new Error(errorMessage);
+  }
+
+  logger.info("ePayco credentials validated successfully");
+}
+
+/**
+ * Validate payment link parameters
+ * @param {Object} params - Payment parameters
+ * @throws {Error} If any required parameter is missing or invalid
+ */
+function validatePaymentParams(params) {
+  const requiredParams = [
+    "name",
+    "description",
+    "amount",
+    "userId",
+    "userEmail",
+    "userName",
+    "plan",
+  ];
+
+  const missingParams = [];
+  for (const param of requiredParams) {
+    if (!params[param]) {
+      missingParams.push(param);
+    }
+  }
+
+  if (missingParams.length > 0) {
+    const errorMessage = `Missing required parameters: ${missingParams.join(", ")}`;
+    logger.error(errorMessage);
+    throw new Error(errorMessage);
+  }
+
+  // Validate amount is a positive number
+  if (typeof params.amount !== "number" || params.amount <= 0) {
+    throw new Error(`Invalid amount: ${params.amount}. Must be a positive number.`);
+  }
+
+  // Validate currency
+  if (params.currency && !["COP", "USD"].includes(params.currency)) {
+    throw new Error(`Invalid currency: ${params.currency}. Must be COP or USD.`);
+  }
+
+  logger.info("Payment parameters validated successfully");
+}
+
+/**
  * Create a payment link for subscription using ePayco Payment Link API
  * @param {Object} params - Payment parameters
  * @param {string} params.name - Product name
@@ -44,10 +114,20 @@ async function createPaymentLink({
       `Creating ePayco payment link for user ${userId}, plan: ${plan}`
     );
 
-    // Validate credentials
-    if (!process.env.EPAYCO_P_CUST_ID || !process.env.EPAYCO_P_KEY) {
-      throw new Error("ePayco credentials (P_CUST_ID, P_KEY) not configured");
-    }
+    // Validate credentials first
+    validateCredentials();
+
+    // Validate all required parameters
+    validatePaymentParams({
+      name,
+      description,
+      amount,
+      currency,
+      userId,
+      userEmail,
+      userName,
+      plan,
+    });
 
     // Generate unique invoice ID
     const invoiceId = `${plan}_${userId}_${Date.now()}`;
@@ -149,9 +229,34 @@ async function createPaymentLink({
       },
     };
   } catch (error) {
-    logger.error("Error creating ePayco payment link:", error);
-    logger.error("Error details:", error.response?.data || error.message);
-    throw error;
+    logger.error("Error creating ePayco payment link:", {
+      errorMessage: error.message,
+      errorStack: error.stack,
+      userId,
+      plan,
+      amount,
+      currency,
+      responseData: error.response?.data,
+    });
+
+    // Provide more specific error messages
+    if (error.message.includes("credentials")) {
+      throw new Error(
+        "ePayco payment gateway is not properly configured. Please check your environment variables."
+      );
+    } else if (error.message.includes("parameters")) {
+      throw new Error(
+        `Invalid payment parameters: ${error.message}`
+      );
+    } else if (error.response?.data) {
+      throw new Error(
+        `ePayco API error: ${JSON.stringify(error.response.data)}`
+      );
+    } else {
+      throw new Error(
+        `Failed to create payment link: ${error.message}`
+      );
+    }
   }
 }
 
@@ -314,4 +419,6 @@ module.exports = {
   createSubscription,
   verifyTransaction,
   cancelSubscription,
+  validateCredentials,
+  validatePaymentParams,
 };

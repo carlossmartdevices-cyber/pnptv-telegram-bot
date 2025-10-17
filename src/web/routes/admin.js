@@ -78,6 +78,14 @@ router.get(
 router.post(
   "/plans",
   asyncHandler(async (req, res) => {
+    // Validate req.body exists
+    if (!req.body) {
+      return res.status(400).json({
+        success: false,
+        error: "Request body is required",
+      });
+    }
+
     const {
       name,
       displayName,
@@ -153,6 +161,14 @@ router.post(
 router.put(
   "/plans/:id",
   asyncHandler(async (req, res) => {
+    // Validate req.body exists
+    if (!req.body) {
+      return res.status(400).json({
+        success: false,
+        error: "Request body is required",
+      });
+    }
+
     const { id } = req.params;
     const updates = req.body;
 

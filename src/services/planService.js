@@ -1,5 +1,16 @@
-const { db } = require("../config/firebase");
+const { db, admin } = require("../config/firebase");
 const logger = require("../utils/logger");
+const {
+  wrapFirestoreOperation,
+  retryFirestoreOperation,
+} = require("../utils/firestoreErrorHandler");
+
+let bucket = null;
+try {
+  bucket = admin.storage().bucket();
+} catch (error) {
+  logger.warn("Firebase Storage bucket not configured. Plan assets will be disabled.", { error: error.message });
+}
 
 class PlanService {
   constructor() {
@@ -107,24 +118,44 @@ class PlanService {
    * Get all plans (including inactive)
    */
   async getAllPlans() {
-    const snapshot = await this.plansCollection.get();
+    try {
+      const snapshot = await retryFirestoreOperation(
+        async () => await this.plansCollection.get(),
+        {
+          maxRetries: 2,
+          initialDelay: 500,
+          operationName: 'fetch all plans',
+          context: { service: 'PlanService' }
+        }
+      );
 
-    if (snapshot.empty) {
-      // Return static plans from config if Firestore is empty
-      logger.info("No plans in Firestore, returning static plans");
+      if (snapshot.empty) {
+        // Return static plans from config if Firestore is empty
+        logger.info("No plans in Firestore, returning static plans");
+        return Object.entries(this.staticPlans)
+          .filter(([key]) => key === key.toUpperCase()) // Only SILVER, GOLDEN (not lowercase aliases)
+          .map(([key, plan]) => ({
+            id: key.toLowerCase(),
+            ...plan,
+            active: true,
+          }));
+      }
+
+      return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+    } catch (error) {
+      logger.error('Failed to fetch plans from Firestore, falling back to static plans:', error.message);
+      // Fallback to static plans on error
       return Object.entries(this.staticPlans)
-        .filter(([key]) => key === key.toUpperCase()) // Only SILVER, GOLDEN (not lowercase aliases)
+        .filter(([key]) => key === key.toUpperCase())
         .map(([key, plan]) => ({
           id: key.toLowerCase(),
           ...plan,
           active: true,
         }));
     }
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
   }
 
   /**
@@ -132,10 +163,18 @@ class PlanService {
    */
   async getActivePlans() {
     try {
-      const snapshot = await this.plansCollection
-        .where("active", "==", true)
-        .orderBy("price", "asc")
-        .get();
+      const snapshot = await retryFirestoreOperation(
+        async () => await this.plansCollection
+          .where("active", "==", true)
+          .orderBy("price", "asc")
+          .get(),
+        {
+          maxRetries: 2,
+          initialDelay: 500,
+          operationName: 'fetch active plans',
+          context: { service: 'PlanService' }
+        }
+      );
 
       if (snapshot.empty) {
         // Return static plans from config if Firestore is empty
@@ -436,4 +475,3 @@ class PlanService {
 }
 
 module.exports = new PlanService();
-
