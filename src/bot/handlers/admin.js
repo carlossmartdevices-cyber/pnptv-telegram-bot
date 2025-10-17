@@ -588,51 +588,42 @@ async function setUserTier(ctx, userId, tier, durationDays = 30) {
 }
 
 /**
- * Broadcast message to all users
+ * Broadcast message to all users - Step 1: Choose Language
  */
 async function broadcastMessage(ctx) {
   try {
     const lang = ctx.session.language || "en";
 
-    // Show segmentation options menu
+    // Initialize broadcast wizard session
+    ctx.session.broadcastWizard = {
+      step: 1,
+      targetLanguage: null,
+      targetStatus: null,
+      media: null,
+      text: null,
+      buttons: null
+    };
+
     const message = lang === "es"
-      ? "📢 **Mensaje Masivo**\n\nSelecciona cómo segmentar el mensaje:"
-      : "📢 **Broadcast Message**\n\nSelect how to segment the message:";
+      ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 1 de 6:** Selecciona el idioma de los usuarios:"
+      : "📢 **Broadcast Wizard**\n\n**Step 1 of 6:** Select target user language:";
 
     const keyboard = {
       inline_keyboard: [
         [
           {
-            text: lang === "es" ? "🌍 Todos los usuarios" : "🌍 All Users",
-            callback_data: "broadcast_segment_all"
+            text: lang === "es" ? "🌍 Todos los idiomas" : "🌍 All Languages",
+            callback_data: "bcast_lang_all"
           }
         ],
         [
           {
             text: lang === "es" ? "🇺🇸 Solo inglés" : "🇺🇸 English only",
-            callback_data: "broadcast_segment_lang_en"
+            callback_data: "bcast_lang_en"
           },
           {
             text: lang === "es" ? "🇪🇸 Solo español" : "🇪🇸 Spanish only",
-            callback_data: "broadcast_segment_lang_es"
-          }
-        ],
-        [
-          {
-            text: lang === "es" ? "💎 Suscriptores activos" : "💎 Active Subscribers",
-            callback_data: "broadcast_segment_subscribers"
-          }
-        ],
-        [
-          {
-            text: lang === "es" ? "🆓 Solo nivel gratuito" : "🆓 Free tier only",
-            callback_data: "broadcast_segment_free"
-          }
-        ],
-        [
-          {
-            text: lang === "es" ? "⏰ Suscripciones expiradas" : "⏰ Expired subscriptions",
-            callback_data: "broadcast_segment_churned"
+            callback_data: "bcast_lang_es"
           }
         ],
         [
@@ -649,7 +640,7 @@ async function broadcastMessage(ctx) {
       reply_markup: keyboard
     });
 
-    logger.info(`Admin ${ctx.from.id} initiated broadcast`);
+    logger.info(`Admin ${ctx.from.id} initiated broadcast wizard`);
   } catch (error) {
     logger.error("Error in broadcast:", error);
     await ctx.reply(t("error", ctx.session.language || "en"));
@@ -657,56 +648,239 @@ async function broadcastMessage(ctx) {
 }
 
 /**
- * Handle broadcast segment selection
+ * Handle broadcast wizard steps
  */
-async function handleBroadcastSegment(ctx, segment) {
+async function handleBroadcastWizard(ctx, action) {
   try {
     const lang = ctx.session.language || "en";
 
-    // Store the segment in session
-    ctx.session.broadcastSegment = segment;
-    ctx.session.waitingFor = "broadcast_message";
-
-    let segmentLabel = "";
-    switch (segment) {
-      case "all":
-        segmentLabel = lang === "es" ? "todos los usuarios" : "all users";
-        break;
-      case "lang_en":
-        segmentLabel = lang === "es" ? "usuarios de habla inglesa" : "English-speaking users";
-        break;
-      case "lang_es":
-        segmentLabel = lang === "es" ? "usuarios de habla hispana" : "Spanish-speaking users";
-        break;
-      case "subscribers":
-        segmentLabel = lang === "es" ? "suscriptores activos" : "active subscribers";
-        break;
-      case "free":
-        segmentLabel = lang === "es" ? "usuarios del nivel gratuito" : "free tier users";
-        break;
-      case "churned":
-        segmentLabel = lang === "es" ? "suscripciones expiradas" : "expired subscriptions";
-        break;
+    if (!ctx.session.broadcastWizard) {
+      ctx.session.broadcastWizard = {
+        step: 1,
+        targetLanguage: null,
+        targetStatus: null,
+        media: null,
+        text: null,
+        buttons: null
+      };
     }
 
-    const message = lang === "es"
-      ? `📢 **Mensaje Masivo**\n\nSegmento: ${segmentLabel}\n\nEnvía el mensaje que quieres enviar:`
-      : `📢 **Broadcast Message**\n\nSegment: ${segmentLabel}\n\nSend the message you want to broadcast:`;
+    const wizard = ctx.session.broadcastWizard;
 
-    await ctx.editMessageText(message, { parse_mode: "Markdown" });
-    await ctx.answerCbQuery();
+    // Step 1: Language selection
+    if (action.startsWith("bcast_lang_")) {
+      const langChoice = action.replace("bcast_lang_", "");
+      wizard.targetLanguage = langChoice;
+      wizard.step = 2;
 
-    logger.info(`Admin ${ctx.from.id} selected broadcast segment: ${segment}`);
+      const message = lang === "es"
+        ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 2 de 6:** Selecciona el estado de los usuarios:"
+        : "📢 **Broadcast Wizard**\n\n**Step 2 of 6:** Select target user status:";
+
+      const keyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "👥 Todos los estados" : "👥 All Status",
+              callback_data: "bcast_status_all"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "💎 Suscriptores activos" : "💎 Active Subscribers",
+              callback_data: "bcast_status_subscribers"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "🆓 Solo nivel gratuito" : "🆓 Free tier only",
+              callback_data: "bcast_status_free"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "⏰ Suscripciones expiradas" : "⏰ Expired subscriptions",
+              callback_data: "bcast_status_churned"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "« Atrás" : "« Back",
+              callback_data: "bcast_back_to_lang"
+            },
+            {
+              text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
+              callback_data: "admin_back"
+            }
+          ]
+        ]
+      };
+
+      await ctx.editMessageText(message, {
+        parse_mode: "Markdown",
+        reply_markup: keyboard
+      });
+      await ctx.answerCbQuery();
+    }
+    // Step 2: Status selection
+    else if (action.startsWith("bcast_status_")) {
+      const statusChoice = action.replace("bcast_status_", "");
+      wizard.targetStatus = statusChoice;
+      wizard.step = 3;
+
+      const message = lang === "es"
+        ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 3 de 6:** ¿Quieres incluir un archivo multimedia?\n\nPuedes enviar una foto, video o documento, o presiona 'Omitir' para continuar sin multimedia."
+        : "📢 **Broadcast Wizard**\n\n**Step 3 of 6:** Do you want to include media?\n\nYou can send a photo, video, or document, or press 'Skip' to continue without media.";
+
+      const keyboard = {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "⏭️ Omitir (sin multimedia)" : "⏭️ Skip (no media)",
+              callback_data: "bcast_media_skip"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "« Atrás" : "« Back",
+              callback_data: "bcast_back_to_status"
+            },
+            {
+              text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
+              callback_data: "admin_back"
+            }
+          ]
+        ]
+      };
+
+      await ctx.editMessageText(message, {
+        parse_mode: "Markdown",
+        reply_markup: keyboard
+      });
+      await ctx.answerCbQuery();
+
+      // Set waiting for media upload
+      ctx.session.waitingFor = "broadcast_media";
+    }
+    // Step 3: Skip media
+    else if (action === "bcast_media_skip") {
+      wizard.media = null;
+      wizard.step = 4;
+      ctx.session.waitingFor = "broadcast_text";
+
+      const message = lang === "es"
+        ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 4 de 6:** Escribe el mensaje de texto que quieres enviar:"
+        : "📢 **Broadcast Wizard**\n\n**Step 4 of 6:** Type the text message you want to send:";
+
+      await ctx.editMessageText(message, { parse_mode: "Markdown" });
+      await ctx.answerCbQuery();
+    }
+    // Step 4: Skip buttons (after text)
+    else if (action === "bcast_buttons_skip") {
+      wizard.buttons = null;
+      await showBroadcastConfirmation(ctx);
+    }
+    // Step 5: Confirm send
+    else if (action === "bcast_confirm_send") {
+      await ctx.answerCbQuery();
+      await executeBroadcast(ctx);
+    }
+    // Step 5: Edit broadcast
+    else if (action === "bcast_edit") {
+      await ctx.answerCbQuery();
+      wizard.step = 1;
+      await broadcastMessage(ctx);
+    }
+    // Back navigation
+    else if (action === "bcast_back_to_lang") {
+      wizard.step = 1;
+      await broadcastMessage(ctx);
+      await ctx.answerCbQuery();
+    }
+    else if (action === "bcast_back_to_status") {
+      wizard.step = 2;
+      await handleBroadcastWizard(ctx, `bcast_lang_${wizard.targetLanguage}`);
+    }
+
   } catch (error) {
-    logger.error("Error handling broadcast segment:", error);
+    logger.error("Error handling broadcast wizard:", error);
     await ctx.reply(t("error", ctx.session.language || "en"));
   }
 }
 
 /**
- * Filter users based on broadcast segment
+ * Show broadcast confirmation with preview
  */
-function filterUsersBySegment(users, segment) {
+async function showBroadcastConfirmation(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    const wizard = ctx.session.broadcastWizard;
+
+    // Count target users
+    const usersSnapshot = await db.collection("users").get();
+    const allUsers = usersSnapshot.docs;
+    const filteredUsers = filterUsersByWizard(allUsers, wizard);
+
+    const langLabel = {
+      all: lang === "es" ? "Todos los idiomas" : "All languages",
+      en: lang === "es" ? "Solo inglés" : "English only",
+      es: lang === "es" ? "Solo español" : "Spanish only"
+    }[wizard.targetLanguage];
+
+    const statusLabel = {
+      all: lang === "es" ? "Todos los estados" : "All status",
+      subscribers: lang === "es" ? "Suscriptores activos" : "Active subscribers",
+      free: lang === "es" ? "Nivel gratuito" : "Free tier",
+      churned: lang === "es" ? "Suscripciones expiradas" : "Expired subscriptions"
+    }[wizard.targetStatus];
+
+    const mediaLabel = wizard.media
+      ? (wizard.media.type === "photo" ? "📷 Foto" : wizard.media.type === "video" ? "🎥 Video" : "📄 Documento")
+      : (lang === "es" ? "Sin multimedia" : "No media");
+
+    const buttonsLabel = wizard.buttons && wizard.buttons.length > 0
+      ? `${wizard.buttons.length} ${lang === "es" ? "botón(es)" : "button(s)"}`
+      : (lang === "es" ? "Sin botones" : "No buttons");
+
+    const message = lang === "es"
+      ? `📢 **Confirmación de Mensaje Masivo**\n\n**Configuración:**\n🌐 Idioma: ${langLabel}\n👥 Estado: ${statusLabel}\n📎 Multimedia: ${mediaLabel}\n🔘 Botones: ${buttonsLabel}\n\n**Mensaje:**\n${wizard.text}\n\n**Usuarios objetivo:** ${filteredUsers.length}\n\n¿Enviar mensaje masivo?`
+      : `📢 **Broadcast Confirmation**\n\n**Configuration:**\n🌐 Language: ${langLabel}\n👥 Status: ${statusLabel}\n📎 Media: ${mediaLabel}\n🔘 Buttons: ${buttonsLabel}\n\n**Message:**\n${wizard.text}\n\n**Target users:** ${filteredUsers.length}\n\nSend broadcast?`;
+
+    const keyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: lang === "es" ? "✅ Enviar ahora" : "✅ Send now",
+            callback_data: "bcast_confirm_send"
+          }
+        ],
+        [
+          {
+            text: lang === "es" ? "✏️ Editar" : "✏️ Edit",
+            callback_data: "bcast_edit"
+          },
+          {
+            text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
+            callback_data: "admin_back"
+          }
+        ]
+      ]
+    };
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: keyboard
+    });
+  } catch (error) {
+    logger.error("Error showing broadcast confirmation:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Filter users based on broadcast wizard settings
+ */
+function filterUsersByWizard(users, wizard) {
   const now = new Date();
 
   return users.filter(user => {
@@ -717,46 +891,51 @@ function filterUsersBySegment(users, segment) {
       return false;
     }
 
-    switch (segment) {
+    // Filter by language
+    if (wizard.targetLanguage !== "all") {
+      if (userData.language !== wizard.targetLanguage) {
+        return false;
+      }
+    }
+
+    // Filter by status
+    switch (wizard.targetStatus) {
       case "all":
-        return true;
-
-      case "lang_en":
-        return userData.language === "en";
-
-      case "lang_es":
-        return userData.language === "es";
+        // No additional filtering
+        break;
 
       case "subscribers":
         // Active subscribers with Silver or Golden tier and not expired
         if (!userData.tier || userData.tier === "Free") return false;
         if (!userData.expiresAt) return false;
         const expiresAt = userData.expiresAt.toDate();
-        return expiresAt > now;
+        if (expiresAt <= now) return false;
+        break;
 
       case "free":
-        return !userData.tier || userData.tier === "Free";
+        if (userData.tier && userData.tier !== "Free") return false;
+        break;
 
       case "churned":
         // Users who had a subscription but it expired
         if (!userData.tier || userData.tier === "Free") return false;
         if (!userData.expiresAt) return false;
         const expired = userData.expiresAt.toDate();
-        return expired <= now;
-
-      default:
-        return true;
+        if (expired > now) return false;
+        break;
     }
+
+    return true;
   });
 }
 
 /**
- * Send broadcast message to segmented users
+ * Execute broadcast message to segmented users
  */
-async function sendBroadcast(ctx, message) {
+async function executeBroadcast(ctx) {
   try {
     const lang = ctx.session.language || "en";
-    const segment = ctx.session.broadcastSegment || "all";
+    const wizard = ctx.session.broadcastWizard;
 
     const statusMsg = await ctx.reply(
       lang === "es"
@@ -767,19 +946,57 @@ async function sendBroadcast(ctx, message) {
     const usersSnapshot = await db.collection("users").get();
     const allUsers = usersSnapshot.docs;
 
-    // Filter users based on segment
-    const filteredUsers = filterUsersBySegment(allUsers, segment);
+    // Filter users based on wizard settings
+    const filteredUsers = filterUsersByWizard(allUsers, wizard);
 
     let sentCount = 0;
     let failedCount = 0;
     let skippedCount = allUsers.length - filteredUsers.length;
 
+    const messageOptions = {
+      parse_mode: "Markdown"
+    };
+
+    // Add inline buttons if configured
+    if (wizard.buttons && wizard.buttons.length > 0) {
+      messageOptions.reply_markup = {
+        inline_keyboard: wizard.buttons
+      };
+    }
+
     for (const doc of filteredUsers) {
       try {
         const userId = doc.id;
-        await ctx.telegram.sendMessage(userId, message, {
-          parse_mode: "Markdown",
-        });
+
+        // Send with media if available
+        if (wizard.media) {
+          const caption = wizard.text || "";
+
+          switch (wizard.media.type) {
+            case "photo":
+              await ctx.telegram.sendPhoto(userId, wizard.media.file_id, {
+                caption,
+                ...messageOptions
+              });
+              break;
+            case "video":
+              await ctx.telegram.sendVideo(userId, wizard.media.file_id, {
+                caption,
+                ...messageOptions
+              });
+              break;
+            case "document":
+              await ctx.telegram.sendDocument(userId, wizard.media.file_id, {
+                caption,
+                ...messageOptions
+              });
+              break;
+          }
+        } else {
+          // Send text only
+          await ctx.telegram.sendMessage(userId, wizard.text, messageOptions);
+        }
+
         sentCount++;
       } catch (error) {
         failedCount++;
@@ -804,12 +1021,62 @@ async function sendBroadcast(ctx, message) {
 
     await ctx.reply(resultMessage, { parse_mode: "Markdown" });
 
-    logger.info(`Admin ${ctx.from.id} sent broadcast to ${sentCount} users (segment: ${segment})`);
+    logger.info(`Admin ${ctx.from.id} sent broadcast to ${sentCount} users`);
 
+    // Clear wizard session
     ctx.session.waitingFor = null;
-    ctx.session.broadcastSegment = null;
+    ctx.session.broadcastWizard = null;
   } catch (error) {
-    logger.error("Error sending broadcast:", error);
+    logger.error("Error executing broadcast:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Legacy function for backward compatibility - redirects to text message handler
+ */
+async function sendBroadcast(ctx, message) {
+  // This is called from the text handler when waitingFor === "broadcast_message"
+  try {
+    const lang = ctx.session.language || "en";
+    const wizard = ctx.session.broadcastWizard;
+
+    if (!wizard) {
+      await ctx.reply(lang === "es" ? "Error: Sesión expirada" : "Error: Session expired");
+      return;
+    }
+
+    wizard.text = message;
+    wizard.step = 5;
+    ctx.session.waitingFor = "broadcast_buttons";
+
+    const msg = lang === "es"
+      ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 5 de 6:** ¿Quieres agregar botones al mensaje?\n\nEnvía los botones en formato:\n```\nTexto | URL\nTexto | URL\n```\n\nEjemplo:\n```\nVisitar sitio | https://ejemplo.com\nMás info | https://ejemplo.com/info\n```\n\nO presiona 'Omitir' para continuar sin botones."
+      : "📢 **Broadcast Wizard**\n\n**Step 5 of 6:** Do you want to add buttons to the message?\n\nSend buttons in format:\n```\nText | URL\nText | URL\n```\n\nExample:\n```\nVisit site | https://example.com\nMore info | https://example.com/info\n```\n\nOr press 'Skip' to continue without buttons.";
+
+    const keyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: lang === "es" ? "⏭️ Omitir (sin botones)" : "⏭️ Skip (no buttons)",
+            callback_data: "bcast_buttons_skip"
+          }
+        ],
+        [
+          {
+            text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
+            callback_data: "admin_back"
+          }
+        ]
+      ]
+    };
+
+    await ctx.reply(msg, {
+      parse_mode: "Markdown",
+      reply_markup: keyboard
+    });
+  } catch (error) {
+    logger.error("Error in sendBroadcast:", error);
     await ctx.reply(t("error", ctx.session.language || "en"));
   }
 }
@@ -3057,6 +3324,100 @@ async function reloadMenus(ctx) {
 }
 
 /**
+ * Handle broadcast media upload (Step 3)
+ */
+async function handleBroadcastMedia(ctx, mediaType) {
+  try {
+    const lang = ctx.session.language || "en";
+    const wizard = ctx.session.broadcastWizard;
+
+    if (!wizard) {
+      await ctx.reply(lang === "es" ? "Error: Sesión expirada" : "Error: Session expired");
+      return;
+    }
+
+    let fileId;
+    switch (mediaType) {
+      case "photo":
+        fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+        break;
+      case "video":
+        fileId = ctx.message.video.file_id;
+        break;
+      case "document":
+        fileId = ctx.message.document.file_id;
+        break;
+    }
+
+    wizard.media = {
+      type: mediaType,
+      file_id: fileId
+    };
+    wizard.step = 4;
+    ctx.session.waitingFor = "broadcast_text";
+
+    const message = lang === "es"
+      ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 4 de 6:** Escribe el mensaje de texto que quieres enviar:\n\n(Este será el caption del archivo multimedia)"
+      : "📢 **Broadcast Wizard**\n\n**Step 4 of 6:** Type the text message you want to send:\n\n(This will be the caption for the media)";
+
+    await ctx.reply(message, { parse_mode: "Markdown" });
+
+    logger.info(`Admin ${ctx.from.id} uploaded ${mediaType} for broadcast`);
+  } catch (error) {
+    logger.error("Error handling broadcast media:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle broadcast buttons text (Step 5)
+ */
+async function handleBroadcastButtons(ctx, buttonText) {
+  try {
+    const lang = ctx.session.language || "en";
+    const wizard = ctx.session.broadcastWizard;
+
+    if (!wizard) {
+      await ctx.reply(lang === "es" ? "Error: Sesión expirada" : "Error: Session expired");
+      return;
+    }
+
+    // Parse button text format: "Text | URL\nText | URL"
+    const lines = buttonText.trim().split('\n');
+    const buttons = [];
+
+    for (const line of lines) {
+      const parts = line.split('|').map(p => p.trim());
+      if (parts.length === 2) {
+        const [text, url] = parts;
+        if (text && url && url.startsWith('http')) {
+          buttons.push([{ text, url }]);
+        }
+      }
+    }
+
+    if (buttons.length === 0) {
+      const errorMsg = lang === "es"
+        ? "❌ Formato inválido. Usa:\n```\nTexto | URL\nTexto | URL\n```\n\nIntenta de nuevo o presiona 'Omitir'."
+        : "❌ Invalid format. Use:\n```\nText | URL\nText | URL\n```\n\nTry again or press 'Skip'.";
+
+      await ctx.reply(errorMsg, { parse_mode: "Markdown" });
+      return;
+    }
+
+    wizard.buttons = buttons;
+    ctx.session.waitingFor = null;
+
+    await showBroadcastConfirmation(ctx);
+
+    logger.info(`Admin ${ctx.from.id} added ${buttons.length} button(s) for broadcast`);
+  } catch (error) {
+    logger.error("Error handling broadcast buttons:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
  * Handle admin callback queries
  */
 async function handleAdminCallback(ctx) {
@@ -3070,9 +3431,9 @@ async function handleAdminCallback(ctx) {
       await showStats(ctx);
     } else if (action === "admin_broadcast") {
       await broadcastMessage(ctx);
-    } else if (action.startsWith("broadcast_segment_")) {
-      const segment = action.replace("broadcast_segment_", "");
-      await handleBroadcastSegment(ctx, segment);
+    } else if (action.startsWith("bcast_")) {
+      // Handle all broadcast wizard actions
+      await handleBroadcastWizard(ctx, action);
     } else if (action === "admin_users") {
       await listUsers(ctx);
     } else if (action === "admin_list_all") {
@@ -3202,6 +3563,8 @@ module.exports = {
   listUsers,
   broadcastMessage,
   sendBroadcast,
+  handleBroadcastMedia,
+  handleBroadcastButtons,
   handleAdminCallback,
   executeSearch,
   showExpiringMemberships,

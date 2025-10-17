@@ -47,11 +47,48 @@ async function handleSubscription(ctx, planIdentifier, retryCount = 0) {
       (await getPlanBySlug(identifier.toLowerCase()));
     if (!plan) throw new PlanNotFoundError(identifier);
 
+    const userId = ctx.from.id.toString();
+    const features = formatPlanFeatures(plan, lang);
+    const priceDisplay = `${plan.priceInCOP.toLocaleString()} ${
+      plan.currency || "COP"
+    }`;
+    const planNameDisplay = plan.displayName || plan.name;
+
+    // Handle Nequi payment method (manual activation)
+    if (plan.paymentMethod === "nequi") {
+      const message =
+        lang === "es"
+          ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💳 **Método de Pago: Nequi Negocios**\n\n⚠️ **Importante:** Después de completar el pago, envía tu comprobante al administrador para activar tu suscripción manualmente.\n\nHaz clic en el botón para ir a Nequi:`
+          : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💳 **Payment Method: Nequi Negocios**\n\n⚠️ **Important:** After completing payment, send your receipt to the admin for manual subscription activation.\n\nClick the button to go to Nequi:`;
+
+      await ctx.answerCbQuery();
+      await ctx.editMessageText(message, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "💳 Pagar con Nequi" : "💳 Pay with Nequi",
+                url: plan.paymentLink,
+              },
+            ],
+            [
+              {
+                text: lang === "es" ? "🔙 Volver" : "🔙 Back",
+                callback_data: "back_to_main",
+              },
+            ],
+          ],
+        },
+      });
+      return;
+    }
+
+    // Handle ePayco payment method (automatic activation)
     if (!process.env.EPAYCO_PUBLIC_KEY) {
       throw new PaymentGatewayError("Payment gateway not configured");
     }
 
-    const userId = ctx.from.id.toString();
     const userEmail = ctx.from.username
       ? `${ctx.from.username}@telegram.user`
       : `user${userId}@telegram.bot`;
@@ -77,15 +114,10 @@ async function handleSubscription(ctx, planIdentifier, retryCount = 0) {
         );
       }
 
-      const features = formatPlanFeatures(plan, lang);
-      const priceDisplay = `${plan.priceInCOP.toLocaleString()} ${
-        plan.currency || "COP"
-      }`;
-      const planNameDisplay = plan.displayName || plan.name;
       const message =
         lang === "es"
-          ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\nHaz clic en el botón para continuar con el pago:`
-          : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\nClick the button to proceed with payment:`;
+          ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💳 **Método de Pago: ePayco (Automático)**\n\nTu suscripción se activará automáticamente tras el pago.\n\nHaz clic en el botón para continuar con el pago:`
+          : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💳 **Payment Method: ePayco (Automatic)**\n\nYour subscription will be activated automatically after payment.\n\nClick the button to proceed with payment:`;
 
       await ctx.answerCbQuery();
       await ctx.editMessageText(message, {
