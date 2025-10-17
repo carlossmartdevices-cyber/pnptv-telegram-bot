@@ -42,26 +42,35 @@ const MAX_BIO_LENGTH = 500;
 const MAX_NEARBY_USERS = 100;
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // For form data
+app.use(express.json({ limit: '100mb' })); // Increase limit for file uploads
+app.use(express.urlencoded({ extended: true, limit: '100mb' })); // For form data
 
 // Cache-busting middleware for static files
-app.use(express.static(path.join(__dirname, "public"), {
-  setHeaders: (res, path) => {
-    // Disable caching for HTML, CSS, and JS files to ensure users always get latest version
-    if (path.endsWith('.html') || path.endsWith('.css') || path.endsWith('.js')) {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-    }
-  }
-}));
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    setHeaders: (res, path) => {
+      // Disable caching for HTML, CSS, and JS files to ensure users always get latest version
+      if (
+        path.endsWith(".html") ||
+        path.endsWith(".css") ||
+        path.endsWith(".js")
+      ) {
+        res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        res.setHeader("Pragma", "no-cache");
+        res.setHeader("Expires", "0");
+      }
+    },
+  })
+);
 
 // CORS for Telegram Mini Apps
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Telegram-Init-Data");
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
   next();
 });
 
@@ -239,7 +248,9 @@ app.put("/api/profile/:userId", authenticateTelegramUser, async (req, res) => {
       if (typeof bio !== "string" || bio.length > MAX_BIO_LENGTH) {
         return res
           .status(400)
-          .json({ error: `Bio must be a string of up to ${MAX_BIO_LENGTH} characters` });
+          .json({
+            error: `Bio must be a string of up to ${MAX_BIO_LENGTH} characters`,
+          });
       }
       updateData.bio = bio.trim();
     }
@@ -302,7 +313,9 @@ app.post("/api/map/nearby", authenticateTelegramUser, async (req, res) => {
     };
 
     if (!isValidLocation(userLocation)) {
-      return res.status(400).json({ error: "Valid latitude and longitude required" });
+      return res
+        .status(400)
+        .json({ error: "Valid latitude and longitude required" });
     }
 
     const searchRadius = Number(radius) || 25;
@@ -336,10 +349,7 @@ app.post("/api/map/nearby", authenticateTelegramUser, async (req, res) => {
 
       const locationName =
         data.locationName ||
-        approximateLocation(
-          data.location.latitude,
-          data.location.longitude
-        );
+        approximateLocation(data.location.latitude, data.location.longitude);
 
       const lastActive = data.lastActive?.toDate
         ? data.lastActive.toDate()
@@ -385,7 +395,9 @@ app.post("/api/map/nearby", authenticateTelegramUser, async (req, res) => {
     });
 
     logger.info(
-      `API: Nearby users fetched for ${userId || "unknown"} within ${searchRadius}km`
+      `API: Nearby users fetched for ${
+        userId || "unknown"
+      } within ${searchRadius}km`
     );
   } catch (error) {
     logger.error("API Error fetching nearby users:", error);
@@ -415,13 +427,16 @@ app.get("/api/live/streams", async (req, res) => {
 /**
  * API: Get subscription plans
  */
-app.get("/api/plans", asyncHandler(async (req, res) => {
-  const plans = await listPlans();
-  res.json({
-    success: true,
-    plans,
-  });
-}));
+app.get(
+  "/api/plans",
+  asyncHandler(async (req, res) => {
+    const plans = await listPlans();
+    res.json({
+      success: true,
+      plans,
+    });
+  })
+);
 
 /**
  * API: Create payment link for subscription
@@ -520,57 +535,60 @@ app.use("/epayco", epaycoWebhook);
 /**
  * Debug: Test ePayco payment link creation
  */
-app.get("/debug/test-payment", asyncHandler(async (req, res) => {
-  try {
-    const plans = await listPlans();
+app.get(
+  "/debug/test-payment",
+  asyncHandler(async (req, res) => {
+    try {
+      const plans = await listPlans();
 
-    if (!plans || plans.length === 0) {
-      return res.status(400).json({
+      if (!plans || plans.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: "No active plans available",
+        });
+      }
+
+      const plan = plans[0];
+      const testUserId = "123456789";
+
+      logger.info("[DEBUG] Testing ePayco payment link creation", {
+        planId: plan.id,
+        planName: plan.name,
+        priceInCOP: plan.priceInCOP,
+      });
+
+      const paymentData = await epayco.createPaymentLink({
+        name: plan.name,
+        description:
+          plan.description ||
+          `${plan.name} subscription - ${plan.durationDays} days`,
+        amount: plan.priceInCOP,
+        currency: plan.currency || "COP",
+        userId: testUserId,
+        userEmail: "test@telegram.user",
+        userName: "Test User",
+        plan: plan.id,
+      });
+
+      res.json({
+        success: true,
+        message: "Payment link created successfully",
+        data: {
+          paymentUrl: paymentData.paymentUrl,
+          reference: paymentData.reference,
+          invoiceId: paymentData.invoiceId,
+        },
+      });
+    } catch (error) {
+      logger.error("[DEBUG] Payment link test failed:", error);
+      res.status(500).json({
         success: false,
-        error: "No active plans available",
+        error: error.message,
+        stack: error.stack,
       });
     }
-
-    const plan = plans[0];
-    const testUserId = "123456789";
-
-    logger.info("[DEBUG] Testing ePayco payment link creation", {
-      planId: plan.id,
-      planName: plan.name,
-      priceInCOP: plan.priceInCOP,
-    });
-
-    const paymentData = await epayco.createPaymentLink({
-      name: plan.name,
-      description:
-        plan.description ||
-        `${plan.name} subscription - ${plan.durationDays} days`,
-      amount: plan.priceInCOP,
-      currency: plan.currency || "COP",
-      userId: testUserId,
-      userEmail: "test@telegram.user",
-      userName: "Test User",
-      plan: plan.id,
-    });
-
-    res.json({
-      success: true,
-      message: "Payment link created successfully",
-      data: {
-        paymentUrl: paymentData.paymentUrl,
-        reference: paymentData.reference,
-        invoiceId: paymentData.invoiceId,
-      },
-    });
-  } catch (error) {
-    logger.error("[DEBUG] Payment link test failed:", error);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      stack: error.stack,
-    });
-  }
-}));
+  })
+);
 /**
  * Serve Mini App main page
  */
@@ -582,7 +600,7 @@ app.get("/", (req, res) => {
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    error: 'Route not found',
+    error: "Route not found",
     path: req.path,
   });
 });
@@ -613,7 +631,9 @@ function startServer() {
 
     server.on("error", (error) => {
       if (error.code === "EADDRINUSE") {
-        logger.warn(`Port ${PORT} already in use, server may already be running`);
+        logger.warn(
+          `Port ${PORT} already in use, server may already be running`
+        );
         // Don't reject, just resolve null
         resolve(null);
       } else {
@@ -626,5 +646,3 @@ function startServer() {
 
 // Export for use in bot
 module.exports = { app, startServer };
-
-

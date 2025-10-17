@@ -95,9 +95,12 @@ function assertStorageBucket() {
 let bucket = null;
 try {
   bucket = admin.storage().bucket();
+  logger.info(`Firebase Storage bucket initialized: ${bucket.name}`);
 } catch (error) {
+  logger.error('Firebase Storage bucket initialization failed:', error);
   logger.warn('Firebase Storage bucket not configured. File uploads will be disabled.');
   logger.warn('To enable file uploads, set FIREBASE_STORAGE_BUCKET in your environment variables.');
+  logger.warn(`Error details: ${error.message}`);
 }
 
 // Configure multer for file uploads (memory storage)

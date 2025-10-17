@@ -18,16 +18,19 @@ Complete step-by-step guide to deploy your improved PNPtv Telegram Bot to Heroku
 ### 1. Install Heroku CLI
 
 **Windows (PowerShell):**
+
 ```powershell
 winget install Heroku.HerokuCLI
 ```
 
 **macOS:**
+
 ```bash
 brew tap heroku/brew && brew install heroku
 ```
 
 **Linux:**
+
 ```bash
 curl https://cli-assets.heroku.com/install.sh | sh
 ```
@@ -122,6 +125,7 @@ heroku logs --tail
 **Symptoms**: H10 (App crashed) or H14 (No web dynos running) errors
 
 **Solutions**:
+
 ```bash
 # Check logs
 heroku logs --tail
@@ -138,6 +142,7 @@ heroku restart
 **Symptoms**: "FIREBASE_PRIVATE_KEY is invalid" or authentication errors
 
 **Solution**:
+
 ```bash
 # Re-set private key with proper escaping
 # If you have jq installed:
@@ -151,6 +156,7 @@ heroku config:set FIREBASE_PRIVATE_KEY="$(cat firebase-credentials.json | jq -r 
 **Symptoms**: Bot online but doesn't respond to commands
 
 **Solutions**:
+
 ```bash
 # Check webhook status
 curl "https://api.telegram.org/bot<YOUR_TOKEN>/getWebhookInfo"
@@ -165,6 +171,7 @@ curl -X POST "https://api.telegram.org/bot<YOUR_TOKEN>/deleteWebhook"
 ### Issue 4: Payment Links Not Working
 
 **Solutions**:
+
 ```bash
 # Verify ePayco config
 heroku config | grep EPAYCO
@@ -202,6 +209,7 @@ heroku restart
 ## Deployment Checklist
 
 ### Pre-Deployment
+
 - [ ] All environment variables set in Heroku
 - [ ] Firebase credentials ready
 - [ ] ePayco credentials (production keys, not test)
@@ -209,6 +217,7 @@ heroku restart
 - [ ] `.env` file NOT committed (should be in `.gitignore`)
 
 ### Post-Deployment
+
 - [ ] Heroku app created and deployed successfully
 - [ ] Bot responds to `/start` command in Telegram
 - [ ] Mini App loads at `https://your-app.herokuapp.com`
@@ -222,21 +231,24 @@ heroku restart
 ## Cost Estimation
 
 ### Free Tier (Hobby Dyno)
+
 - **Cost**: $0/month
 - **Limitations**: Sleeps after 30 min inactivity, 550 dyno hours/month
 - **RAM**: 512MB
 - **Best for**: Development, testing
 
 ### Basic Dyno (Recommended for Production)
+
 - **Cost**: $7/month
 - **Benefits**: Never sleeps, custom domain
 - **RAM**: 512MB
 - **Best for**: Small production apps
 
 ### Standard Dynos
+
 - **Cost**: $25-$50/month
 - **Features**: Better performance, more RAM (1GB-2GB)
-- **Best for**: Production apps with high traffic
+- **Best for**: Production apps with moderate to high traffic
 
 ```bash
 # Upgrade to Basic
@@ -281,16 +293,16 @@ heroku rollback v123
 
 ## Quick Reference Commands
 
-| Command | Description |
-|---------|-------------|
-| `heroku create` | Create new app |
+| Command                       | Description              |
+| ----------------------------- | ------------------------ |
+| `heroku create`               | Create new app           |
 | `heroku config:set KEY=value` | Set environment variable |
-| `git push heroku main` | Deploy app |
-| `heroku logs --tail` | View live logs |
-| `heroku ps` | Check dyno status |
-| `heroku restart` | Restart app |
-| `heroku run bash` | Access dyno shell |
-| `heroku releases` | View deployment history |
+| `git push heroku main`        | Deploy app               |
+| `heroku logs --tail`          | View live logs           |
+| `heroku ps`                   | Check dyno status        |
+| `heroku restart`              | Restart app              |
+| `heroku run bash`             | Access dyno shell        |
+| `heroku releases`             | View deployment history  |
 
 ---
 
@@ -299,6 +311,7 @@ heroku rollback v123
 ### 1. Test Bot Commands
 
 In Telegram, send to your bot:
+
 ```
 /start
 /help
@@ -310,6 +323,7 @@ In Telegram, send to your bot:
 ### 2. Test Mini App
 
 Open in browser:
+
 ```
 https://your-pnptv-bot.herokuapp.com
 ```
