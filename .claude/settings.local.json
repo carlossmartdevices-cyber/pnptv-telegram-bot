@@ -38,7 +38,8 @@
       "Bash(tasklist:*)",
       "Bash(timeout 30 heroku logs:*)",
       "Bash(npm test:*)",
-      "Bash(npm run build:payment)"
+      "Bash(npm run build:payment)",
+      "Bash(dir src)"
     ],
     "deny": [],
     "ask": []
