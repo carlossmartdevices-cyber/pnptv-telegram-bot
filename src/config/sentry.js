@@ -39,11 +39,8 @@ function initSentry(options = {}) {
       // Set sample rate for performance monitoring
       tracesSampleRate: nodeEnv === "production" ? 0.1 : 1.0,
 
-      // Capture unhandled promise rejections
-      integrations: [
-        // Automatically instrument Node.js libraries and frameworks
-        ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
-      ],
+      // Automatically capture unhandled promise rejections and other errors
+      // Integrations are automatically enabled in Sentry v8+
 
       // Filter out sensitive data
       beforeSend(event, hint) {
@@ -62,7 +59,9 @@ function initSentry(options = {}) {
             "EPAYCO_PRIVATE_KEY",
             "EPAYCO_P_KEY",
             "FIREBASE_PRIVATE_KEY",
+            "FIREBASE_CREDENTIALS",
             "SENTRY_DSN",
+            "DAIMO_API_KEY",
           ];
           sensitiveKeys.forEach((key) => {
             if (event.contexts.runtime.env[key]) {
