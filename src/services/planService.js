@@ -88,13 +88,18 @@ class PlanService {
     }
 
     // Validate payment method
-    if (!["epayco", "nequi"].includes(paymentMethod)) {
-      throw new Error("Payment method must be either 'epayco' or 'nequi'");
+    if (!["epayco", "nequi", "daimo"].includes(paymentMethod)) {
+      throw new Error("Payment method must be either 'epayco', 'nequi', or 'daimo'");
     }
 
     // If Nequi, require payment link
     if (paymentMethod === "nequi" && !paymentLink) {
       throw new Error("Payment link is required for Nequi payment method");
+    }
+
+    // If Daimo, ensure amount is in USD (Daimo uses USDC)
+    if (paymentMethod === "daimo" && currency !== "USD") {
+      logger.warn(`Daimo payment requires USD, converting from ${currency}`);
     }
 
     // Check for duplicate plan names

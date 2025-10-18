@@ -1,0 +1,232 @@
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+body {
+  color: #fff;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.payment-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 500px;
+  color: #333;
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.logo h1 {
+  font-size: 32px;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.logo p {
+  color: #666;
+  font-size: 14px;
+}
+
+.plan-details {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.plan-details h2 {
+  font-size: 24px;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.plan-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.plan-info:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.plan-info label {
+  color: #666;
+  font-size: 14px;
+}
+
+.plan-info span {
+  color: #333;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.features {
+  margin-top: 16px;
+}
+
+.features h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.features ul {
+  list-style: none;
+  padding: 0;
+}
+
+.features li {
+  padding: 8px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.features li:before {
+  content: "✓ ";
+  color: #667eea;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.payment-section {
+  margin-top: 24px;
+}
+
+.payment-section h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
+  color: #333;
+  text-align: center;
+}
+
+.payment-methods {
+  background: #f0f7ff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.payment-methods p {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.payment-methods ul {
+  list-style: none;
+  padding-left: 16px;
+  font-size: 13px;
+  color: #666;
+}
+
+.payment-methods li {
+  padding: 4px 0;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+}
+
+.error {
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  color: #c00;
+}
+
+.success {
+  text-align: center;
+  padding: 40px;
+}
+
+.success-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.success h2 {
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.success p {
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+}
+
+.footer {
+  text-align: center;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+  color: #999;
+  font-size: 12px;
+}
+
+@media (max-width: 600px) {
+  .payment-card {
+    padding: 24px;
+  }
+
+  .logo h1 {
+    font-size: 24px;
+  }
+
+  .plan-details h2 {
+    font-size: 20px;
+  }
+}

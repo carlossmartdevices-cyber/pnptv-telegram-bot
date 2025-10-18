@@ -6,6 +6,7 @@
 const { t } = require("../../utils/i18n");
 const logger = require("../../utils/logger");
 const epayco = require("../../config/epayco");
+const daimo = require("../../config/daimo");
 const { ensureOnboarding } = require("../../utils/guards");
 const { getPlanById, getPlanBySlug } = require("../../services/planService");
 const {
@@ -82,6 +83,73 @@ async function handleSubscription(ctx, planIdentifier, retryCount = 0) {
         },
       });
       return;
+    }
+
+    // Handle Daimo Pay payment method (USDC stablecoin - automatic activation)
+    if (plan.paymentMethod === "daimo") {
+      const daimoConfig = daimo.getConfig();
+      if (!daimoConfig.enabled) {
+        throw new PaymentGatewayError("Daimo Pay not configured");
+      }
+
+      const userEmail = ctx.from.username
+        ? `${ctx.from.username}@telegram.user`
+        : `user${userId}@telegram.bot`;
+
+      // Convert COP to USD if needed (Daimo uses USDC/USD)
+      const amountUSD = plan.currency === "USD" ? plan.price : plan.price / 4000; // Simple conversion, adjust as needed
+
+      try {
+        const paymentData = await daimo.createPaymentRequest({
+          amount: amountUSD,
+          userId,
+          userEmail,
+          userName: ctx.from.first_name || ctx.from.username || "User",
+          plan: plan.id,
+          description:
+            plan.description ||
+            `${plan.name} subscription - ${plan.durationDays} days`,
+        });
+
+        if (!paymentData.success || !paymentData.paymentUrl) {
+          throw new PaymentGatewayError(
+            "Daimo payment request failed",
+            paymentData
+          );
+        }
+
+        const message =
+          lang === "es"
+            ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: $${amountUSD.toFixed(2)} USD (USDC)\n- Precio COP: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💰 **Método de Pago: Daimo Pay (Stablecoin USDC)**\n\nPaga con USDC desde cualquier exchange, wallet o app de pago.\nTu suscripción se activará automáticamente tras el pago.\n\nHaz clic en el botón para continuar:`
+            : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: $${amountUSD.toFixed(2)} USD (USDC)\n- Price COP: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💰 **Payment Method: Daimo Pay (USDC Stablecoin)**\n\nPay with USDC from any exchange, wallet, or payment app.\nYour subscription will be activated automatically after payment.\n\nClick the button to proceed:`;
+
+        await ctx.answerCbQuery();
+        await ctx.editMessageText(message, {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: lang === "es" ? "💰 Pagar con USDC" : "💰 Pay with USDC",
+                  url: paymentData.paymentUrl,
+                },
+              ],
+              [
+                {
+                  text: lang === "es" ? "🔙 Volver" : "🔙 Back",
+                  callback_data: "back_to_main",
+                },
+              ],
+            ],
+          },
+        });
+        return;
+      } catch (daimoError) {
+        logger.error("[Subscription] Daimo payment error:", daimoError);
+        throw new PaymentGatewayError(daimoError.message, {
+          originalError: daimoError,
+        });
+      }
     }
 
     // Handle ePayco payment method (automatic activation)

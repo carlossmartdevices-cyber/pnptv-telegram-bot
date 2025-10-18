@@ -63,10 +63,10 @@ const PLAN_CREATION_STEPS = [
   },
   {
     key: 'paymentMethod',
-    prompt: 'Choose payment method (epayco or nequi):',
+    prompt: 'Choose payment method (epayco, nequi, or daimo):',
     transform: (value) => value.trim().toLowerCase(),
-    validate: (value) => ['epayco', 'nequi'].includes(value),
-    errorMessage: 'Payment method must be either "epayco" or "nequi".'
+    validate: (value) => ['epayco', 'nequi', 'daimo'].includes(value),
+    errorMessage: 'Payment method must be either "epayco", "nequi", or "daimo".'
   },
   {
     key: 'paymentLink',
@@ -76,6 +76,19 @@ const PLAN_CREATION_STEPS = [
     transform: (value) => value.trim(),
     validate: (value) => value.length > 0,
     errorMessage: 'Payment link is required for Nequi payment method.'
+  },
+  {
+    key: 'daimoAppId',
+    prompt: 'Enter your Daimo App ID (or type "skip" to use default from .env):',
+    optional: true,
+    conditional: (data) => data.paymentMethod === 'daimo',
+    transform: (value) => {
+      const trimmed = value.trim();
+      if (!trimmed || trimmed.toLowerCase() === 'skip') {
+        return undefined;
+      }
+      return trimmed;
+    },
   },
   {
     key: 'description',
@@ -234,6 +247,23 @@ const PLAN_EDIT_FIELDS = {
     },
     validate: () => true,
     prepare: (value) => ({ recommended: value }),
+  },
+  paymentMethod: {
+    label: 'Payment method (epayco/nequi/daimo)',
+    transform: (value) => value.trim().toLowerCase(),
+    validate: (value) => ['epayco', 'nequi', 'daimo'].includes(value),
+    prepare: (value) => ({
+      paymentMethod: value,
+      requiresManualActivation: value === 'nequi'
+    }),
+    errorMessage: 'Payment method must be either "epayco", "nequi", or "daimo".'
+  },
+  paymentLink: {
+    label: 'Payment link (for Nequi)',
+    optional: true,
+    transform: (value) => value.trim(),
+    validate: () => true,
+    prepare: (value) => ({ paymentLink: value || null }),
   },
 };
 
@@ -396,6 +426,7 @@ async function showPlanDetails(ctx, planId, options = {}) {
     } else {
       buttons.push([{ text: '🗑️ Archive', callback_data: `plan:toggle:${plan.id}:archive` }]);
     }
+    buttons.push([{ text: '❌ Delete Plan', callback_data: `plan:delete:${plan.id}` }]);
   } else {
     buttons.push([{ text: 'ℹ️ Read-only plan', callback_data: 'plan:refresh' }]);
   }
@@ -450,7 +481,17 @@ async function startPlanCreationFlow(ctx) {
   };
 
   await ctx.answerCbQuery().catch(() => {});
-  await ctx.reply('Let\'s create a new subscription plan. You can type "cancel" at any time to stop.');
+
+  const welcomeMsg = `💎 **Enhanced Plan Creation Wizard**\n\n` +
+    `Let's create a new subscription plan with improved validation!\n\n` +
+    `**Features:**\n` +
+    `✓ Step-by-step guidance\n` +
+    `✓ Smart validation\n` +
+    `✓ Live preview before saving\n` +
+    `✓ Support for multiple payment methods\n\n` +
+    `Type "cancel" at any time to stop.`;
+
+  await ctx.reply(welcomeMsg, { parse_mode: 'Markdown' });
   promptCreationStep(ctx);
 }
 
@@ -508,43 +549,8 @@ async function handlePlanCreationResponse(ctx, text) {
   state.stepIndex += 1;
 
   if (state.stepIndex >= PLAN_CREATION_STEPS.length) {
-    try {
-      const payload = {
-        name: state.data.name,
-        displayName: state.data.displayName || state.data.name,
-        tier: state.data.tier,
-        price: state.data.price,
-        priceInCOP: state.data.priceInCOP,
-        currency: state.data.currency || 'USD',
-        duration: state.data.duration,
-        features: state.data.features,
-        description: state.data.description || '',
-        icon: state.data.icon || '💎',
-        cryptoBonus: state.data.cryptoBonus || null,
-        recommended: Boolean(state.data.recommended),
-        paymentMethod: state.data.paymentMethod || 'epayco',
-        paymentLink: state.data.paymentLink || null,
-      };
-
-      const newPlan = await planService.createPlan(payload);
-      ctx.session.planCreation = null;
-
-      let successMsg = `✅ Plan "${newPlan.displayName || newPlan.name}" created successfully!\n\n`;
-      successMsg += `Payment method: ${newPlan.paymentMethod.toUpperCase()}\n`;
-      if (newPlan.paymentMethod === 'nequi') {
-        successMsg += `⚠️ Manual activation required for subscriptions.\n`;
-        successMsg += `Payment link: ${newPlan.paymentLink}`;
-      } else {
-        successMsg += `✓ Automatic activation via ePayco API`;
-      }
-
-      await ctx.reply(successMsg);
-      await showPlanDashboard(ctx, { replace: false });
-    } catch (error) {
-      logger.error('Error creating plan:', error);
-      await ctx.reply(`❌ Failed to create plan: ${error.message}`);
-      ctx.session.planCreation = null;
-    }
+    // Show preview before creating
+    await showPlanCreationPreview(ctx);
     return true;
   }
 
@@ -661,10 +667,47 @@ async function handlePlanCallback(ctx) {
       return;
     }
 
+    if (parts[0] === 'plan' && parts[1] === 'delete' && parts[2]) {
+      await showDeleteConfirmation(ctx, parts[2]);
+      await ctx.answerCbQuery().catch(() => {});
+      return;
+    }
+
     if (parts[0] === 'plan' && parts[1] === 'deleteConfirm' && parts[2]) {
-      await planService.updatePlan(parts[2], { active: false });
-      await ctx.answerCbQuery('Plan archived successfully').catch(() => {});
-      await showPlanDashboard(ctx, { replace: true });
+      await planService.hardDeletePlan(parts[2]);
+      await ctx.answerCbQuery('Plan deleted permanently').catch(() => {});
+      await ctx.reply('✅ Plan has been permanently deleted.');
+      await showPlanDashboard(ctx, { replace: false });
+      return;
+    }
+
+    if (parts[0] === 'plan' && parts[1] === 'deleteCancel' && parts[2]) {
+      await showPlanDetails(ctx, parts[2], { replace: true });
+      await ctx.answerCbQuery('Delete cancelled').catch(() => {});
+      return;
+    }
+
+    if (data === 'plan:confirmCreate') {
+      await confirmPlanCreation(ctx);
+      return;
+    }
+
+    if (data === 'plan:editPreview') {
+      await ctx.answerCbQuery('Restarting wizard...').catch(() => {});
+      const state = ctx.session.planCreation;
+      if (state) {
+        state.stepIndex = 0;
+        await ctx.reply('Let\'s edit your plan. Starting from the beginning...');
+        promptCreationStep(ctx);
+      }
+      return;
+    }
+
+    if (data === 'plan:cancelCreate') {
+      ctx.session.planCreation = null;
+      await ctx.answerCbQuery('Plan creation cancelled').catch(() => {});
+      await ctx.reply('❌ Plan creation cancelled.');
+      await showPlanDashboard(ctx, { replace: false });
       return;
     }
 
@@ -719,6 +762,10 @@ async function showPlanEditMenu(ctx, planId) {
       { text: 'Recommended', callback_data: `plan:editField:${planId}:recommended` },
     ],
     [
+      { text: 'Payment method', callback_data: `plan:editField:${planId}:paymentMethod` },
+      { text: 'Payment link', callback_data: `plan:editField:${planId}:paymentLink` },
+    ],
+    [
       { text: 'Description', callback_data: `plan:editField:${planId}:description` },
       { text: 'Features', callback_data: `plan:editField:${planId}:features` },
     ],
@@ -753,6 +800,169 @@ async function startPlanEditField(ctx, planId, field) {
   }
 
   await ctx.reply(prompt);
+}
+
+async function showPlanCreationPreview(ctx) {
+  if (!ensureAdmin(ctx)) {
+    return;
+  }
+
+  const state = ctx.session.planCreation;
+  if (!state || !state.data) {
+    await ctx.reply('❌ Error: No plan data found.');
+    return;
+  }
+
+  const data = state.data;
+
+  // Build preview message
+  const lines = [];
+  lines.push('💎 **Plan Creation Preview**\n');
+  lines.push('**Please review your plan details:**\n');
+  lines.push(`${data.icon || '💎'} **${data.displayName || data.name}**`);
+  lines.push(`Tier: ${data.tier}`);
+  lines.push(`Price: ${formatCurrency(data.price, data.currency || 'USD')}`);
+
+  if (Number.isFinite(data.priceInCOP)) {
+    lines.push(`Price (COP): ${data.priceInCOP.toLocaleString('es-CO')}`);
+  }
+
+  lines.push(`Duration: ${data.duration} days`);
+  lines.push(`Payment Method: ${(data.paymentMethod || 'epayco').toUpperCase()}`);
+
+  if (data.paymentMethod === 'nequi' && data.paymentLink) {
+    lines.push(`Payment Link: ${data.paymentLink}`);
+  }
+
+  if (data.description) {
+    lines.push(`\nDescription: ${data.description}`);
+  }
+
+  if (Array.isArray(data.features) && data.features.length > 0) {
+    lines.push('\n**Features:**');
+    data.features.forEach((feature) => {
+      lines.push(` • ${feature}`);
+    });
+  }
+
+  if (data.cryptoBonus) {
+    lines.push(`\n**Crypto Bonus:** ${data.cryptoBonus}`);
+  }
+
+  if (data.recommended) {
+    lines.push('\n⭐ Recommended plan');
+  }
+
+  lines.push('\n**Ready to create this plan?**');
+
+  const keyboard = Markup.inlineKeyboard([
+    [
+      { text: '✅ Create Plan', callback_data: 'plan:confirmCreate' },
+    ],
+    [
+      { text: '✏️ Edit Details', callback_data: 'plan:editPreview' },
+      { text: '❌ Cancel', callback_data: 'plan:cancelCreate' },
+    ],
+  ]);
+
+  await ctx.reply(lines.join('\n'), {
+    parse_mode: 'Markdown',
+    reply_markup: keyboard.reply_markup,
+  });
+}
+
+async function confirmPlanCreation(ctx) {
+  if (!ensureAdmin(ctx)) {
+    return;
+  }
+
+  const state = ctx.session.planCreation;
+  if (!state || !state.data) {
+    await ctx.answerCbQuery('Session expired', { show_alert: true }).catch(() => {});
+    return;
+  }
+
+  try {
+    const payload = {
+      name: state.data.name,
+      displayName: state.data.displayName || state.data.name,
+      tier: state.data.tier,
+      price: state.data.price,
+      priceInCOP: state.data.priceInCOP,
+      currency: state.data.currency || 'USD',
+      duration: state.data.duration,
+      features: state.data.features,
+      description: state.data.description || '',
+      icon: state.data.icon || '💎',
+      cryptoBonus: state.data.cryptoBonus || null,
+      recommended: Boolean(state.data.recommended),
+      paymentMethod: state.data.paymentMethod || 'epayco',
+      paymentLink: state.data.paymentLink || null,
+    };
+
+    const newPlan = await planService.createPlan(payload);
+    ctx.session.planCreation = null;
+
+    let successMsg = `✅ **Plan created successfully!**\n\n`;
+    successMsg += `${newPlan.icon || '💎'} **${newPlan.displayName || newPlan.name}**\n`;
+    successMsg += `Payment method: ${newPlan.paymentMethod.toUpperCase()}\n`;
+
+    if (newPlan.paymentMethod === 'nequi') {
+      successMsg += `⚠️ Manual activation required for subscriptions.\n`;
+      successMsg += `Payment link: ${newPlan.paymentLink}`;
+    } else if (newPlan.paymentMethod === 'daimo') {
+      successMsg += `✓ Automatic activation via Daimo Pay API`;
+    } else {
+      successMsg += `✓ Automatic activation via ePayco API`;
+    }
+
+    await ctx.answerCbQuery('Plan created!').catch(() => {});
+    await ctx.reply(successMsg, { parse_mode: 'Markdown' });
+    await showPlanDashboard(ctx, { replace: false });
+  } catch (error) {
+    logger.error('Error creating plan:', error);
+    await ctx.answerCbQuery('Error creating plan', { show_alert: true }).catch(() => {});
+    await ctx.reply(`❌ Failed to create plan: ${error.message}`);
+    ctx.session.planCreation = null;
+  }
+}
+
+async function showDeleteConfirmation(ctx, planId) {
+  if (!ensureAdmin(ctx)) {
+    return;
+  }
+
+  const plan = await planService.getPlanById(planId);
+  if (!plan) {
+    await ctx.answerCbQuery('Plan not found', { show_alert: true }).catch(() => {});
+    await showPlanDashboard(ctx, { replace: true });
+    return;
+  }
+
+  const message = `⚠️ WARNING: Delete Plan?\n\n` +
+    `Plan: ${plan.icon || '💎'} ${plan.displayName || plan.name}\n` +
+    `Tier: ${plan.tier}\n` +
+    `Price: ${formatCurrency(plan.price, plan.currency || 'USD')}\n\n` +
+    `⚠️ This action CANNOT be undone!\n` +
+    `All plan data will be permanently deleted.\n\n` +
+    `Are you absolutely sure?`;
+
+  const buttons = [
+    [
+      { text: '✅ Yes, Delete Forever', callback_data: `plan:deleteConfirm:${planId}` },
+    ],
+    [
+      { text: '❌ No, Cancel', callback_data: `plan:deleteCancel:${planId}` },
+    ],
+  ];
+
+  const keyboard = Markup.inlineKeyboard(buttons);
+
+  try {
+    await ctx.editMessageText(message, { reply_markup: keyboard.reply_markup });
+  } catch (error) {
+    await ctx.reply(message, keyboard);
+  }
 }
 
 module.exports = {

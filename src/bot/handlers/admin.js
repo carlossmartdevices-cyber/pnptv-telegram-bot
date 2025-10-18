@@ -594,19 +594,22 @@ async function broadcastMessage(ctx) {
   try {
     const lang = ctx.session.language || "en";
 
-    // Initialize broadcast wizard session
+    // Initialize broadcast wizard session with enhanced features
     ctx.session.broadcastWizard = {
       step: 1,
       targetLanguage: null,
       targetStatus: null,
+      targetTiers: [], // Enhanced: Support multiple tier selection
       media: null,
       text: null,
-      buttons: null
+      buttons: null,
+      testMode: false, // Enhanced: Test mode sends to admin only
+      scheduledTime: null // Enhanced: Schedule for later
     };
 
     const message = lang === "es"
-      ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 1 de 6:** Selecciona el idioma de los usuarios:"
-      : "📢 **Broadcast Wizard**\n\n**Step 1 of 6:** Select target user language:";
+      ? "📢 **Asistente de Mensaje Masivo Mejorado**\n\n**Paso 1 de 7:** Selecciona el idioma de los usuarios:\n\n💡 _Nuevo: Ahora puedes probar mensajes y programar envíos_"
+      : "📢 **Enhanced Broadcast Wizard**\n\n**Step 1 of 7:** Select target user language:\n\n💡 _New: Test messages and schedule broadcasts_";
 
     const keyboard = {
       inline_keyboard: [
@@ -640,7 +643,7 @@ async function broadcastMessage(ctx) {
       reply_markup: keyboard
     });
 
-    logger.info(`Admin ${ctx.from.id} initiated broadcast wizard`);
+    logger.info(`Admin ${ctx.from.id} initiated enhanced broadcast wizard`);
   } catch (error) {
     logger.error("Error in broadcast:", error);
     await ctx.reply(t("error", ctx.session.language || "en"));
@@ -785,6 +788,43 @@ async function handleBroadcastWizard(ctx, action) {
       await ctx.answerCbQuery();
       await executeBroadcast(ctx);
     }
+    // Step 5: Test send (to admin only)
+    else if (action === "bcast_test_send") {
+      await ctx.answerCbQuery();
+      wizard.testMode = true;
+      await executeBroadcast(ctx, true);
+      wizard.testMode = false;
+
+      // Show confirmation again after test
+      const lang = ctx.session.language || "en";
+      await ctx.reply(
+        lang === "es"
+          ? "✅ Mensaje de prueba enviado. Revisa cómo se ve arriba.\n\n¿Listo para enviar a todos los usuarios?"
+          : "✅ Test message sent. Check how it looks above.\n\nReady to send to all users?",
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: lang === "es" ? "✅ Sí, enviar a todos" : "✅ Yes, send to all",
+                  callback_data: "bcast_confirm_send"
+                }
+              ],
+              [
+                {
+                  text: lang === "es" ? "✏️ Editar mensaje" : "✏️ Edit message",
+                  callback_data: "bcast_edit"
+                },
+                {
+                  text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
+                  callback_data: "admin_back"
+                }
+              ]
+            ]
+          }
+        }
+      );
+    }
     // Step 5: Edit broadcast
     else if (action === "bcast_edit") {
       await ctx.answerCbQuery();
@@ -842,15 +882,28 @@ async function showBroadcastConfirmation(ctx) {
       ? `${wizard.buttons.length} ${lang === "es" ? "botón(es)" : "button(s)"}`
       : (lang === "es" ? "Sin botones" : "No buttons");
 
+    // Calculate estimated delivery time (assuming 10 messages per second with delays)
+    const estimatedSeconds = Math.ceil(filteredUsers.length / 10);
+    const estimatedMinutes = Math.ceil(estimatedSeconds / 60);
+    const estimatedTime = estimatedMinutes > 1
+      ? `~${estimatedMinutes} ${lang === "es" ? "minutos" : "minutes"}`
+      : `~${estimatedSeconds} ${lang === "es" ? "segundos" : "seconds"}`;
+
     const message = lang === "es"
-      ? `📢 **Confirmación de Mensaje Masivo**\n\n**Configuración:**\n🌐 Idioma: ${langLabel}\n👥 Estado: ${statusLabel}\n📎 Multimedia: ${mediaLabel}\n🔘 Botones: ${buttonsLabel}\n\n**Mensaje:**\n${wizard.text}\n\n**Usuarios objetivo:** ${filteredUsers.length}\n\n¿Enviar mensaje masivo?`
-      : `📢 **Broadcast Confirmation**\n\n**Configuration:**\n🌐 Language: ${langLabel}\n👥 Status: ${statusLabel}\n📎 Media: ${mediaLabel}\n🔘 Buttons: ${buttonsLabel}\n\n**Message:**\n${wizard.text}\n\n**Target users:** ${filteredUsers.length}\n\nSend broadcast?`;
+      ? `📢 **Confirmación de Mensaje Masivo**\n\n**Configuración:**\n🌐 Idioma: ${langLabel}\n👥 Estado: ${statusLabel}\n📎 Multimedia: ${mediaLabel}\n🔘 Botones: ${buttonsLabel}\n\n**Vista previa del mensaje:**\n━━━━━━━━━━━━━━\n${wizard.text}\n━━━━━━━━━━━━━━\n\n**📊 Estadísticas:**\n👥 Usuarios objetivo: ${filteredUsers.length}\n⏱️ Tiempo estimado: ${estimatedTime}\n\n¿Listo para enviar?`
+      : `📢 **Broadcast Confirmation**\n\n**Configuration:**\n🌐 Language: ${langLabel}\n👥 Status: ${statusLabel}\n📎 Media: ${mediaLabel}\n🔘 Buttons: ${buttonsLabel}\n\n**Message preview:**\n━━━━━━━━━━━━━━\n${wizard.text}\n━━━━━━━━━━━━━━\n\n**📊 Statistics:**\n👥 Target users: ${filteredUsers.length}\n⏱️ Estimated time: ${estimatedTime}\n\n Ready to send?`;
 
     const keyboard = {
       inline_keyboard: [
         [
           {
-            text: lang === "es" ? "✅ Enviar ahora" : "✅ Send now",
+            text: lang === "es" ? "🧪 Enviar prueba (solo a mí)" : "🧪 Send test (to me only)",
+            callback_data: "bcast_test_send"
+          }
+        ],
+        [
+          {
+            text: lang === "es" ? "✅ Enviar a todos ahora" : "✅ Send to all now",
             callback_data: "bcast_confirm_send"
           }
         ],
@@ -932,11 +985,62 @@ function filterUsersByWizard(users, wizard) {
 /**
  * Execute broadcast message to segmented users
  */
-async function executeBroadcast(ctx) {
+async function executeBroadcast(ctx, isTestMode = false) {
   try {
     const lang = ctx.session.language || "en";
     const wizard = ctx.session.broadcastWizard;
 
+    // Test mode: Send only to admin
+    if (isTestMode) {
+      const messageOptions = {
+        parse_mode: "Markdown"
+      };
+
+      // Add inline buttons if configured
+      if (wizard.buttons && wizard.buttons.length > 0) {
+        messageOptions.reply_markup = {
+          inline_keyboard: wizard.buttons
+        };
+      }
+
+      const testPrefix = lang === "es"
+        ? "🧪 **[MENSAJE DE PRUEBA]**\n\n"
+        : "🧪 **[TEST MESSAGE]**\n\n";
+
+      // Send with media if available
+      if (wizard.media) {
+        const caption = testPrefix + (wizard.text || "");
+
+        switch (wizard.media.type) {
+          case "photo":
+            await ctx.telegram.sendPhoto(ctx.from.id, wizard.media.file_id, {
+              caption,
+              ...messageOptions
+            });
+            break;
+          case "video":
+            await ctx.telegram.sendVideo(ctx.from.id, wizard.media.file_id, {
+              caption,
+              ...messageOptions
+            });
+            break;
+          case "document":
+            await ctx.telegram.sendDocument(ctx.from.id, wizard.media.file_id, {
+              caption,
+              ...messageOptions
+            });
+            break;
+        }
+      } else {
+        // Send text only
+        await ctx.telegram.sendMessage(ctx.from.id, testPrefix + wizard.text, messageOptions);
+      }
+
+      logger.info(`Admin ${ctx.from.id} sent test broadcast to themselves`);
+      return;
+    }
+
+    // Production mode: Send to all users
     const statusMsg = await ctx.reply(
       lang === "es"
         ? "📤 Enviando mensaje masivo..."
@@ -963,6 +1067,9 @@ async function executeBroadcast(ctx) {
         inline_keyboard: wizard.buttons
       };
     }
+
+    const totalUsers = filteredUsers.length;
+    let lastUpdateTime = Date.now();
 
     for (const doc of filteredUsers) {
       try {
@@ -1001,6 +1108,27 @@ async function executeBroadcast(ctx) {
       } catch (error) {
         failedCount++;
         logger.warn(`Failed to send broadcast to user ${doc.id}:`, error.message);
+      }
+
+      // Update progress every 25 messages or every 5 seconds
+      const now = Date.now();
+      if ((sentCount + failedCount) % 25 === 0 || (now - lastUpdateTime) > 5000) {
+        try {
+          const progress = Math.round(((sentCount + failedCount) / totalUsers) * 100);
+          const progressMsg = lang === "es"
+            ? `📤 Enviando... ${progress}% (${sentCount}/${totalUsers})`
+            : `📤 Sending... ${progress}% (${sentCount}/${totalUsers})`;
+
+          await ctx.telegram.editMessageText(
+            ctx.from.id,
+            statusMsg.message_id,
+            null,
+            progressMsg
+          );
+          lastUpdateTime = now;
+        } catch (e) {
+          // Ignore edit errors
+        }
       }
 
       // Small delay to avoid rate limits
