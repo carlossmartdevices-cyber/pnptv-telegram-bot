@@ -3,9 +3,11 @@
  * Handles network connectivity issues gracefully
  */
 
+// IMPORTANT: Import instrument.js at the very top for Sentry error tracking
+require("./instrument.js");
+
 require("./src/config/env");
 const logger = require("./src/utils/logger");
-const { startServer } = require("./src/web/server");
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 3000; // 3 seconds
@@ -28,15 +30,6 @@ async function launchBotWithRetry(retryCount = 0) {
     console.log("PNPtv Bot is running!");
     console.log("Bot username: @PNPtvbot");
     console.log("Start chatting: https://t.me/PNPtvbot\n");
-
-    // Start web server for Mini App
-    try {
-      await startServer();
-      logger.info("Web server started successfully");
-    } catch (error) {
-      logger.warn("Failed to start web server:", error.message);
-      console.log("Mini App server could not start. Bot will continue running.");
-    }
 
     // Initialize scheduler for membership expiration
     try {

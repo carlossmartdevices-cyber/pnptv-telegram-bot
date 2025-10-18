@@ -8,13 +8,9 @@ const { ensureOnboarding } = require("../utils/guards");
 const { isAdmin, adminMiddleware } = require("../config/admin");
 const { getMenu } = require("../config/menus");
 const { prepareTextLocationUpdate } = require("../services/profileService");
-const { initSentry, captureException, setUser } = require("../config/sentry");
+const { captureException, setUser } = require("../config/sentry");
 
-// Initialize Sentry for bot error tracking
-initSentry({
-  environment: process.env.NODE_ENV || "production",
-  release: process.env.npm_package_version,
-});
+// Note: Sentry is initialized in instrument.js at the application entry point
 
 const {
   showPlanDashboard,

@@ -1,15 +1,24 @@
 # Configuración de Sentry para Monitoreo de Errores
 
-Este documento explica cómo configurar y usar Sentry para capturar y monitorear errores en producción en el bot de Telegram y la aplicación web.
+Este documento explica cómo configurar y usar Sentry para capturar y monitorear errores en producción en el bot de Telegram.
+
+## ✅ Configuración Completada
+
+Sentry ha sido configurado siguiendo las mejores prácticas de Sentry:
+
+1. **instrument.js** - Inicialización de Sentry al inicio de la aplicación
+2. **start-bot.js** - Importa `instrument.js` en la primera línea
+3. **src/config/sentry.js** - Funciones auxiliares para tracking de errores
+4. **src/bot/index.js** - Usa las funciones de Sentry para manejo de errores del bot
 
 ## ¿Qué es Sentry?
 
 Sentry es una plataforma de monitoreo de errores que te permite:
-- Capturar errores en tiempo real
-- Ver stack traces completos de errores
-- Identificar qué usuarios se vieron afectados
-- Rastrear el rendimiento de la aplicación
-- Recibir alertas cuando ocurren errores críticos
+- ✅ Capturar errores en tiempo real
+- ✅ Ver stack traces completos de errores
+- ✅ Identificar qué usuarios se vieron afectados
+- ✅ Rastrear el rendimiento de la aplicación
+- ✅ Recibir alertas cuando ocurren errores críticos
 
 ## Configuración Inicial
 
@@ -23,6 +32,7 @@ Sentry es una plataforma de monitoreo de errores que te permite:
 
 1. Una vez creado el proyecto, ve a **Settings → Projects → [Tu Proyecto] → Client Keys (DSN)**
 2. Copia el DSN (se ve similar a: `https://xxxxx@xxx.ingest.sentry.io/xxxxx`)
+3. **Tu DSN actual**: `https://dab7b206e39473c2b1d706131f538f42@o4510204127870976.ingest.us.sentry.io/4510204133769216`
 
 ### 3. Configurar Variables de Entorno
 
@@ -30,9 +40,9 @@ Agrega las siguientes variables a tu archivo `.env`:
 
 ```bash
 # Error Tracking & Monitoring
-SENTRY_DSN=your_sentry_dsn_here
-SENTRY_ENABLE_IN_DEV=false
-NODE_ENV=production
+SENTRY_DSN=https://dab7b206e39473c2b1d706131f538f42@o4510204127870976.ingest.us.sentry.io/4510204133769216
+SENTRY_ENABLE_IN_DEV=false  # true para habilitar en desarrollo
+NODE_ENV=production  # production, development, staging
 ```
 
 **Variables:**
@@ -43,41 +53,41 @@ NODE_ENV=production
 ### 4. Configurar en Heroku (Producción)
 
 ```bash
-heroku config:set SENTRY_DSN=your_sentry_dsn_here
+heroku config:set SENTRY_DSN=https://dab7b206e39473c2b1d706131f538f42@o4510204127870976.ingest.us.sentry.io/4510204133769216
 heroku config:set NODE_ENV=production
 ```
 
 ## Características Implementadas
 
-### 1. Integración en Web Server (Express)
+### 1. Inicialización Temprana (Mejores Prácticas)
 
-**Ubicación:** `src/web/server.js`
+**Ubicación:** `instrument.js` (raíz del proyecto)
 
-Sentry se integra automáticamente con:
-- Request handler (captura información de cada solicitud HTTP)
-- Tracing handler (monitoreo de rendimiento)
-- Error handler (captura errores no manejados en Express)
+Siguiendo las mejores prácticas de Sentry, la inicialización ocurre en un archivo separado que se importa ANTES que cualquier otro módulo. Esto garantiza:
+- ✅ Captura de errores desde el inicio de la aplicación
+- ✅ Instrumentación automática de librerías
+- ✅ Monitoreo de rendimiento completo
+- ✅ Captura de errores en tiempo de importación
 
-**Características:**
-- Filtrado automático de datos sensibles (tokens, contraseñas, API keys)
-- Captura de contexto de solicitudes HTTP
-- Monitoreo de rendimiento con sample rate del 10% en producción
+**Importado en:** `start-bot.js` (primera línea)
 
 ### 2. Integración en Bot de Telegram
 
 **Ubicación:** `src/bot/index.js`
 
-Sentry captura:
-- Errores en handlers de comandos
-- Errores en callbacks de botones
-- Contexto del usuario (ID, username)
-- Información del comando o acción que causó el error
+Sentry captura automáticamente:
+- ✅ Errores en handlers de comandos
+- ✅ Errores en callbacks de botones
+- ✅ Errores en middleware
+- ✅ Contexto del usuario (ID, username)
+- ✅ Información del comando o acción que causó el error
+- ✅ Chat ID y tipo de actualización
 
 ### 3. Módulo de Configuración Centralizado
 
 **Ubicación:** `src/config/sentry.js`
 
-Proporciona funciones útiles:
+Proporciona funciones útiles en todo el código:
 
 ```javascript
 const { captureException, captureMessage, setUser, addBreadcrumb } = require("../config/sentry");
@@ -129,7 +139,9 @@ El sistema está configurado para NO enviar a Sentry:
 - `EPAYCO_PRIVATE_KEY`
 - `EPAYCO_P_KEY`
 - `FIREBASE_PRIVATE_KEY`
+- `FIREBASE_CREDENTIALS`
 - `SENTRY_DSN`
+- `DAIMO_API_KEY`
 
 ### Errores Ignorados
 
@@ -308,5 +320,98 @@ Para ver métricas de rendimiento:
 3. Optimiza basándote en los datos recolectados
 
 ---
+
+## Probar la Configuración
+
+### 1. Verificar que instrument.js carga correctamente
+
+```bash
+node -e "require('./instrument.js'); console.log('✓ Sentry cargado correctamente');"
+```
+
+Deberías ver:
+```
+✓ Sentry initialized (environment: production)
+✓ Sentry cargado correctamente
+```
+
+### 2. Crear archivo de prueba
+
+Crea `test-sentry.js` en la raíz del proyecto:
+
+```javascript
+// test-sentry.js
+require('./instrument.js');
+const { captureException, captureMessage } = require('./src/config/sentry');
+
+console.log('Probando integración con Sentry...\n');
+
+// Test 1: Capturar mensaje
+captureMessage('🧪 Mensaje de prueba desde PNPtv Bot', 'info', {
+  test: true,
+  timestamp: new Date().toISOString()
+});
+console.log('✓ Mensaje de prueba enviado a Sentry');
+
+// Test 2: Capturar excepción
+try {
+  throw new Error('🧪 Error de prueba desde PNPtv Bot');
+} catch (error) {
+  captureException(error, {
+    test: true,
+    feature: 'sentry-setup',
+    timestamp: new Date().toISOString()
+  });
+  console.log('✓ Error de prueba enviado a Sentry');
+}
+
+// Esperar a que Sentry envíe los eventos
+setTimeout(() => {
+  console.log('\n✓ Prueba completada. Ve a https://sentry.io/ para ver los eventos.');
+  process.exit(0);
+}, 2000);
+```
+
+Ejecuta:
+```bash
+node test-sentry.js
+```
+
+### 3. Verificar en el Dashboard de Sentry
+
+1. Ve a https://sentry.io/
+2. Abre tu proyecto
+3. Ve a la sección **Issues**
+4. Deberías ver:
+   - Un error: "🧪 Error de prueba desde PNPtv Bot"
+   - Un mensaje: "🧪 Mensaje de prueba desde PNPtv Bot"
+
+### 4. Probar con el Bot
+
+Inicia el bot y fuerza un error (solo para prueba):
+```bash
+npm start
+```
+
+Luego, en otra terminal, puedes ver los logs de Sentry cuando ocurran errores reales.
+
+---
+
+## ✅ Resumen de la Configuración
+
+**Archivos modificados/creados:**
+- ✅ `instrument.js` - Inicialización de Sentry (nuevo)
+- ✅ `start-bot.js` - Importa instrument.js
+- ✅ `src/bot/index.js` - Usa funciones de Sentry
+- ✅ `src/config/sentry.js` - Ya existía, sin cambios necesarios
+- ✅ `.env.example` - Ya incluye SENTRY_DSN
+
+**Próximos pasos:**
+1. ✅ Obtén tu DSN de Sentry.io (o usa el que ya tienes)
+2. ✅ Agrégalo a tu `.env` local
+3. ✅ Configúralo en Heroku con `heroku config:set`
+4. ✅ Ejecuta las pruebas anteriores
+5. ✅ Despliega a producción
+6. ✅ Monitorea errores en el dashboard de Sentry
 
 **Configuración completada.** Sentry está listo para capturar errores en producción y ayudarte a mantener tu aplicación estable y confiable.
