@@ -33,18 +33,38 @@ export async function GET(request: NextRequest) {
 
     const { db } = getFirebaseAdmin()
 
+    // Get current user's membership status
+    const userDoc = await db.collection('users').doc(payload.userId).get()
+    const userData = userDoc.data()
+    const userMembership = userData?.membership?.tier || 'free'
+    const isPrimeOrPremium = userMembership === 'prime' || userMembership === 'premium'
+
     let query = db.collection('posts')
       .orderBy('createdAt', 'desc')
       .limit(limit)
 
     // Apply filters based on feed type
     if (feedType === 'prime') {
+      // Check if user has PRIME/Premium membership
+      if (!isPrimeOrPremium) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'PRIME membership required',
+            requiresUpgrade: true,
+          },
+          { status: 403 }
+        )
+      }
       query = query.where('visibility', '==', 'prime') as any
     } else if (feedType === 'nearby') {
       query = query.where('visibility', 'in', ['public', 'nearby']) as any
+    } else if (feedType === 'profile') {
+      // Profile feed - show all user's posts regardless of visibility
+      // No visibility filter needed, will be filtered by userId below
     } else {
-      // Main feed - public posts
-      query = query.where('visibility', 'in', ['public']) as any
+      // Main feed - public posts only
+      query = query.where('visibility', '==', 'public') as any
     }
 
     // Filter by specific user

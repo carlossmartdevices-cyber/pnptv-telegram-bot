@@ -98,51 +98,40 @@
 
 ## 📋 Pendiente (Fase 1)
 
-### Backend API Routes
-- [ ] `/api/posts` - CRUD de posts
-- [ ] `/api/feed` - Obtener feed paginado
-- [ ] `/api/users/:id` - Perfil de usuario
-- [ ] `/api/interactions` - Likes, comments, shares
-- [ ] `/api/nearby` - Posts cercanos (geolocation)
+### Frontend - Páginas Adicionales
+- [ ] Página `/prime` - Feed exclusivo para miembros PRIME
+- [ ] Página `/nearby` - Posts cercanos con geolocalización
+- [ ] Página `/profile/edit` - Editar perfil de usuario
+- [ ] Página `/settings` - Configuración de la cuenta
 
-### Frontend - Feed
-- [ ] Página principal del feed
-- [ ] Componente PostCard
-- [ ] Componente PostComposer
-- [ ] Infinite scroll con React Query
-- [ ] Filtros de feed (main, prime, nearby)
+### Features Avanzados
+- [ ] Upload de imágenes para posts
+- [ ] Sistema de shares (compartir posts)
+- [ ] Notificaciones en tiempo real
+- [ ] Búsqueda de usuarios y posts
+- [ ] Sistema de follows/followers
+- [ ] Direct messages
 
-### Frontend - Profiles
-- [ ] Página de perfil de usuario
-- [ ] Editar perfil
-- [ ] Stats de usuario
-- [ ] Lista de posts del usuario
+### Suscripciones y Pagos
+- [ ] Página de planes (/plans)
+- [ ] Integración Daimo Pay para checkout
+- [ ] Verificación de membership activa
+- [ ] Auto-renewal de suscripciones
 
-### Frontend - Posts
-- [ ] Crear post con media
-- [ ] Sistema de likes
-- [ ] Sistema de comentarios
-- [ ] Compartir posts
-
-### Frontend - Nearby
-- [ ] Solicitar geolocalización
-- [ ] Mapa de usuarios cercanos
-- [ ] Feed filtrado por ubicación
-
-### Suscripciones
-- [ ] Migrar Daimo Pay integration
-- [ ] Página de planes
-- [ ] Checkout flow
-- [ ] Verificación de membership
+### Geolocalización
+- [ ] Solicitar permisos de ubicación
+- [ ] Mapa interactivo de usuarios cercanos
+- [ ] Filtros de distancia
+- [ ] Posts nearby con radio configurable
 
 ### Testing & Deployment
-- [ ] Tests unitarios
-- [ ] Tests de integración
+- [ ] Tests E2E con Playwright
+- [ ] Tests unitarios de componentes
 - [ ] Dockerfile para webapp
-- [ ] Docker Compose
-- [ ] Configuración Nginx
+- [ ] Docker Compose completo
+- [ ] Configuración Nginx reverse proxy
 - [ ] SSL con Let's Encrypt
-- [ ] Deploy en Hostinger VPS
+- [ ] Deploy en Hostinger VPS o Vercel
 
 ---
 
@@ -287,13 +276,20 @@ npm run start:webapp
 
 ### MVP - Sin Neynar (6-8 semanas)
 
-**Semana 1-2:** ✅ Estructura + Auth
-**Semana 3-4:** Backend API + Feed
-**Semana 5-6:** Profiles + Posts
-**Semana 7:** Nearby + Daimo Pay
-**Semana 8:** Testing + Deploy
+**Semana 1-2:** ✅ Estructura + Auth - **COMPLETADO**
+**Semana 3-4:** ✅ Backend API + Feed - **COMPLETADO**
+**Semana 5-6:** 🔄 Profiles + Posts + Comments - **75% COMPLETADO**
+**Semana 7:** ⏳ Nearby + Daimo Pay
+**Semana 8:** ⏳ Testing + Deploy
 
-**Estado actual:** Semana 1 - 90% completado ✅
+**Estado actual:** Semana 5 - MVP funcional al 75% ✅
+
+### 🎉 Logros Recientes (Sesión actual)
+- ✅ Sistema completo de comentarios implementado
+- ✅ Página de perfil de usuario completa
+- ✅ Logout mejorado con tracking en Firebase
+- ✅ Firebase Admin SDK integrado correctamente
+- ✅ Webapp iniciando sin errores
 
 ---
 

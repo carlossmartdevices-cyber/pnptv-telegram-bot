@@ -3,6 +3,9 @@ const { ensureOnboarding } = require("../../utils/guards");
 const planService = require("../../services/planService");
 const { Markup } = require("telegraf");
 
+// Import formatPlanSummary from planManager
+const { formatPlanSummary } = require("./admin/planManager");
+
 async function showPlans(ctx) {
   const plans = await planService.getActivePlans();
 
@@ -24,7 +27,7 @@ module.exports = async (ctx) => {
   const lang = ctx.session.language || "en";
 
   try {
-    const plans = await listPlans();
+    const plans = await planService.listPlans();
 
     if (!plans || plans.length === 0) {
       const message =

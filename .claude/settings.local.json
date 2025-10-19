@@ -46,7 +46,9 @@
       "Bash(mkdir -p src/webapp/app src/webapp/components src/webapp/lib src/webapp/hooks src/webapp/types src/webapp/styles src/webapp/public)",
       "Bash(test -f .env)",
       "Bash(timeout 15 npm run dev)",
-      "Bash(timeout 20 npm run dev)"
+      "Bash(timeout 20 npm run dev)",
+      "Bash(npm ls --depth=0)",
+      "Bash(npm ls date-fns postcss zustand autoprefixer tailwindcss @types/react-dom --depth=0)"
     ],
     "deny": [],
     "ask": []
