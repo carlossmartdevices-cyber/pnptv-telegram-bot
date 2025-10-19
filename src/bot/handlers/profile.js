@@ -32,8 +32,6 @@ async function viewProfile(ctx) {
         language: lang,
         createdAt: now,
         lastActive: now,
-        xp: 0,
-        badges: [],
         tier: "Free",
         photoFileId: null,
         bio: null,
@@ -80,14 +78,6 @@ async function viewProfile(ctx) {
       ctx.from.username ||
       (lang === "es" ? "No disponible" : "Not set");
 
-    const badgesList = Array.isArray(userData.badges) ? userData.badges : [];
-    const badgesDisplay =
-      badgesList.length > 0
-        ? badgesList.join(", ")
-        : lang === "es"
-        ? "Ninguna"
-        : "None";
-
     const locationDisplay = getLocationDisplay(userData, lang);
     const bioDisplay =
       typeof userData.bio === "string" && userData.bio.trim().length > 0
@@ -100,8 +90,6 @@ async function viewProfile(ctx) {
     const profileText = t("profileInfo", lang, {
       userId: userData.userId,
       username: usernameDisplay,
-      xp: userData.xp || 0,
-      badges: badgesDisplay,
       tier: userData.tier || "Free",
       location: locationDisplay,
       bio: bioDisplay,
@@ -282,32 +270,12 @@ async function handlePhotoMessage(ctx) {
     // Clear waiting state
     ctx.session.waitingFor = null;
 
-    // Award XP for uploading photo (first time only)
-    const userRef = db.collection("users").doc(userId);
-    const doc = await userRef.get();
-    const userData = doc.data();
+    const message =
+      lang === "es"
+        ? "✅ ¡Foto de perfil actualizada exitosamente!"
+        : "✅ Profile photo updated successfully!";
 
-    if (!userData.photoXpAwarded) {
-      const xpReward = 25;
-      await userRef.update({
-        xp: (userData.xp || 0) + xpReward,
-        photoXpAwarded: true,
-      });
-
-      const rewardMessage =
-        lang === "es"
-          ? `✅ ¡Foto de perfil actualizada!\n\n🎁 +${xpReward} XP por agregar una foto.`
-          : `✅ Profile photo updated!\n\n🎁 +${xpReward} XP for adding a photo.`;
-
-      await ctx.reply(rewardMessage, { parse_mode: "Markdown" });
-    } else {
-      const message =
-        lang === "es"
-          ? "✅ ¡Foto de perfil actualizada exitosamente!"
-          : "✅ Profile photo updated successfully!";
-
-      await ctx.reply(message);
-    }
+    await ctx.reply(message);
 
     // Show updated profile
     await viewProfile(ctx);

@@ -55,7 +55,6 @@ const {
   handleAdminCallback,
   sendBroadcast,
   executeSearch,
-  executeGiveXP,
   executeSendMessage,
   processActivationUserId,
   processUpdateMemberUserId,
@@ -338,15 +337,6 @@ bot.on("text", async (ctx) => {
       // Admin user search
       if (isAdmin(ctx.from.id)) {
         await executeSearch(ctx, ctx.message.text);
-      }
-    } else if (
-      ctx.session.waitingFor &&
-      ctx.session.waitingFor.startsWith("admin_give_xp_")
-    ) {
-      // Admin give XP
-      if (isAdmin(ctx.from.id)) {
-        const userId = ctx.session.waitingFor.replace("admin_give_xp_", "");
-        await executeGiveXP(ctx, userId, ctx.message.text);
       }
     } else if (
       ctx.session.waitingFor &&

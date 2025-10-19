@@ -52,7 +52,6 @@ async function showStats(ctx) {
     let activeThisWeek = 0;
     let withPhotos = 0;
     let withLocations = 0;
-    let totalXP = 0;
     let onboardingComplete = 0;
 
     const today = new Date();
@@ -81,16 +80,12 @@ async function showStats(ctx) {
       if (userData.photoFileId) withPhotos++;
       if (userData.location) withLocations++;
       if (userData.onboardingComplete) onboardingComplete++;
-
-      // Sum XP
-      totalXP += userData.xp || 0;
     });
 
     // Calculate percentages
     const photoPercentage = totalUsers > 0 ? Math.round((withPhotos / totalUsers) * 100) : 0;
     const locationPercentage = totalUsers > 0 ? Math.round((withLocations / totalUsers) * 100) : 0;
     const onboardingPercentage = totalUsers > 0 ? Math.round((onboardingComplete / totalUsers) * 100) : 0;
-    const avgXP = totalUsers > 0 ? Math.round(totalXP / totalUsers) : 0;
 
     // Calculate revenue (estimates)
     const monthlyRevenue = (silverTier * 15) + (goldenTier * 25);
@@ -125,8 +120,7 @@ async function showStats(ctx) {
       ? `✨ **Características**\n`
       : `✨ **Features**\n`;
     message += `• Con foto: ${withPhotos} (${photoPercentage}%)\n`;
-    message += `• Con ubicación: ${withLocations} (${locationPercentage}%)\n`;
-    message += `• XP promedio: ${avgXP}\n\n`;
+    message += `• Con ubicación: ${withLocations} (${locationPercentage}%)\n\n`;
 
     message += lang === "es"
       ? `💰 **Ingresos Estimados**\n`
@@ -390,8 +384,6 @@ async function showUserDetails(ctx, userId, userData) {
       message += `⏰ Expires: Never (Lifetime)\n`;
     }
 
-    message += `⭐ XP: ${userData.xp || 0}\n`;
-    message += `🏆 Badges: ${userData.badges?.join(", ") || "None"}\n`;
     message += `📸 Photo: ${userData.photoFileId ? "Yes" : "No"}\n`;
     message += `📍 Location: ${userData.location ? "Yes" : "No"}\n`;
     message += `📝 Bio: ${userData.bio || "Not set"}\n\n`;
@@ -414,15 +406,11 @@ async function showUserDetails(ctx, userId, userData) {
           callback_data: `admin_edit_tier_${userId}`,
         },
         {
-          text: lang === "es" ? "🎁 Dar XP" : "🎁 Give XP",
-          callback_data: `admin_give_xp_${userId}`,
-        },
-      ],
-      [
-        {
           text: lang === "es" ? "💬 Mensaje" : "💬 Message",
           callback_data: `admin_message_${userId}`,
         },
+      ],
+      [
         userData.banned
           ? {
               text: lang === "es" ? "✅ Desbanear" : "✅ Unban",
@@ -1348,93 +1336,6 @@ async function runExpirationCheck(ctx) {
 }
 
 /**
- * Give XP to user
- */
-async function giveXP(ctx, userId) {
-  try {
-    const lang = ctx.session.language || "en";
-
-    ctx.session.waitingFor = `admin_give_xp_${userId}`;
-
-    const message = lang === "es"
-      ? `🎁 **Dar XP**\n\nUsuario: \`${userId}\`\n\nEnvía la cantidad de XP a dar (ejemplo: 100):`
-      : `🎁 **Give XP**\n\nUser: \`${userId}\`\n\nSend the amount of XP to give (example: 100):`;
-
-    await ctx.reply(message, { parse_mode: "Markdown" });
-
-    logger.info(`Admin ${ctx.from.id} initiated XP gift for user: ${userId}`);
-  } catch (error) {
-    logger.error("Error in give XP:", error);
-    await ctx.reply(t("error", ctx.session.language || "en"));
-  }
-}
-
-/**
- * Execute XP gift
- */
-async function executeGiveXP(ctx, userId, amount) {
-  try {
-    const lang = ctx.session.language || "en";
-
-    const xpAmount = parseInt(amount);
-    if (isNaN(xpAmount) || xpAmount <= 0) {
-      await ctx.reply(
-        lang === "es"
-          ? "❌ Cantidad inválida. Envía un número positivo."
-          : "❌ Invalid amount. Send a positive number."
-      );
-      return;
-    }
-
-    // Get current user data
-    const userDoc = await db.collection("users").doc(userId).get();
-    if (!userDoc.exists) {
-      await ctx.reply(
-        lang === "es" ? "❌ Usuario no encontrado." : "❌ User not found."
-      );
-      return;
-    }
-
-    const userData = userDoc.data();
-    const currentXP = userData.xp || 0;
-    const newXP = currentXP + xpAmount;
-
-    // Update XP
-    await db.collection("users").doc(userId).update({
-      xp: newXP,
-      lastActive: new Date(),
-    });
-
-    // Notify user
-    try {
-      const userLang = userData.language || "en";
-      const message = userLang === "es"
-        ? `🎁 ¡Felicitaciones!\n\nHas recibido **${xpAmount} XP** de parte de un administrador.\n\nXP Total: ${newXP}`
-        : `🎁 Congratulations!\n\nYou've received **${xpAmount} XP** from an administrator.\n\nTotal XP: ${newXP}`;
-
-      await ctx.telegram.sendMessage(userId, message, {
-        parse_mode: "Markdown",
-      });
-    } catch (e) {
-      logger.warn(`Could not notify user ${userId} about XP gift:`, e.message);
-    }
-
-    await ctx.reply(
-      lang === "es"
-        ? `✅ **XP Otorgado**\n\n👤 Usuario: \`${userId}\`\n🎁 XP dado: ${xpAmount}\n⭐ XP nuevo: ${newXP}`
-        : `✅ **XP Given**\n\n👤 User: \`${userId}\`\n🎁 XP given: ${xpAmount}\n⭐ New XP: ${newXP}`,
-      { parse_mode: "Markdown" }
-    );
-
-    logger.info(`Admin ${ctx.from.id} gave ${xpAmount} XP to user: ${userId}`);
-    ctx.session.waitingFor = null;
-  } catch (error) {
-    logger.error("Error executing give XP:", error);
-    await ctx.reply(t("error", ctx.session.language || "en"));
-  }
-}
-
-/**
  * Send message to user
  */
 async function messageUser(ctx, userId) {
@@ -1714,7 +1615,7 @@ async function listPremiumUsers(ctx) {
       }
 
       message += `${index + 1}. ${tierIcon} @${userData.username || "Anonymous"}${expiryInfo}\n`;
-      message += `   ID: \`${doc.id}\` | XP: ${userData.xp || 0}\n\n`;
+      message += `   ID: \`${doc.id}\`\n\n`;
     });
 
     await ctx.reply(message, {
@@ -1801,7 +1702,7 @@ async function listNewUsers(ctx) {
       const daysAgo = Math.floor((new Date() - createdAt) / (1000 * 60 * 60 * 24));
 
       message += `${index + 1}. ${tierIcon} @${userData.username || "Anonymous"}\n`;
-      message += `   ID: \`${doc.id}\` | ${daysAgo}d ago | XP: ${userData.xp || 0}\n\n`;
+      message += `   ID: \`${doc.id}\` | ${daysAgo}d ago\n\n`;
     });
 
     await ctx.reply(message, {
@@ -3697,8 +3598,6 @@ module.exports = {
   executeSearch,
   showExpiringMemberships,
   runExpirationCheck,
-  giveXP,
-  executeGiveXP,
   messageUser,
   executeSendMessage,
   banUser,

@@ -13,8 +13,6 @@ const session = new LocalSession({
     language: "en",
     onboardingStep: "start",
     onboardingComplete: false,
-    xp: 0,
-    badges: [],
     ageVerified: false,
     termsAccepted: false,
     privacyAccepted: false,

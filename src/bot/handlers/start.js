@@ -80,8 +80,6 @@ module.exports = async (ctx) => {
       if (userData.onboardingComplete) {
         ctx.session.language = lang;
         ctx.session.onboardingComplete = true;
-        ctx.session.xp = userData.xp || 0;
-        ctx.session.badges = userData.badges || [];
         ctx.session.tier = userData.tier || "Free";
 
         await userRef.update({

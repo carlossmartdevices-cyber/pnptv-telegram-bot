@@ -8,8 +8,6 @@ const { t } = require('../../utils/i18n');
 const logger = require('../../utils/logger');
 const { getMenu } = require('../../config/menus');
 
-const ONBOARDING_REWARD_XP = 100;
-const ONBOARDING_BADGE = "Trailblazer";
 const AGE_VERIFICATION_INTERVAL_HOURS = 72;
 const AGE_VERIFICATION_INTERVAL_MS = AGE_VERIFICATION_INTERVAL_HOURS * 60 * 60 * 1000;
 
@@ -157,11 +155,6 @@ async function handlePrivacyAcceptance(ctx) {
     }
 
     if (isNewUser) {
-      baseUpdate.xp = existingData?.xp ?? ONBOARDING_REWARD_XP;
-      baseUpdate.badges =
-        Array.isArray(existingData?.badges) && existingData.badges.length > 0
-          ? existingData.badges
-          : [ONBOARDING_BADGE];
       baseUpdate.tier = existingData?.tier || "Free";
     }
 
@@ -173,8 +166,6 @@ async function handlePrivacyAcceptance(ctx) {
     ctx.session.ageVerificationExpiresAt = ageVerificationExpiresAt;
 
     if (isNewUser) {
-      ctx.session.xp = baseUpdate.xp;
-      ctx.session.badges = baseUpdate.badges;
       ctx.session.tier = baseUpdate.tier;
     }
 
@@ -184,14 +175,6 @@ async function handlePrivacyAcceptance(ctx) {
       await ctx.editMessageText(t("profileCreated", lang), {
         parse_mode: "Markdown",
       });
-
-      await ctx.reply(
-        t("onboardingReward", lang, {
-          xp: ONBOARDING_REWARD_XP,
-          badge: ONBOARDING_BADGE,
-        }),
-        { parse_mode: "Markdown" }
-      );
     } else {
       await ctx.editMessageText(t("ageVerificationSuccess", lang), {
         parse_mode: "Markdown",
@@ -239,8 +222,6 @@ async function handlePrivacyDecline(ctx) {
 }
 
 module.exports = {
-  ONBOARDING_REWARD_XP,
-  ONBOARDING_BADGE,
   AGE_VERIFICATION_INTERVAL_HOURS,
   handleLanguageSelection,
   handleAgeConfirmation,
