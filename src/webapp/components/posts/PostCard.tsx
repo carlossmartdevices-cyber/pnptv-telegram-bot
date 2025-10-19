@@ -6,6 +6,7 @@ import type { Post } from '@/types'
 import { getAuthToken } from '@/lib/auth'
 import { CommentList } from '@/components/comments/CommentList'
 import { CommentInput } from '@/components/comments/CommentInput'
+import { ShareModal } from '@/components/share/ShareModal'
 
 interface PostCardProps {
   post: Post
@@ -19,6 +20,8 @@ export function PostCard({ post, onLikeToggle }: PostCardProps) {
   const [showComments, setShowComments] = useState(false)
   const [commentRefreshKey, setCommentRefreshKey] = useState(0)
   const [localCommentCount, setLocalCommentCount] = useState(post.comments)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [localShareCount, setLocalShareCount] = useState(post.shares || 0)
 
   const handleLike = async () => {
     setIsLiking(true)
@@ -137,9 +140,12 @@ export function PostCard({ post, onLikeToggle }: PostCardProps) {
           <span className="text-sm font-medium">{localCommentCount}</span>
         </button>
 
-        <button className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors group">
+        <button
+          onClick={() => setShowShareModal(true)}
+          className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors group"
+        >
           <span className="text-xl group-hover:scale-110 transition-transform">🔄</span>
-          <span className="text-sm font-medium">{post.shares || 0}</span>
+          <span className="text-sm font-medium">{localShareCount}</span>
         </button>
       </div>
 
@@ -156,6 +162,17 @@ export function PostCard({ post, onLikeToggle }: PostCardProps) {
           />
         </div>
       )}
+
+      {/* Share Modal */}
+      <ShareModal
+        post={post}
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        onShareComplete={(newShareCount) => {
+          setLocalShareCount(newShareCount)
+          setShowShareModal(false)
+        }}
+      />
     </div>
   )
 }
