@@ -8,7 +8,7 @@ const logger = require("../../utils/logger");
 const epayco = require("../../config/epayco");
 const daimo = require("../../config/daimo");
 const { ensureOnboarding } = require("../../utils/guards");
-const { getPlanById, getPlanBySlug } = require("../../services/planService");
+const planService = require("../../services/planService");
 const {
   PaymentGatewayError,
   PlanNotFoundError,
@@ -44,8 +44,8 @@ async function handleSubscription(ctx, planIdentifier, retryCount = 0) {
     const MAX_RETRIES = 3;
 
     const plan =
-      (await getPlanById(identifier)) ||
-      (await getPlanBySlug(identifier.toLowerCase()));
+      (await planService.getPlanById(identifier)) ||
+      (await planService.getPlanBySlug(identifier.toLowerCase()));
     if (!plan) throw new PlanNotFoundError(identifier);
 
     const userId = ctx.from.id.toString();

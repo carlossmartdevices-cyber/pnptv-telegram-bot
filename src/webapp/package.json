@@ -21,12 +21,14 @@
     "@daimo/pay-common": "^1.18.3",
     "viem": "^2.38.3",
     "zustand": "^4.5.0",
-    "date-fns": "^3.0.0"
+    "date-fns": "^3.0.0",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "@types/node": "^24.8.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "@types/jsonwebtoken": "^9.0.5",
     "typescript": "^5.9.3",
     "tailwindcss": "^3.4.0",
     "postcss": "^8.4.35",

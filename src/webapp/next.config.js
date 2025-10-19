@@ -59,10 +59,11 @@ const nextConfig = {
 
   // Rewrites para API routes
   async rewrites() {
+    const botUrl = process.env.NEXT_PUBLIC_BOT_URL || process.env.BOT_URL || 'https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com'
     return [
       {
         source: '/api/bot/:path*',
-        destination: `${process.env.BOT_URL}/api/:path*`,
+        destination: `${botUrl}/api/:path*`,
       },
     ];
   },

@@ -76,10 +76,28 @@ export async function getCurrentUser(): Promise<User | null> {
 /**
  * Logout user
  */
-export function logout() {
-  localStorage.removeItem('authToken')
-  localStorage.removeItem('user')
-  window.location.href = '/login'
+export async function logout() {
+  try {
+    const token = getAuthToken()
+
+    if (token) {
+      // Call logout endpoint to update server-side
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+    }
+  } catch (error) {
+    console.error('Logout error:', error)
+    // Continue with client-side logout even if server call fails
+  } finally {
+    // Clear client-side storage
+    localStorage.removeItem('authToken')
+    localStorage.removeItem('user')
+    window.location.href = '/login'
+  }
 }
 
 /**

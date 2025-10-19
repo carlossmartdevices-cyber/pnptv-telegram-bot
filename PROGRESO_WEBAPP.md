@@ -2,7 +2,7 @@
 
 **Fecha:** 2025-10-18
 **Fase Actual:** Fase 1 - MVP (Sin Neynar)
-**Progreso General:** 30% ✅
+**Progreso General:** 75% ✅
 
 ---
 
@@ -20,6 +20,7 @@
 - [x] Configuración de Next.js 15
 - [x] TypeScript setup completo
 - [x] TailwindCSS configurado
+- [x] Firebase Admin SDK integrado (compartido con bot)
 
 ### 3. Landing Page
 - [x] Diseño de landing page
@@ -27,14 +28,54 @@
 - [x] Features grid (6 características)
 - [x] Footer con links
 
-### 4. Autenticación (Frontend)
+### 4. Autenticación Completa
 - [x] Componente TelegramLoginButton
 - [x] Página de login completa
 - [x] Auth utilities (lib/auth.ts)
 - [x] Manejo de tokens JWT
 - [x] LocalStorage para sesiones
+- [x] Endpoint `/api/auth/telegram` ✅
+- [x] Endpoint `/api/auth/me` ✅
+- [x] Endpoint `/api/auth/logout` ✅
+- [x] Protected routes con redirect automático
 
-### 5. Tipos TypeScript
+### 5. Sistema de Posts Completo
+- [x] Endpoint `/api/posts` - GET y POST ✅
+- [x] Endpoint `/api/posts/[id]` ✅
+- [x] Endpoint `/api/posts/[id]/like` ✅
+- [x] Endpoint `/api/feed` - Feed paginado ✅
+- [x] PostComposer component (crear posts)
+- [x] PostCard component (mostrar posts)
+- [x] FeedList component (infinite scroll)
+- [x] Sistema de likes con optimistic updates
+
+### 6. Sistema de Comentarios ✨ NUEVO
+- [x] Endpoint `/api/posts/[id]/comments` - GET y POST ✅
+- [x] Endpoint `/api/posts/[id]/comments/[commentId]` - DELETE ✅
+- [x] CommentList component
+- [x] CommentInput component
+- [x] Integración completa en PostCard
+- [x] Delete de comentarios propios
+- [x] Contador de comentarios en tiempo real
+
+### 7. Página de Perfil ✨ NUEVO
+- [x] Página completa de perfil (/profile)
+- [x] Display de información del usuario
+- [x] Stats (posts, followers, following)
+- [x] Membership badge (Free/PRIME/Premium)
+- [x] Tabs (Posts / About)
+- [x] Feed de posts del usuario
+- [x] Botón de logout funcional
+- [x] Avatar con gradient
+
+### 8. Navegación y Layout
+- [x] Navigation bar completo (desktop)
+- [x] Mobile bottom navigation
+- [x] Protected layout para rutas autenticadas
+- [x] Dark mode support completo
+- [x] Responsive design
+
+### 9. Tipos TypeScript
 - [x] Tipos de User
 - [x] Tipos de Post
 - [x] Tipos de Comment
@@ -42,7 +83,7 @@
 - [x] Tipos de Auth
 - [x] Tipos de API Response
 
-### 6. Configuración
+### 10. Configuración
 - [x] next.config.js
 - [x] tailwind.config.js
 - [x] tsconfig.json
@@ -50,17 +91,8 @@
 - [x] package.json con scripts
 - [x] .env.example
 - [x] .gitignore
-
----
-
-## 🔄 En Progreso
-
-### Backend de Autenticación
-- [ ] Endpoint `/api/auth/telegram` (validación de hash)
-- [ ] Endpoint `/api/auth/me` (obtener usuario actual)
-- [ ] Endpoint `/api/auth/logout`
-- [ ] Middleware de autenticación JWT
-- [ ] Verificación de usuario en bot
+- [x] API rewrites configurados
+- [x] Security headers
 
 ---
 
