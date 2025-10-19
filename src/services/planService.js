@@ -173,7 +173,10 @@ class PlanService {
       const snapshot = await retryFirestoreOperation(
         async () => await this.plansCollection
           .where("active", "==", true)
-          .orderBy("price", "asc")
+          // NOTE: orderBy removed temporarily - requires Firestore composite index
+          // To enable sorting by price, create index at:
+          // https://console.firebase.google.com/project/pnptv-b8af8/firestore/indexes
+          // .orderBy("price", "asc")
           .get(),
         {
           maxRetries: 2,
@@ -188,10 +191,14 @@ class PlanService {
         return [];
       }
 
-      return snapshot.docs.map((doc) => ({
+      // Sort in memory instead (temporary workaround)
+      const plans = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+
+      // Sort by price ascending
+      return plans.sort((a, b) => (a.price || 0) - (b.price || 0));
     } catch (error) {
       logger.warn("Failed to query Firestore plans:", error.message);
       return [];
