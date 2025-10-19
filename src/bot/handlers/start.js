@@ -1,4 +1,4 @@
-﻿const { db } = require("../../config/firebase");
+const { db } = require("../../config/firebase");
 const { t } = require("../../utils/i18n");
 const logger = require("../../utils/logger");
 const { getMenu } = require("../../config/menus");
@@ -92,41 +92,25 @@ module.exports = async (ctx) => {
 
         const mainMenu = getMenu("main", lang);
         await ctx.reply(t("mainMenuIntro", lang), {
-          reply_markup: mainMenu,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: lang === "es" ? "¡Únete a nuestro canal gratis!" : "Join our free channel!",
+                  url: "https://t.me/PNPtv",
+                },
+              ],
+            ],
+          },
           parse_mode: "Markdown",
         });
 
-        const webAppUrl = process.env.WEB_APP_URL;
+        // Show the keyboard menu
+        await ctx.reply("👇", {
+          reply_markup: mainMenu,
+        });
 
-        if (webAppUrl && webAppUrl.startsWith("https://")) {
-          return ctx.reply(
-            lang === "es"
-              ? "ðŸŒ Abre nuestra Mini App para una experiencia completa!"
-              : "ðŸŒ Open our Mini App for the full experience!",
-            {
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text:
-                        lang === "es"
-                          ? "ðŸš€ Abrir Mini App"
-                          : "ðŸš€ Open Mini App",
-                      web_app: { url: webAppUrl },
-                    },
-                  ],
-                ],
-              },
-            }
-          );
-        }
-
-        return ctx.reply(
-          lang === "es"
-            ? "ðŸ’¡ *Mini App Disponible!*\n\nðŸŒ PruÃ©bala en tu navegador:\n`http://localhost:3000/demo.html`\n\nðŸ“± Para usarla en Telegram, el administrador necesita configurar HTTPS"
-            : "ðŸ’¡ *Mini App Available!*\n\nðŸŒ Try it in your browser:\n`http://localhost:3000/demo.html`\n\nðŸ“± To use in Telegram, admin needs to setup HTTPS",
-          { parse_mode: "Markdown" }
-        );
+        return;
       }
     }
 

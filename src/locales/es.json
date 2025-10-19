@@ -15,7 +15,7 @@
   "acceptRequired": "🚫 La aceptación es obligatoria. Reinicia con /start para continuar.",
   "profileCreated": "✨ **¡Bienvenido/a a la Tribu!**\n\nTu perfil de PNPtv ya está activo — ¡a encender las chispas!",
   "onboardingReward": "🎁 **¡Recompensa Desbloqueada!**\n\n🔥 +{xp} XP ganados\n🏅 Insignia obtenida: {badge}",
-  "mainMenuIntro": "🎬 ¡Todo listo!\n\nUsa el menú de abajo para explorar, conectar y vivir PNPtv:",
+  "mainMenuIntro": "🎬 ¡Todo está listo!\n\nUsa el menú a continuación para explorar, conectarte y disfrutar todo lo que ofrece PNPtv:\n\n👤 Actualiza tu perfil y comparte tu ubicación.\n\n💎 Elige un plan de suscripción para acceder al mejor contenido amateur de PNP.\n\n🌐 Conéctate con miembros cerca de ti.\n\n❓ Obtén soporte cuando lo necesites.",
   "pleaseCompleteOnboarding": "⚠️ Por favor completa el onboarding primero.\n\nUsa /start para comenzar.",
   "error": "❌ ¡Ups! Algo salió mal. Intenta de nuevo en unos segundos.",
   "profileInfo": "👤 **Tu Perfil PNPtv**\n\n🆔 ID: `{userId}`\n💋 Usuario: @{username}\n⭐ XP: {xp}\n🏆 Insignias: {badges}\n💎 Nivel: {tier}\n{membershipInfo}\n📍 Ubicación: {location}\n📝 Bio: {bio}",

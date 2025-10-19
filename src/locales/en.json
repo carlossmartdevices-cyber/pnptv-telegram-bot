@@ -15,7 +15,7 @@
   "acceptRequired": "🚫 Acceptance is required. Please restart with /start to continue.",
   "profileCreated": "✨ **Welcome to the Cult!**\n\nYour PNPtv profile is now live — let’s get spun together!",
   "onboardingReward": "🎁 **Reward Unlocked!**\n\n🔥 +{xp} XP gained\n🏅 Badge unlocked: {badge}",
-  "mainMenuIntro": "🎬 You’re all set!\n\nUse the menu below to explore, connect, and experience PNPtv:",
+  "mainMenuIntro": "🎬 You're all set!\n\nUse the menu below to explore, connect, and enjoy everything PNPtv has to offer:\n\n👤 Update your profile and share your location.\n\n💎 Choose a membership to access the best PNP amateur content.\n\n🌐 Connect with members near you.\n\n❓ Get support whenever you need it.",
   "pleaseCompleteOnboarding": "⚠️ Please complete onboarding first.\n\nUse /start to begin your journey.",
   "error": "❌ Oops! Something went wrong. Try again in a few seconds.",
   "profileInfo": "👤 **Your PNPtv Profile**\n\n🆔 ID: `{userId}`\n💋 Username: @{username}\n⭐ XP: {xp}\n🏆 Badges: {badges}\n💎 Tier: {tier}\n{membershipInfo}\n📍 Location: {location}\n📝 Bio: {bio}",

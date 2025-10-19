@@ -7,17 +7,15 @@ const menus = {
   main: {
     en: {
       keyboard: [
-        ["👤 My Profile", "💎 Subscribe to PNPtv PRIME!"],
-        ["🗺️ Who is getting spun nearby?", "🌐 PNPTv App!"],
-        ["📡 PNPtv Live!", "❓ Help"],
+        ["👤 My Profile", "💎 Subscription Plans"],
+        ["🌐 Nearby Members", "❓ Help"],
       ],
       resize_keyboard: true,
     },
     es: {
       keyboard: [
-        ["👤 Mi Perfil", "💎 Suscribirse a PNPtv PRIME!"],
-        ["🗺️ ¿Quién está cerca?", "🌐 App PNPTv!"],
-        ["📡 PNPtv en Vivo!", "❓ Ayuda"],
+        ["👤 Mi Perfil", "💎 Planes de Suscripción"],
+        ["🌐 Miembros en el Área", "❓ Ayuda"],
       ],
       resize_keyboard: true,
     },

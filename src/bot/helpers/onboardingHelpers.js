@@ -198,11 +198,25 @@ async function handlePrivacyAcceptance(ctx) {
       });
     }
 
-    // Show main menu
+    // Show main menu with channel button
     const mainMenu = getMenu("main", lang);
     await ctx.reply(t("mainMenuIntro", lang), {
-      reply_markup: mainMenu,
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "¡Únete a nuestro canal gratis!" : "Join our free channel!",
+              url: "https://t.me/PNPtv",
+            },
+          ],
+        ],
+      },
       parse_mode: "Markdown",
+    });
+
+    // Show the keyboard menu
+    await ctx.reply("👇", {
+      reply_markup: mainMenu,
     });
   } catch (error) {
     logger.error("Error completing onboarding:", error);

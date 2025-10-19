@@ -419,11 +419,11 @@ bot.on("text", async (ctx) => {
         await viewProfile(ctx);
       } else if (text.includes("map") || text.includes("mapa")) {
         await mapHandler(ctx);
-      } else if (text.includes("nearby") || text.includes("cercano") || text.includes("cerca")) {
+      } else if (text.includes("nearby") || text.includes("cercano") || text.includes("cerca") || text.includes("miembro")) {
         await nearbyHandler(ctx);
       } else if (text.includes("live") || text.includes("vivo")) {
         await liveHandler(ctx);
-      } else if (text.includes("subscribe") || text.includes("suscri")) {
+      } else if (text.includes("subscri") || text.includes("suscri") || text.includes("plan")) {
         await subscribeHandler(ctx);
       } else if (text.includes("help") || text.includes("ayuda")) {
         await helpHandler(ctx);
