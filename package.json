@@ -25,7 +25,8 @@
     "build": "npm run build:payment && npm run build:webapp",
     "railway:deploy": "railway up",
     "railway:logs": "railway logs",
-    "railway:status": "railway status"
+    "railway:status": "railway status",
+    "init:plans": "node scripts/initializePlans.js"
   },
   "dependencies": {
     "@daimo/pay": "^1.18.3",
