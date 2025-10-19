@@ -39,7 +39,11 @@
       "Bash(timeout 30 heroku logs:*)",
       "Bash(npm test:*)",
       "Bash(npm run build:payment)",
-      "Bash(dir src)"
+      "Bash(dir src)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.neynar.com)",
+      "Bash(mkdir -p src/webapp/app src/webapp/components src/webapp/lib src/webapp/hooks src/webapp/types src/webapp/styles src/webapp/public)"
     ],
     "deny": [],
     "ask": []
