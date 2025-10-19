@@ -26,7 +26,8 @@
     "railway:deploy": "railway up",
     "railway:logs": "railway logs",
     "railway:status": "railway status",
-    "init:plans": "node scripts/initializePlans.js"
+    "init:plans": "node scripts/initializePlans.js",
+    "test:plans": "node scripts/testPlanUpdate.js"
   },
   "dependencies": {
     "@daimo/pay": "^1.18.3",

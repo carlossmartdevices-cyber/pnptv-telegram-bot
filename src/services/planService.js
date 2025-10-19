@@ -125,8 +125,8 @@ class PlanService {
       paymentMethod: paymentMethod,
       paymentLink: paymentLink || null,
       requiresManualActivation: paymentMethod === "nequi" || requiresManualActivation,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       active: true,
     };
 
@@ -339,7 +339,7 @@ class PlanService {
     // Add updatedAt timestamp
     const updateData = {
       ...updates,
-      updatedAt: Date.now(),
+      updatedAt: new Date().toISOString(),
     };
 
     // Remove undefined values
@@ -370,7 +370,7 @@ class PlanService {
 
     await this.plansCollection.doc(planId).update({
       active: false,
-      updatedAt: Date.now(),
+      updatedAt: new Date().toISOString(),
     });
 
     logger.info(`Plan deleted (soft): ${planId}`);
