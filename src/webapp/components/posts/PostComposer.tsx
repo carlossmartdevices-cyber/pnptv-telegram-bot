@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { getAuthToken } from '@/lib/auth'
+import { ImageUpload } from '@/components/upload/ImageUpload'
 
 interface PostComposerProps {
   onPostCreated?: () => void
@@ -11,6 +12,7 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
   const [content, setContent] = useState('')
   const [isPosting, setIsPosting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [mediaUrls, setMediaUrls] = useState<string[]>([])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,6 +36,7 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
         body: JSON.stringify({
           content: content.trim(),
           visibility: 'public',
+          mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
         }),
       })
 
@@ -44,6 +47,7 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
 
       // Success!
       setContent('')
+      setMediaUrls([])
       onPostCreated?.()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create post')
@@ -66,6 +70,11 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
           />
         </div>
 
+        {/* Image Upload */}
+        <div className="mb-4">
+          <ImageUpload onUploadComplete={setMediaUrls} maxImages={4} />
+        </div>
+
         {error && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
@@ -73,28 +82,15 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
         )}
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
-            <button
-              type="button"
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              title="Add image (coming soon)"
-              disabled
-            >
-              <span className="text-xl">📷</span>
-            </button>
-            <button
-              type="button"
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              title="Add location (coming soon)"
-              disabled
-            >
-              <span className="text-xl">📍</span>
-            </button>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {mediaUrls.length > 0 && (
+              <span>{mediaUrls.length} image{mediaUrls.length !== 1 ? 's' : ''} attached</span>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={isPosting || !content.trim()}
+            disabled={isPosting || (!content.trim() && mediaUrls.length === 0)}
             className="px-6 py-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-medium rounded-lg hover:from-primary-700 hover:to-primary-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
           >
             {isPosting ? 'Posting...' : 'Post'}

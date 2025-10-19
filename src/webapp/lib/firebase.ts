@@ -1,8 +1,10 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app'
 import { getFirestore, Firestore } from 'firebase-admin/firestore'
+import { getStorage, Storage } from 'firebase-admin/storage'
 
 let app: App
 let db: Firestore
+let storage: Storage
 
 interface ServiceAccount {
   type: string
@@ -26,7 +28,8 @@ export function initializeFirebase() {
     // Already initialized (probably by the bot)
     app = getApps()[0]
     db = getFirestore(app)
-    return { app, db }
+    storage = getStorage(app)
+    return { app, db, storage }
   }
 
   // Parse Firebase credentials
@@ -90,24 +93,29 @@ export function initializeFirebase() {
   }
 
   // Initialize Firebase
+  const storageBucket = process.env.FIREBASE_STORAGE_BUCKET || `${serviceAccount.project_id}.appspot.com`
+
   app = initializeApp({
     credential: cert(serviceAccount),
     projectId: serviceAccount.project_id,
+    storageBucket,
   })
 
   db = getFirestore(app)
+  storage = getStorage(app)
 
   console.log('Firebase initialized for webapp')
+  console.log('Storage bucket:', storageBucket)
 
-  return { app, db }
+  return { app, db, storage }
 }
 
 // Export singleton instances
 export function getFirebaseAdmin() {
-  if (!app || !db) {
+  if (!app || !db || !storage) {
     return initializeFirebase()
   }
-  return { app, db }
+  return { app, db, storage }
 }
 
-export { db, app }
+export { db, app, storage }
