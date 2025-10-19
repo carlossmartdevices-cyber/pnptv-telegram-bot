@@ -1,5 +1,6 @@
 const { db } = require("../config/firebase");
 const logger = require("./logger");
+const { batchUpdate } = require("./batchOperations");
 
 /**
  * Calculate expiration date based on plan duration
@@ -69,6 +70,7 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
 
 /**
  * Check and expire memberships that have passed their expiration date
+ * Uses Firestore batch operations for better performance and atomicity
  * @returns {Promise<Object>} Results of the cleanup
  */
 async function checkAndExpireMemberships() {
@@ -92,15 +94,16 @@ async function checkAndExpireMemberships() {
       };
     }
 
-    let expiredCount = 0;
-    let failedCount = 0;
+    logger.info(`Found ${expiredUsersSnapshot.size} expired memberships to process`);
 
-    for (const doc of expiredUsersSnapshot.docs) {
-      try {
-        const userId = doc.id;
-        const userData = doc.data();
+    // Prepare batch update operations
+    const operations = expiredUsersSnapshot.docs.map((doc) => {
+      const userId = doc.id;
+      const userData = doc.data();
 
-        await db.collection("users").doc(userId).update({
+      return {
+        ref: db.collection("users").doc(userId),
+        data: {
           tier: "Free",
           tierUpdatedAt: now,
           tierUpdatedBy: "system",
@@ -108,22 +111,23 @@ async function checkAndExpireMemberships() {
           membershipExpiredAt: now,
           membershipIsPremium: false,
           membershipExpiresAt: null,
-        });
+        },
+      };
+    });
 
-        expiredCount++;
-        logger.info(`Expired membership for user ${userId}: ${userData.tier} -> Free`);
-      } catch (error) {
-        failedCount++;
-        logger.error(`Failed to expire membership for user ${doc.id}:`, error);
-      }
-    }
+    // Execute batch update
+    const result = await batchUpdate(operations, "Expire memberships");
 
-    logger.info(`Membership expiration check complete: ${expiredCount} expired, ${failedCount} failed`);
+    logger.info(
+      `Membership expiration complete: ${result.processed} expired, ${result.failed} failed`
+    );
 
     return {
       checked: expiredUsersSnapshot.size,
-      expired: expiredCount,
-      failed: failedCount,
+      expired: result.processed,
+      failed: result.failed,
+      batches: result.batches,
+      batchesFailed: result.batchesFailed,
     };
   } catch (error) {
     logger.error("Error in checkAndExpireMemberships:", error);

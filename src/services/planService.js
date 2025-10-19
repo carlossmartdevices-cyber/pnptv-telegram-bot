@@ -1,5 +1,6 @@
 const { db, admin } = require("../config/firebase");
 const logger = require("../utils/logger");
+const cacheService = require("./cacheService");
 const {
   wrapFirestoreOperation,
   retryFirestoreOperation,
@@ -132,6 +133,10 @@ class PlanService {
 
     const docRef = await this.plansCollection.add(plan);
     logger.info(`Plan created: ${name} (${docRef.id}) with ${paymentMethod} payment`);
+
+    // Invalidate plan caches
+    await cacheService.invalidatePlanCaches();
+
     return { id: docRef.id, ...plan };
   }
 
@@ -166,10 +171,18 @@ class PlanService {
   }
 
   /**
-   * Get active plans only
+   * Get active plans only (with caching)
    */
   async getActivePlans() {
     try {
+      // Check cache first
+      const cachedPlans = await cacheService.getActivePlans();
+      if (cachedPlans) {
+        logger.debug("Returning active plans from cache");
+        return cachedPlans;
+      }
+
+      // Cache miss - fetch from Firestore
       const snapshot = await retryFirestoreOperation(
         async () => await this.plansCollection
           .where("active", "==", true)
@@ -198,7 +211,12 @@ class PlanService {
       }));
 
       // Sort by price ascending
-      return plans.sort((a, b) => (a.price || 0) - (b.price || 0));
+      const sortedPlans = plans.sort((a, b) => (a.price || 0) - (b.price || 0));
+
+      // Cache the result
+      await cacheService.cacheActivePlans(sortedPlans);
+
+      return sortedPlans;
     } catch (error) {
       logger.warn("Failed to query Firestore plans:", error.message);
       return [];
@@ -213,7 +231,7 @@ class PlanService {
   }
 
   /**
-   * Get plan by ID
+   * Get plan by ID (with caching)
    */
   async getPlanById(planId) {
     if (!planId) {
@@ -221,13 +239,26 @@ class PlanService {
     }
 
     try {
+      // Check cache first
+      const cachedPlan = await cacheService.getPlanById(planId);
+      if (cachedPlan) {
+        logger.debug(`Returning plan ${planId} from cache`);
+        return cachedPlan;
+      }
+
+      // Cache miss - fetch from Firestore
       const doc = await this.plansCollection.doc(planId).get();
 
       if (doc.exists) {
-        return {
+        const plan = {
           id: doc.id,
           ...doc.data(),
         };
+
+        // Cache the result
+        await cacheService.cachePlanById(planId, plan);
+
+        return plan;
       }
 
       return null;
@@ -238,7 +269,7 @@ class PlanService {
   }
 
   /**
-   * Get plan by slug/name (case-insensitive)
+   * Get plan by slug/name (case-insensitive, with caching)
    */
   async getPlanBySlug(slug) {
     if (!slug || typeof slug !== "string") {
@@ -247,8 +278,15 @@ class PlanService {
 
     const normalizedSlug = slug.toLowerCase().trim();
 
-    // Search Firestore
     try {
+      // Check cache first
+      const cachedPlan = await cacheService.getPlanBySlug(normalizedSlug);
+      if (cachedPlan) {
+        logger.debug(`Returning plan (slug: ${normalizedSlug}) from cache`);
+        return cachedPlan;
+      }
+
+      // Cache miss - search Firestore
       const snapshot = await this.plansCollection
         .where("tier", "==", slug)
         .limit(1)
@@ -256,10 +294,15 @@ class PlanService {
 
       if (!snapshot.empty) {
         const doc = snapshot.docs[0];
-        return {
+        const plan = {
           id: doc.id,
           ...doc.data(),
         };
+
+        // Cache the result
+        await cacheService.cachePlanBySlug(normalizedSlug, plan);
+
+        return plan;
       }
 
       // Try searching by name (case-insensitive)
@@ -269,6 +312,11 @@ class PlanService {
                p.tier.toLowerCase() === normalizedSlug ||
                p.displayName?.toLowerCase() === normalizedSlug
       );
+
+      if (match) {
+        // Cache the result
+        await cacheService.cachePlanBySlug(normalizedSlug, match);
+      }
 
       return match || null;
     } catch (error) {
@@ -352,6 +400,9 @@ class PlanService {
     await this.plansCollection.doc(planId).update(updateData);
     logger.info(`Plan updated: ${planId}`);
 
+    // Invalidate plan caches
+    await cacheService.invalidatePlanCaches();
+
     return this.getPlanById(planId);
   }
 
@@ -374,6 +425,9 @@ class PlanService {
     });
 
     logger.info(`Plan deleted (soft): ${planId}`);
+
+    // Invalidate plan caches
+    await cacheService.invalidatePlanCaches();
   }
 
   /**
@@ -386,13 +440,24 @@ class PlanService {
 
     await this.plansCollection.doc(planId).delete();
     logger.info(`Plan deleted (hard): ${planId}`);
+
+    // Invalidate plan caches
+    await cacheService.invalidatePlanCaches();
   }
 
   /**
-   * Get plan statistics
+   * Get plan statistics (with caching)
    */
   async getPlanStats() {
     try {
+      // Check cache first
+      const cachedStats = await cacheService.getPlanStats();
+      if (cachedStats) {
+        logger.debug("Returning plan stats from cache");
+        return cachedStats;
+      }
+
+      // Cache miss - calculate stats
       const [allPlans, usersSnapshot] = await Promise.all([
         this.getAllPlans(),
         db.collection("users").get(),
@@ -445,6 +510,9 @@ class PlanService {
           );
         }
       });
+
+      // Cache the stats
+      await cacheService.cachePlanStats(stats);
 
       return stats;
     } catch (error) {
