@@ -120,4 +120,49 @@ router.post('/payments/completed', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/payments/status
+ * Check payment status (for polling from payment page)
+ */
+router.get('/payments/status', async (req, res) => {
+  try {
+    const { reference } = req.query;
+
+    if (!reference) {
+      return res.status(400).json({
+        error: 'Missing reference',
+        message: 'Payment reference is required',
+      });
+    }
+
+    logger.info(`API: Checking payment status for ${reference}`);
+
+    // Check payment intent in database
+    const paymentIntent = await db.collection('payment_intents').doc(reference).get();
+
+    if (!paymentIntent.exists) {
+      return res.json({
+        status: 'not_found',
+        message: 'Payment intent not found',
+      });
+    }
+
+    const data = paymentIntent.data();
+
+    res.json({
+      status: data.status || 'pending',
+      reference: reference,
+      amount: data.amount,
+      createdAt: data.createdAt,
+      completedAt: data.completedAt,
+    });
+  } catch (error) {
+    logger.error('API: Error checking payment status:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to check payment status',
+    });
+  }
+});
+
 module.exports = router;

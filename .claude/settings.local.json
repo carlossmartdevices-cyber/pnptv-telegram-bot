@@ -17,7 +17,11 @@
       "Bash(node -c src/bot/handlers/admin/planManager.js)",
       "Bash(timeout 3 bash -c 'while true; do sleep 1; echo -n .; done')",
       "Bash(git add src/bot/webhook.js)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nFix Daimo Pay SDK loading issue\n\n- Add SDK loading check before enabling payment button\n- Button now waits for DaimoPay SDK to be available\n- Improved error handling for SDK loading\n- Added console logging for debugging\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(git commit -m \"$(cat <<''EOF''\nFix Daimo Pay SDK loading issue\n\n- Add SDK loading check before enabling payment button\n- Button now waits for DaimoPay SDK to be available\n- Improved error handling for SDK loading\n- Added console logging for debugging\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Read(//c/mnt/c/Users/carlo/Documents/Bots/**)",
+      "Bash(npm install)",
+      "Bash(npm cache clean:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

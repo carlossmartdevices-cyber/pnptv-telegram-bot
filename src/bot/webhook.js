@@ -151,7 +151,7 @@ app.get("/pay", async (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Complete Payment - PNPtv! Digital Community</title>
         <meta name="description" content="Complete your PNPtv subscription payment securely via Daimo Pay">
-        <script src="https://unpkg.com/@daimo/pay@latest/dist/index.umd.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
@@ -330,15 +330,31 @@ app.get("/pay", async (req, res) => {
               <div class="price">$${amount} <span class="currency">USDC</span></div>
             </div>
 
-            <div id="daimo-pay-container">
-              <button class="pay-button" id="pay-btn" disabled>Loading...</button>
+            <div id="payment-info" style="text-align: center;">
+              <div style="background: rgba(223,0,255,0.05); border: 1px solid rgba(223,0,255,0.2); padding: 20px; border-radius: 16px; margin-bottom: 20px;">
+                <h3 style="margin: 0 0 10px 0; color: var(--accent); font-size: 16px;">Treasury Address</h3>
+                <code id="wallet-address" style="background: var(--bg); padding: 12px 16px; border-radius: 10px; display: block; color: var(--text); font-size: 13px; word-break: break-all; cursor: pointer; border: 1px solid var(--border);">${process.env.NEXT_PUBLIC_TREASURY_ADDRESS || '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0'}</code>
+                <button onclick="copyAddress()" style="margin-top: 12px; padding: 10px 20px; background: rgba(223,0,255,0.15); border: 1px solid rgba(223,0,255,0.3); border-radius: 10px; color: var(--accent); cursor: pointer; font-weight: 600;">
+                  📋 Copy Address
+                </button>
+              </div>
+
+              <div style="margin: 24px 0;">
+                <canvas id="qr-code" style="max-width: 280px; height: auto; border-radius: 16px; border: 4px solid var(--panel); background: white; padding: 16px;"></canvas>
+              </div>
+
+              <div style="background: rgba(106,64,167,0.1); border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-top: 20px;">
+                <p style="margin: 0; font-size: 14px; line-height: 1.6;">
+                  <strong>📱 How to Pay:</strong><br>
+                  1. Open your USDC wallet (Base, Ethereum, or Polygon)<br>
+                  2. Scan the QR code or copy the address above<br>
+                  3. Send exactly <strong>$${amount} USDC</strong><br>
+                  4. Your subscription activates automatically!
+                </p>
+              </div>
             </div>
 
-            <div class="loading" id="loading" style="display:none;">
-              Processing payment...
-            </div>
-
-            <div class="error" id="error"></div>
+            <div class="error" id="error" style="display:none;"></div>
 
             <div class="security-note">
               🔒 Secure payment powered by Daimo Pay<br>
@@ -357,120 +373,88 @@ app.get("/pay", async (req, res) => {
           const amount = parseFloat("${amount}");
           const apiBaseUrl = window.location.origin;
           const treasuryAddress = "${process.env.NEXT_PUBLIC_TREASURY_ADDRESS || '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0'}";
+          const reference = \`\${planId}_\${userId}_\${Date.now()}\`;
 
-          // Wait for SDK to load before enabling button
-          let sdkLoaded = false;
-          const payBtn = document.getElementById('pay-btn');
+          // Generate QR code on page load
+          window.addEventListener('load', () => {
+            const canvas = document.getElementById('qr-code');
 
-          // Check if SDK is already loaded
-          function checkSDK() {
-            if (window.DaimoPay) {
-              sdkLoaded = true;
-              payBtn.disabled = false;
-              payBtn.textContent = 'Pay with USDC (Daimo)';
-              console.log('Daimo Pay SDK loaded successfully');
-            } else {
-              console.log('Waiting for Daimo Pay SDK...');
-              setTimeout(checkSDK, 100);
+            // Create payment URI for wallets (EIP-681 format)
+            const paymentUri = \`ethereum:\${treasuryAddress}@8453?value=\${amount * 1e6}\`;
+
+            QRCode.toCanvas(canvas, paymentUri, {
+              width: 280,
+              margin: 2,
+              color: {
+                dark: '#28282B',
+                light: '#FFFFFF'
+              }
+            }, function (error) {
+              if (error) {
+                console.error('QR Code generation error:', error);
+                canvas.style.display = 'none';
+              } else {
+                console.log('QR Code generated successfully');
+              }
+            });
+
+            // Notify backend payment started
+            notifyPaymentStarted();
+
+            // Poll for payment confirmation every 10 seconds
+            setInterval(checkPaymentStatus, 10000);
+          });
+
+          // Copy address to clipboard
+          function copyAddress() {
+            const address = document.getElementById('wallet-address').textContent;
+            navigator.clipboard.writeText(address).then(() => {
+              const btn = event.target;
+              const originalText = btn.textContent;
+              btn.textContent = '✅ Copied!';
+              btn.style.background = 'rgba(34, 197, 94, 0.15)';
+              btn.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+              btn.style.color = '#22c55e';
+
+              setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = 'rgba(223,0,255,0.15)';
+                btn.style.borderColor = 'rgba(223,0,255,0.3)';
+                btn.style.color = 'var(--accent)';
+              }, 2000);
+            }).catch(err => {
+              console.error('Failed to copy:', err);
+              alert('Failed to copy address. Please copy manually.');
+            });
+          }
+
+          // Notify backend payment started
+          async function notifyPaymentStarted() {
+            try {
+              await fetch(\`\${apiBaseUrl}/api/payments/started\`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, planId, amount, reference })
+              });
+              console.log('Payment intent created');
+            } catch (e) {
+              console.warn('Failed to notify payment start:', e);
             }
           }
 
-          // Start checking for SDK
-          checkSDK();
-
-          payBtn.onclick = async () => {
+          // Check payment status (would need backend webhook integration)
+          async function checkPaymentStatus() {
             try {
-              if (!sdkLoaded || !window.DaimoPay) {
-                throw new Error('Daimo Pay SDK is still loading. Please wait a moment and try again.');
-              }
+              const response = await fetch(\`\${apiBaseUrl}/api/payments/status?reference=\${reference}\`);
+              const data = await response.json();
 
-              const loading = document.getElementById('loading');
-              const errorEl = document.getElementById('error');
-
-              payBtn.disabled = true;
-              payBtn.textContent = 'Initializing...';
-              loading.style.display = 'block';
-              errorEl.style.display = 'none';
-
-              const reference = \`\${planId}_\${userId}_\${Date.now()}\`;
-
-              // Notify backend payment started
-              try {
-                await fetch(\`\${apiBaseUrl}/api/payments/started\`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ userId, planId, amount, reference })
-                });
-              } catch (e) {
-                console.warn('Failed to notify payment start:', e);
-              }
-
-              // Initialize Daimo Pay
-              const daimoPay = new window.DaimoPay({
-                destinationAddress: treasuryAddress,
-                amount: amount.toString(),
-                metadata: {
-                  userId: userId,
-                  planId: planId,
-                  reference: reference
-                }
-              });
-
-              // Handle success
-              daimoPay.on('success', async (data) => {
-                console.log('Payment successful:', data);
-
-                // Notify backend
-                try {
-                  await fetch(\`\${apiBaseUrl}/api/payments/completed\`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      userId,
-                      planId,
-                      amount,
-                      reference,
-                      transactionHash: data.transactionHash
-                    })
-                  });
-                } catch (e) {
-                  console.warn('Failed to notify payment completion:', e);
-                }
-
-                // Redirect to success page
+              if (data.status === 'completed') {
                 window.location.href = \`\${apiBaseUrl}/payment/success?ref=\${reference}\`;
-              });
-
-              // Handle errors
-              daimoPay.on('error', (error) => {
-                console.error('Payment error:', error);
-                errorEl.textContent = 'Payment failed: ' + (error.message || 'Unknown error');
-                errorEl.style.display = 'block';
-                payBtn.disabled = false;
-                payBtn.textContent = 'Pay with USDC (Daimo)';
-                loading.style.display = 'none';
-              });
-
-              // Handle cancel
-              daimoPay.on('cancel', () => {
-                console.log('Payment cancelled');
-                payBtn.disabled = false;
-                payBtn.textContent = 'Pay with USDC (Daimo)';
-                loading.style.display = 'none';
-              });
-
-              // Open Daimo Pay modal
-              await daimoPay.open();
-
-            } catch (error) {
-              console.error('Error:', error);
-              document.getElementById('error').textContent = error.message;
-              document.getElementById('error').style.display = 'block';
-              payBtn.disabled = false;
-              payBtn.textContent = 'Pay with USDC (Daimo)';
-              document.getElementById('loading').style.display = 'none';
+              }
+            } catch (e) {
+              console.warn('Failed to check payment status:', e);
             }
-          };
+          }
         </script>
       </body>
       </html>

@@ -90,7 +90,7 @@ async function createPaymentRequest({
 }) {
   try {
     logger.info(
-      `Creating Daimo Pay payment link for user ${userId}, plan: ${plan}`
+      `Creating Daimo Pay payment request for user ${userId}, plan: ${plan}`
     );
 
     // Validate credentials first
@@ -107,23 +107,81 @@ async function createPaymentRequest({
     // Generate unique reference ID
     const referenceId = `${plan}_${userId}_${Date.now()}`;
 
-    // Get the payment page URL (defaults to bot URL + /pay path)
-    const paymentPageUrl = process.env.PAYMENT_PAGE_URL || `${process.env.BOT_URL}/pay`;
+    // Use Daimo Pay API to create a payment request
+    const axios = require('axios');
+    const apiUrl = process.env.DAIMO_API_URL || 'https://api.daimo.com/v1';
 
-    // Build payment URL with query parameters
-    const paymentUrl = new URL(paymentPageUrl);
-    paymentUrl.searchParams.set('plan', plan);
-    paymentUrl.searchParams.set('user', userId);
-    paymentUrl.searchParams.set('amount', amount.toFixed(2)); // Ensure 2 decimal places for USDC
+    const response = await axios.post(`${apiUrl}/payments`, {
+      amount: amount.toString(),
+      currency: 'USDC',
+      recipientAddress: process.env.NEXT_PUBLIC_TREASURY_ADDRESS,
+      description: description || `${plan} subscription - ${userName}`,
+      metadata: {
+        userId: userId,
+        planId: plan,
+        reference: referenceId,
+        userEmail: userEmail,
+        userName: userName,
+      },
+      returnUrl: process.env.DAIMO_RETURN_URL || `${process.env.BOT_URL}/payment/success`,
+      webhookUrl: process.env.DAIMO_WEBHOOK_URL || `${process.env.BOT_URL}/daimo/webhook`,
+    }, {
+      headers: {
+        'Authorization': `Bearer ${process.env.DAIMO_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-    logger.info("Daimo Pay payment link created:", {
+    const paymentData = response.data;
+
+    logger.info("Daimo Pay payment request created:", {
       reference: referenceId,
+      paymentId: paymentData.id,
       amount: amount,
       currency: "USDC",
       userId: userId,
       plan: plan,
-      paymentUrl: paymentUrl.toString(),
+      paymentUrl: paymentData.paymentUrl,
     });
+
+    return {
+      success: true,
+      paymentUrl: paymentData.paymentUrl || paymentData.url,
+      reference: referenceId,
+      data: {
+        id: paymentData.id,
+        url: paymentData.paymentUrl || paymentData.url,
+        reference: referenceId,
+        amount: amount,
+        currency: "USDC",
+        status: "pending",
+      },
+    };
+  } catch (error) {
+    logger.error("Error creating Daimo Pay payment request:", {
+      errorMessage: error.message,
+      errorStack: error.stack,
+      errorResponse: error.response?.data,
+      userId,
+      plan,
+      amount,
+    });
+
+    // Fallback: Use React payment page
+    logger.warn("Using React payment page (Daimo API unavailable or disabled)");
+
+    const referenceId = `${plan}_${userId}_${Date.now()}`;
+
+    // For local development, use BOT_URL if set (for ngrok), otherwise use a dummy URL
+    // Telegram doesn't accept http://localhost URLs in inline keyboards
+    const paymentPageUrl = process.env.NODE_ENV === 'development'
+      ? (process.env.PAYMENT_PAGE_URL || process.env.BOT_URL || 'https://example.com/pay')
+      : `${process.env.BOT_URL}/pay`;
+
+    const paymentUrl = new URL(paymentPageUrl);
+    paymentUrl.searchParams.set('plan', plan);
+    paymentUrl.searchParams.set('user', userId);
+    paymentUrl.searchParams.set('amount', amount.toFixed(2));
 
     return {
       success: true,
@@ -137,29 +195,6 @@ async function createPaymentRequest({
         status: "pending",
       },
     };
-  } catch (error) {
-    logger.error("Error creating Daimo Pay payment link:", {
-      errorMessage: error.message,
-      errorStack: error.stack,
-      userId,
-      plan,
-      amount,
-    });
-
-    // Provide more specific error messages
-    if (error.message.includes("credentials")) {
-      throw new Error(
-        "Daimo Pay is not properly configured. Please check your environment variables."
-      );
-    } else if (error.message.includes("parameters")) {
-      throw new Error(
-        `Invalid payment parameters: ${error.message}`
-      );
-    } else {
-      throw new Error(
-        `Failed to create Daimo Pay payment link: ${error.message}`
-      );
-    }
   }
 }
 
