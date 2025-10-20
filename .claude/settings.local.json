@@ -11,7 +11,10 @@
       "Bash(npm start)",
       "Bash(timeout 8 bash -c 'while true; do sleep 1; echo -n .; done')",
       "Bash(timeout 6 bash -c 'while true; do sleep 1; echo -n .; done')",
-      "Bash(node src/bot/webhook.js)"
+      "Bash(node src/bot/webhook.js)",
+      "Bash(git add src/bot/webhook.js src/bot/handlers/subscribe.js src/bot/helpers/subscriptionHelpers.js src/bot/index.js src/bot/handlers/admin/planManager.js)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd Daimo payment page endpoint and redesign subscription flow\n\n- Add /pay endpoint in webhook.js for Daimo USDC payments\n- Integrate Daimo Pay SDK with payment page UI\n- Redesign subscription flow: channel description → plan list → plan details → payment options\n- Add development mode support in webhook.js (polling without webhook setup)\n- Export formatPlanSummary in planManager.js\n- Add show_subscription_plans callback handler in index.js\n- Update subscribe.js to show USD prices and channel description\n- Improve error logging in subscription handlers\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(node -c src/bot/handlers/admin/planManager.js)"
     ],
     "deny": [],
     "ask": []
