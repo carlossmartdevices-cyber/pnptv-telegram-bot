@@ -147,13 +147,14 @@ app.get("/pay", async (req, res) => {
       <!DOCTYPE html>
       <html lang="en">
       <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Complete Payment - PNPtv</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Complete Payment - PNPtv! Digital Community</title>
+        <meta name="description" content="Complete your PNPtv subscription payment securely via Daimo Pay">
         <script src="https://unpkg.com/@daimo/pay@latest/dist/index.umd.js"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
         <style>
           :root {
             --bg: #28282B;
@@ -167,66 +168,53 @@ app.get("/pay", async (req, res) => {
             --radius: 22px;
             --shadow: 0 8px 22px rgba(0,0,0,0.25);
           }
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          body {
+          * { box-sizing: border-box; }
+          html, body {
+            margin: 0; padding: 0;
+            background: var(--bg); color: var(--text);
             font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
             line-height: 1.6;
           }
-          h1, h2 {
-            font-family: 'Space Grotesk', Inter, system-ui, sans-serif;
-          }
-          .payment-container {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
+          h1, h2, h3 { font-family: 'Space Grotesk', Inter, system-ui, sans-serif; }
+          code, pre { font-family: 'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; }
+          a { color: var(--link); text-decoration: none; }
+          a:hover { text-decoration: underline; }
+          .container { max-width: 980px; margin: 0 auto; padding: 28px; }
+          header {
+            background: linear-gradient(180deg, rgba(106,64,167,0.18), rgba(223,0,255,0.06));
             border-bottom: 1px solid var(--border);
+            box-shadow: 0 6px 18px rgba(106,64,167,0.25);
           }
-          .logo {
-            font-size: 48px;
-            margin-bottom: 10px;
-          }
+          header .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+          .brand { display:flex; align-items:center; gap:12px; }
           .badge {
-            display: inline-block;
             background: rgba(223,0,255,0.10);
             color: var(--accent);
             border: 1px solid rgba(223,0,255,0.35);
             padding: 6px 12px;
             border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: .3px;
-            margin-bottom: 12px;
+            font-size: 12px; font-weight: 700; letter-spacing: .3px;
           }
-          h1 {
-            color: var(--text);
-            font-size: 26px;
-            margin-bottom: 8px;
-            font-weight: 700;
+          .chip { display:inline-block; background:#232329; border:1px solid var(--border); padding:6px 10px; border-radius:10px; font-size:12px; color:var(--muted);}
+          main { min-height: 60vh; }
+          .payment-section {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+            margin: 30px auto;
+            box-shadow: var(--shadow);
+            max-width: 600px;
           }
-          .subtitle {
-            color: var(--muted);
-            font-size: 14px;
+          .payment-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
           }
+          .logo { font-size: 48px; margin-bottom: 10px; }
+          h1 { font-size: 30px; margin: 14px 0 6px; }
+          .subtitle { color: var(--muted); font-size: 14px; }
           .plan-info {
             background: rgba(106,64,167,0.12);
             border: 1px solid rgba(223,0,255,0.2);
@@ -266,7 +254,7 @@ app.get("/pay", async (req, res) => {
             padding: 16px 24px;
             background: linear-gradient(135deg, var(--primary), var(--accent));
             color: #ffffff;
-            border: 1px solid rgba(255,255,255,0.08);
+            border: none;
             border-radius: 14px;
             font-size: 18px;
             font-weight: 700;
@@ -310,38 +298,58 @@ app.get("/pay", async (req, res) => {
             padding-top: 20px;
             border-top: 1px solid var(--border);
           }
+          footer {
+            color: var(--muted);
+            font-size: 14px;
+            border-top: 1px solid var(--border);
+            margin-top: 24px;
+          }
         </style>
       </head>
       <body>
-        <div class="payment-container">
-          <div class="header">
-            <div class="logo">🎥</div>
-            <span class="badge">PNPtv! Digital Community</span>
-            <h1>Complete Payment</h1>
-            <p class="subtitle">Secure crypto payment via Daimo Pay</p>
+        <header>
+          <div class="container">
+            <div class="brand">
+              <span class="badge">PNPtv! Digital Community</span>
+              <span class="chip">Payment</span>
+            </div>
           </div>
+        </header>
 
-          <div class="plan-info">
-            <h2>${planName}</h2>
-            <p>${planDescription}</p>
-            <div class="price">$${amount} <span class="currency">USDC</span></div>
-          </div>
+        <main class="container">
+          <section class="payment-section">
+            <div class="payment-header">
+              <div class="logo">🎥</div>
+              <h1>Complete Payment</h1>
+              <p class="subtitle">Secure crypto payment via Daimo Pay</p>
+            </div>
 
-          <div id="daimo-pay-container">
-            <button class="pay-button" id="pay-btn" disabled>Loading...</button>
-          </div>
+            <div class="plan-info">
+              <h2>${planName}</h2>
+              <p>${planDescription}</p>
+              <div class="price">$${amount} <span class="currency">USDC</span></div>
+            </div>
 
-          <div class="loading" id="loading" style="display:none;">
-            Processing payment...
-          </div>
+            <div id="daimo-pay-container">
+              <button class="pay-button" id="pay-btn" disabled>Loading...</button>
+            </div>
 
-          <div class="error" id="error"></div>
+            <div class="loading" id="loading" style="display:none;">
+              Processing payment...
+            </div>
 
-          <div class="security-note">
-            🔒 Secure payment powered by Daimo Pay<br>
-            Your transaction is encrypted and secure
-          </div>
-        </div>
+            <div class="error" id="error"></div>
+
+            <div class="security-note">
+              🔒 Secure payment powered by Daimo Pay<br>
+              Your transaction is encrypted and secure
+            </div>
+          </section>
+        </main>
+
+        <footer class="container">
+          <p>© 2025 PNPtv! Digital Community — <a href="mailto:support@pnptv.app">support@pnptv.app</a></p>
+        </footer>
 
         <script>
           const planId = "${plan}";
