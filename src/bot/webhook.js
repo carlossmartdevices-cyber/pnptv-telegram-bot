@@ -282,14 +282,37 @@ app.get("/pay", async (req, res) => {
           const apiBaseUrl = window.location.origin;
           const treasuryAddress = "${process.env.NEXT_PUBLIC_TREASURY_ADDRESS || '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0'}";
 
-          document.getElementById('pay-btn').onclick = async () => {
+          // Wait for SDK to load before enabling button
+          let sdkLoaded = false;
+          const payBtn = document.getElementById('pay-btn');
+
+          // Check if SDK is already loaded
+          function checkSDK() {
+            if (window.DaimoPay) {
+              sdkLoaded = true;
+              payBtn.disabled = false;
+              payBtn.textContent = 'Pay with USDC (Daimo)';
+              console.log('Daimo Pay SDK loaded successfully');
+            } else {
+              console.log('Waiting for Daimo Pay SDK...');
+              setTimeout(checkSDK, 100);
+            }
+          }
+
+          // Start checking for SDK
+          checkSDK();
+
+          payBtn.onclick = async () => {
             try {
-              const btn = document.getElementById('pay-btn');
+              if (!sdkLoaded || !window.DaimoPay) {
+                throw new Error('Daimo Pay SDK is still loading. Please wait a moment and try again.');
+              }
+
               const loading = document.getElementById('loading');
               const errorEl = document.getElementById('error');
 
-              btn.disabled = true;
-              btn.textContent = 'Initializing...';
+              payBtn.disabled = true;
+              payBtn.textContent = 'Initializing...';
               loading.style.display = 'block';
               errorEl.style.display = 'none';
 
@@ -304,11 +327,6 @@ app.get("/pay", async (req, res) => {
                 });
               } catch (e) {
                 console.warn('Failed to notify payment start:', e);
-              }
-
-              // Check if Daimo Pay SDK is loaded
-              if (!window.DaimoPay) {
-                throw new Error('Daimo Pay SDK not loaded. Please refresh the page.');
               }
 
               // Initialize Daimo Pay
@@ -352,16 +370,16 @@ app.get("/pay", async (req, res) => {
                 console.error('Payment error:', error);
                 errorEl.textContent = 'Payment failed: ' + (error.message || 'Unknown error');
                 errorEl.style.display = 'block';
-                btn.disabled = false;
-                btn.textContent = 'Pay with USDC (Daimo)';
+                payBtn.disabled = false;
+                payBtn.textContent = 'Pay with USDC (Daimo)';
                 loading.style.display = 'none';
               });
 
               // Handle cancel
               daimoPay.on('cancel', () => {
                 console.log('Payment cancelled');
-                btn.disabled = false;
-                btn.textContent = 'Pay with USDC (Daimo)';
+                payBtn.disabled = false;
+                payBtn.textContent = 'Pay with USDC (Daimo)';
                 loading.style.display = 'none';
               });
 
@@ -372,8 +390,8 @@ app.get("/pay", async (req, res) => {
               console.error('Error:', error);
               document.getElementById('error').textContent = error.message;
               document.getElementById('error').style.display = 'block';
-              document.getElementById('pay-btn').disabled = false;
-              document.getElementById('pay-btn').textContent = 'Pay with USDC (Daimo)';
+              payBtn.disabled = false;
+              payBtn.textContent = 'Pay with USDC (Daimo)';
               document.getElementById('loading').style.display = 'none';
             }
           };
