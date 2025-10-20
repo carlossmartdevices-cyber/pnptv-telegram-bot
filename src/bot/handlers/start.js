@@ -95,7 +95,7 @@ module.exports = async (ctx) => {
               [
                 {
                   text: lang === "es" ? "¡Únete a nuestro canal gratis!" : "Join our free channel!",
-                  url: "https://t.me/PNPtv",
+                  url: "https://t.me/pnptvfree",
                 },
               ],
             ],
