@@ -129,6 +129,23 @@ bot.action(/^plan_select_(.+)$/, async (ctx) => {
   const planId = ctx.match[1];
   await subscriptionHelpers.handleSubscription(ctx, planId);
 });
+
+// Back to subscription plans handler
+bot.action("show_subscription_plans", async (ctx) => {
+  await subscribeHandler(ctx);
+});
+
+// Payment method selection handlers
+bot.action(/^pay_epayco_(.+)$/, async (ctx) => {
+  const planId = ctx.match[1];
+  await subscriptionHelpers.handleSubscription(ctx, planId, "epayco");
+});
+
+bot.action(/^pay_daimo_(.+)$/, async (ctx) => {
+  const planId = ctx.match[1];
+  await subscriptionHelpers.handleSubscription(ctx, planId, "daimo");
+});
+
 bot.action("upgrade_tier", (ctx) => subscribeHandler(ctx));
 
 // ===== PROFILE EDIT HANDLERS =====
@@ -211,10 +228,19 @@ bot.action("back_to_main", async (ctx) => {
     const mainMenu = getMenu("main", lang);
 
     await ctx.answerCbQuery();
-    await ctx.editMessageText(t("mainMenuIntro", lang), {
-      reply_markup: mainMenu,
-      parse_mode: "Markdown",
-    });
+
+    // Try to edit message, if fails send new message
+    try {
+      await ctx.editMessageText(t("mainMenuIntro", lang), {
+        parse_mode: "Markdown",
+      });
+    } catch (editError) {
+      // Can't edit with regular keyboard, just send new message
+      await ctx.reply(t("mainMenuIntro", lang), {
+        reply_markup: mainMenu,
+        parse_mode: "Markdown",
+      });
+    }
   } catch (error) {
     logger.error("Error in back navigation:", error);
   }

@@ -969,4 +969,5 @@ module.exports = {
   showPlanDashboard,
   handlePlanCallback,
   handlePlanTextResponse,
+  formatPlanSummary,
 };

@@ -35,7 +35,7 @@ function formatPlanFeatures(plan, lang) {
  * @param {object} ctx - Telegraf context
  * @param {string} planIdentifier - Plan id or slug
  */
-async function handleSubscription(ctx, planIdentifier, retryCount = 0) {
+async function handleSubscription(ctx, planIdentifier, paymentMethod = null, retryCount = 0) {
   if (!ensureOnboarding(ctx)) return;
 
   try {
@@ -54,6 +54,62 @@ async function handleSubscription(ctx, planIdentifier, retryCount = 0) {
       plan.currency || "COP"
     }`;
     const planNameDisplay = plan.displayName || plan.name;
+
+    // If no payment method specified, show plan details with payment options
+    if (!paymentMethod) {
+      // Plan details message
+      const planDetails =
+        lang === "es"
+          ? `${plan.icon || "💎"} **${planNameDisplay}**\n\n` +
+            `**Descripción:**\n${plan.description || "Plan de suscripción premium"}\n\n` +
+            `**Características:**\n${features}\n\n` +
+            `💰 **Precio:** $${plan.price} USD (${plan.priceInCOP.toLocaleString()} COP)\n` +
+            `⏱️ **Duración:** ${plan.durationDays || plan.duration} días\n\n` +
+            `**Selecciona tu método de pago:**`
+          : `${plan.icon || "💎"} **${planNameDisplay}**\n\n` +
+            `**Description:**\n${plan.description || "Premium subscription plan"}\n\n` +
+            `**Features:**\n${features}\n\n` +
+            `💰 **Price:** $${plan.price} USD (${plan.priceInCOP.toLocaleString()} COP)\n` +
+            `⏱️ **Duration:** ${plan.durationDays || plan.duration} days\n\n` +
+            `**Select your payment method:**`;
+
+      const paymentButtons = [];
+
+      // ePayco option (credit/debit cards - Colombia)
+      paymentButtons.push([
+        {
+          text: lang === "es" ? "💳 Pagar con Tarjeta (ePayco)" : "💳 Pay with Card (ePayco)",
+          callback_data: `pay_epayco_${plan.id}`,
+        },
+      ]);
+
+      // Daimo Pay option (USDC stablecoin)
+      if (process.env.DAIMO_API_KEY) {
+        paymentButtons.push([
+          {
+            text: lang === "es" ? "💰 Pagar con USDC (Daimo)" : "💰 Pay with USDC (Daimo)",
+            callback_data: `pay_daimo_${plan.id}`,
+          },
+        ]);
+      }
+
+      // Back button
+      paymentButtons.push([
+        {
+          text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
+          callback_data: "show_subscription_plans",
+        },
+      ]);
+
+      await ctx.answerCbQuery();
+      await ctx.editMessageText(planDetails, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: paymentButtons,
+        },
+      });
+      return;
+    }
 
     // Handle Nequi payment method (manual activation)
     if (plan.paymentMethod === "nequi") {
@@ -86,7 +142,7 @@ async function handleSubscription(ctx, planIdentifier, retryCount = 0) {
     }
 
     // Handle Daimo Pay payment method (USDC stablecoin - automatic activation)
-    if (plan.paymentMethod === "daimo") {
+    if (paymentMethod === "daimo" || plan.paymentMethod === "daimo") {
       const daimoConfig = daimo.getConfig();
       if (!daimoConfig.enabled) {
         throw new PaymentGatewayError("Daimo Pay not configured");
@@ -153,8 +209,10 @@ async function handleSubscription(ctx, planIdentifier, retryCount = 0) {
     }
 
     // Handle ePayco payment method (automatic activation)
-    if (!process.env.EPAYCO_PUBLIC_KEY) {
-      throw new PaymentGatewayError("Payment gateway not configured");
+    if (paymentMethod === "epayco" || plan.paymentMethod === "epayco" || !paymentMethod) {
+      if (!process.env.EPAYCO_PUBLIC_KEY) {
+        throw new PaymentGatewayError("Payment gateway not configured");
+      }
     }
 
     const userEmail = ctx.from.username

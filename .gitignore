@@ -64,3 +64,4 @@ yarn-error.log*
 # Next.js build files
 .next/
 out/
+*.tar.gz

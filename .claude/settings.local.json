@@ -1,23 +1,17 @@
 {
   "permissions": {
     "allow": [
+      "Bash(git config http.postBuffer 524288000)",
+      "Bash(git push origin main)",
+      "Bash(git config http.postBuffer 52428800)",
+      "Bash(cat .gitignore)",
+      "Bash(node -c src/bot/handlers/subscribe.js)",
+      "Bash(mv .env .env.production)",
+      "Bash(mv .env.local .env)",
       "Bash(npm start)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nSimplify main menu and add legal documentation\n\n- Simplified main menu from 6 to 4 buttons in both languages\n  - English: My Profile, Subscription Plans, Nearby Members, Help\n  - Spanish: Mi Perfil, Planes de Suscripción, Miembros en el Área, Ayuda\n- Updated mainMenuIntro with detailed descriptions for each menu option\n- Removed Mini App button and related code from start handler\n- Updated text handlers to recognize new button labels (plan, miembro)\n- Added comprehensive legal documentation pages:\n  - terms-en.html and terms-es.html (Terms, Refunds & Privacy)\n  - privacy-en.html and privacy-es.html (redirect pages)\n  - Includes GDPR/CCPA compliance, AI disclosure, Colombian jurisdiction\n  - Dark theme design with purple/magenta branding\n- Added utility scripts for channel management\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git push)",
-      "Bash(git add src/bot/helpers/onboardingHelpers.js src/bot/handlers/profile.js src/bot/handlers/admin.js src/bot/handlers/start.js src/bot/index.js src/bot/middleware/session.js src/bot/middleware/firestoreSession.js src/locales/en.json src/locales/es.json)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nRemove gamification system (XP, badges, rewards)\n\n- Removed XP points system across entire codebase\n- Removed badges/achievements system\n- Removed onboarding rewards (100 XP, Trailblazer badge)\n- Removed photo upload XP rewards (25 XP)\n- Removed admin XP gifting functionality\n- Removed XP/badges from:\n  - User profiles display\n  - Admin panel user details\n  - Admin statistics dashboard\n  - Session middleware defaults\n  - Onboarding flow\n  - User search results\n  - Premium/new user lists\n- Updated locale strings to remove gamification references\n- Cleaned up profile info display to focus on core features\n\nFocus shift: Core features (profiles, subscriptions, location, community)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(npm install ioredis)",
-      "Bash(git add src/services/cacheService.js src/utils/batchOperations.js REDIS_CACHING.md BATCH_OPERATIONS.md .env.example package.json src/services/planService.js src/utils/membershipManager.js)",
-      "Bash(node test-epayco.js)",
-      "Bash(cat package.json)",
-      "Bash(node test-payment-webhooks.js)",
-      "Bash(git add src/bot/webhook.js PAYMENT_INTEGRATION.md test-payment-webhooks.js)",
-      "Bash(git add -f test-payment-webhooks.js)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nFix critical ePayco payment integration - add missing webhook handlers\n\nCRITICAL BUG FIX:\n- ePayco payments were being created but never activated due to missing webhook handlers\n- Users could pay but subscriptions were never activated\n\nChanges:\n\nWebhook Handlers (src/bot/webhook.js):\n- Add GET /epayco/response - user redirect page with success/failure/processing states\n- Add POST /epayco/confirmation - server-to-server webhook for payment confirmation\n- Implement SHA256 signature verification for security\n- Add automatic subscription activation on successful payment\n- Add Telegram notifications (success, failure, processing states)\n- Add comprehensive error handling and logging\n- Extract plan and user ID from invoice format (planId_userId_timestamp)\n- Update user document with payment details and membership info\n- Calculate expiration date based on plan duration\n\nSecurity Improvements:\n- Signature verification using SHA256 (EPAYCO_P_KEY)\n- Strict mode enforced (EPAYCO_ALLOW_UNSIGNED_WEBHOOKS=false)\n- Validate webhook data before processing\n- Log all payment events for audit trail\n- Support test mode with proper validation\n\nUser Experience:\n- Beautiful redirect pages for success/failure/processing states\n- Automatic Telegram notifications with payment details\n- Formatted payment confirmation messages in Spanish\n- Link back to bot from redirect pages\n\nTesting & Documentation:\n- Add test-payment-webhooks.js - comprehensive webhook testing utility\n- Generate test webhook payloads with valid signatures\n- Add manual testing instructions with curl commands\n- Add PAYMENT_INTEGRATION.md - complete setup and deployment guide\n- Document webhook configuration for ePayco and Daimo\n- Add troubleshooting section with common issues\n- Include security best practices\n\nDocumentation Includes:\n- Setup instructions for ePayco and Daimo Pay\n- Webhook configuration guide\n- Environment variable reference\n- Test card numbers for ePayco sandbox\n- Deployment guides (Railway, Heroku, Vercel)\n- Manual testing checklist\n- Troubleshooting common issues\n- File structure reference\n- Security best practices\n- Support contacts\n\nFiles Modified:\n- src/bot/webhook.js - add ePayco webhook handlers (389 lines added)\n\nFiles Added:\n- PAYMENT_INTEGRATION.md - comprehensive payment integration guide\n- test-payment-webhooks.js - webhook testing utility\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(curl -s https://pnptv-telegram-bot-5dab055d3a53.herokuapp.com/health)",
-      "Bash(node test-payment-flow.js)",
-      "Bash(node test-daimo.js)",
-      "Bash(curl -X GET \"https://developers.hostinger.com/api/vps/v1/virtual-machines\" -H \"Authorization: Bearer gQJbTDbuR9U8VveSJA9nWDZNpxoT9U4LAQSCZnld67d1e569\" -H \"Content-Type: application/json\")"
+      "Bash(timeout 8 bash -c 'while true; do sleep 1; echo -n .; done')",
+      "Bash(timeout 6 bash -c 'while true; do sleep 1; echo -n .; done')",
+      "Bash(node src/bot/webhook.js)"
     ],
     "deny": [],
     "ask": []

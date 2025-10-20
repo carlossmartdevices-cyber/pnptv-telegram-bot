@@ -81,6 +81,312 @@ app.get("/ready", async (req, res) => {
 const apiRoutes = require('./api/routes');
 app.use('/api', apiRoutes);
 
+// Payment page endpoint for Daimo Pay
+app.get("/pay", async (req, res) => {
+  try {
+    const { plan, user, amount } = req.query;
+
+    if (!plan || !user || !amount) {
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Invalid Payment Link</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              margin: 0;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+            .container {
+              background: white;
+              padding: 40px;
+              border-radius: 20px;
+              box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+              text-align: center;
+              max-width: 400px;
+            }
+            .icon { font-size: 64px; margin-bottom: 20px; }
+            h1 { color: #333; margin-bottom: 10px; }
+            p { color: #666; line-height: 1.6; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="icon">⚠️</div>
+            <h1>Invalid Payment Link</h1>
+            <p>This payment link is missing required information. Please return to the bot and try again.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    logger.info("Payment page accessed:", { plan, user, amount });
+
+    // Fetch plan details to show on payment page
+    const planService = require('../services/planService');
+    let planData;
+    try {
+      planData = await planService.getPlanById(plan);
+    } catch (err) {
+      logger.error("Failed to fetch plan:", err);
+    }
+
+    const planName = planData?.displayName || planData?.name || 'Premium Plan';
+    const planDescription = planData?.description || 'Premium subscription';
+
+    // Serve Daimo payment page
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Complete Payment - PNPtv</title>
+        <script src="https://unpkg.com/@daimo/pay@latest/dist/index.umd.js"></script>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+          }
+          .payment-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+          }
+          .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+          }
+          h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+          }
+          .plan-info {
+            background: #f7f9fc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+          }
+          .plan-info h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 10px;
+          }
+          .plan-info p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+          }
+          .price {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+          }
+          .currency {
+            font-size: 14px;
+            color: #666;
+          }
+          #daimo-pay-container {
+            margin-top: 20px;
+          }
+          .pay-button {
+            width: 100%;
+            padding: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+          }
+          .pay-button:hover {
+            background: #764ba2;
+          }
+          .pay-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+          }
+          .loading {
+            text-align: center;
+            color: #666;
+            margin-top: 20px;
+          }
+          .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="payment-container">
+          <div class="header">
+            <div class="logo">🎥</div>
+            <h1>PNPtv Premium</h1>
+            <p>Complete your subscription payment</p>
+          </div>
+
+          <div class="plan-info">
+            <h2>${planName}</h2>
+            <p>${planDescription}</p>
+            <div class="price">$${amount} <span class="currency">USDC</span></div>
+          </div>
+
+          <div id="daimo-pay-container">
+            <button class="pay-button" id="pay-btn">Pay with USDC (Daimo)</button>
+          </div>
+
+          <div class="loading" id="loading" style="display:none;">
+            Processing payment...
+          </div>
+
+          <div class="error" id="error"></div>
+        </div>
+
+        <script>
+          const planId = "${plan}";
+          const userId = "${user}";
+          const amount = parseFloat("${amount}");
+          const apiBaseUrl = window.location.origin;
+          const treasuryAddress = "${process.env.NEXT_PUBLIC_TREASURY_ADDRESS || '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0'}";
+
+          document.getElementById('pay-btn').onclick = async () => {
+            try {
+              const btn = document.getElementById('pay-btn');
+              const loading = document.getElementById('loading');
+              const errorEl = document.getElementById('error');
+
+              btn.disabled = true;
+              btn.textContent = 'Initializing...';
+              loading.style.display = 'block';
+              errorEl.style.display = 'none';
+
+              const reference = \`\${planId}_\${userId}_\${Date.now()}\`;
+
+              // Notify backend payment started
+              try {
+                await fetch(\`\${apiBaseUrl}/api/payments/started\`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId, planId, amount, reference })
+                });
+              } catch (e) {
+                console.warn('Failed to notify payment start:', e);
+              }
+
+              // Check if Daimo Pay SDK is loaded
+              if (!window.DaimoPay) {
+                throw new Error('Daimo Pay SDK not loaded. Please refresh the page.');
+              }
+
+              // Initialize Daimo Pay
+              const daimoPay = new window.DaimoPay({
+                destinationAddress: treasuryAddress,
+                amount: amount.toString(),
+                metadata: {
+                  userId: userId,
+                  planId: planId,
+                  reference: reference
+                }
+              });
+
+              // Handle success
+              daimoPay.on('success', async (data) => {
+                console.log('Payment successful:', data);
+
+                // Notify backend
+                try {
+                  await fetch(\`\${apiBaseUrl}/api/payments/completed\`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      userId,
+                      planId,
+                      amount,
+                      reference,
+                      transactionHash: data.transactionHash
+                    })
+                  });
+                } catch (e) {
+                  console.warn('Failed to notify payment completion:', e);
+                }
+
+                // Redirect to success page
+                window.location.href = \`\${apiBaseUrl}/payment/success?ref=\${reference}\`;
+              });
+
+              // Handle errors
+              daimoPay.on('error', (error) => {
+                console.error('Payment error:', error);
+                errorEl.textContent = 'Payment failed: ' + (error.message || 'Unknown error');
+                errorEl.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Pay with USDC (Daimo)';
+                loading.style.display = 'none';
+              });
+
+              // Handle cancel
+              daimoPay.on('cancel', () => {
+                console.log('Payment cancelled');
+                btn.disabled = false;
+                btn.textContent = 'Pay with USDC (Daimo)';
+                loading.style.display = 'none';
+              });
+
+              // Open Daimo Pay modal
+              await daimoPay.open();
+
+            } catch (error) {
+              console.error('Error:', error);
+              document.getElementById('error').textContent = error.message;
+              document.getElementById('error').style.display = 'block';
+              document.getElementById('pay-btn').disabled = false;
+              document.getElementById('pay-btn').textContent = 'Pay with USDC (Daimo)';
+              document.getElementById('loading').style.display = 'none';
+            }
+          };
+        </script>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    logger.error("Error serving payment page:", error);
+    res.status(500).send("Internal server error");
+  }
+});
+
 // Webhook endpoint for Telegram
 app.post(`/bot${process.env.TELEGRAM_TOKEN}`, (req, res) => {
   bot.handleUpdate(req.body, res);
@@ -738,26 +1044,52 @@ const PORT = process.env.PORT || 3000;
 const HOST = "0.0.0.0"; // Required for Railway
 
 if (require.main === module) {
-  setupWebhook()
-    .then(() => {
-      const server = app.listen(PORT, HOST, () => {
-        logger.info(`Webhook server running on ${HOST}:${PORT}`);
-        console.log(`\n🚀 PNPtv Bot Server Started`);
-        console.log(`   - Environment: ${process.env.NODE_ENV || "production"}`);
-        console.log(`   - Host: ${HOST}`);
-        console.log(`   - Port: ${PORT}`);
-        console.log(`   - Health Check: http://localhost:${PORT}/health`);
-        console.log(`   - Bot Username: @${bot.botInfo?.username || "PNPtvbot"}\n`);
-      });
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
-      // Setup graceful shutdown
-      setupGracefulShutdown(server);
-    })
-    .catch((error) => {
-      logger.error("Failed to start webhook server:", error);
-      console.error("❌ Failed to start server:", error.message);
-      process.exit(1);
+  // In development mode, start Express server without webhook (use polling mode from bot)
+  if (isDevelopment) {
+    logger.info("Starting in development mode (polling) - webhook disabled");
+    console.log("\n⚙️  Development Mode: Starting server without webhook");
+    console.log("   Bot will use polling mode from index.js");
+    console.log("   Express server available for payment endpoints\n");
+
+    // Start Express server only (bot runs separately via index.js in polling mode)
+    const server = app.listen(PORT, HOST, () => {
+      logger.info(`Development server running on ${HOST}:${PORT}`);
+      console.log(`\n🚀 PNPtv Development Server Started`);
+      console.log(`   - Environment: development`);
+      console.log(`   - Host: ${HOST}`);
+      console.log(`   - Port: ${PORT}`);
+      console.log(`   - Health Check: http://localhost:${PORT}/health`);
+      console.log(`   - Payment Page: http://localhost:${PORT}/pay`);
+      console.log(`   - Run 'npm start' in another terminal for bot polling mode\n`);
     });
+
+    // Setup graceful shutdown
+    setupGracefulShutdown(server);
+  } else {
+    // Production mode: use webhook
+    setupWebhook()
+      .then(() => {
+        const server = app.listen(PORT, HOST, () => {
+          logger.info(`Webhook server running on ${HOST}:${PORT}`);
+          console.log(`\n🚀 PNPtv Bot Server Started`);
+          console.log(`   - Environment: ${process.env.NODE_ENV || "production"}`);
+          console.log(`   - Host: ${HOST}`);
+          console.log(`   - Port: ${PORT}`);
+          console.log(`   - Health Check: http://localhost:${PORT}/health`);
+          console.log(`   - Bot Username: @${bot.botInfo?.username || "PNPtvbot"}\n`);
+        });
+
+        // Setup graceful shutdown
+        setupGracefulShutdown(server);
+      })
+      .catch((error) => {
+        logger.error("Failed to start webhook server:", error);
+        console.error("❌ Failed to start server:", error.message);
+        process.exit(1);
+      });
+  }
 }
 
 module.exports = { app, setupWebhook };
