@@ -151,25 +151,46 @@ app.get("/pay", async (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Complete Payment - PNPtv</title>
         <script src="https://unpkg.com/@daimo/pay@latest/dist/index.umd.js"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
+          :root {
+            --bg: #28282B;
+            --panel: #2F2F33;
+            --text: #EAEAF0;
+            --muted: #C6C6CD;
+            --primary: #6A40A7;
+            --accent: #DF00FF;
+            --link: #DF00FF;
+            --border: #3A3A40;
+            --radius: 22px;
+            --shadow: 0 8px 22px rgba(0,0,0,0.25);
+          }
           * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
           }
           body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            line-height: 1.6;
+          }
+          h1, h2 {
+            font-family: 'Space Grotesk', Inter, system-ui, sans-serif;
           }
           .payment-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
             padding: 40px;
             max-width: 500px;
             width: 100%;
@@ -177,76 +198,117 @@ app.get("/pay", async (req, res) => {
           .header {
             text-align: center;
             margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
           }
           .logo {
             font-size: 48px;
             margin-bottom: 10px;
           }
+          .badge {
+            display: inline-block;
+            background: rgba(223,0,255,0.10);
+            color: var(--accent);
+            border: 1px solid rgba(223,0,255,0.35);
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .3px;
+            margin-bottom: 12px;
+          }
           h1 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 10px;
+            color: var(--text);
+            font-size: 26px;
+            margin-bottom: 8px;
+            font-weight: 700;
+          }
+          .subtitle {
+            color: var(--muted);
+            font-size: 14px;
           }
           .plan-info {
-            background: #f7f9fc;
-            padding: 20px;
-            border-radius: 12px;
+            background: rgba(106,64,167,0.12);
+            border: 1px solid rgba(223,0,255,0.2);
+            padding: 24px;
+            border-radius: 18px;
             margin-bottom: 30px;
           }
           .plan-info h2 {
-            color: #667eea;
-            font-size: 20px;
-            margin-bottom: 10px;
+            color: var(--accent);
+            font-size: 22px;
+            margin-bottom: 12px;
+            font-weight: 600;
           }
           .plan-info p {
-            color: #666;
+            color: var(--muted);
             line-height: 1.6;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
+            font-size: 15px;
           }
           .price {
-            font-size: 36px;
-            font-weight: bold;
-            color: #333;
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--text);
             margin-bottom: 5px;
+            font-family: 'Space Grotesk', sans-serif;
           }
           .currency {
-            font-size: 14px;
-            color: #666;
+            font-size: 16px;
+            color: var(--muted);
+            font-weight: 500;
           }
           #daimo-pay-container {
-            margin-top: 20px;
+            margin-top: 24px;
           }
           .pay-button {
             width: 100%;
-            padding: 16px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 12px;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
             font-size: 18px;
-            font-weight: 600;
+            font-weight: 700;
+            font-family: 'Space Grotesk', sans-serif;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(223,0,255,0.25);
           }
           .pay-button:hover {
-            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(223,0,255,0.35);
           }
           .pay-button:disabled {
-            background: #ccc;
+            background: #3A3A40;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            color: var(--muted);
           }
           .loading {
             text-align: center;
-            color: #666;
+            color: var(--muted);
             margin-top: 20px;
+            font-size: 14px;
           }
           .error {
-            background: #fee;
-            color: #c33;
-            padding: 15px;
-            border-radius: 8px;
+            background: rgba(255,59,48,0.15);
+            color: #ff6b6b;
+            border: 1px solid rgba(255,59,48,0.3);
+            padding: 16px;
+            border-radius: 12px;
             margin-top: 20px;
             display: none;
+            font-size: 14px;
+          }
+          .security-note {
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
           }
         </style>
       </head>
@@ -254,8 +316,9 @@ app.get("/pay", async (req, res) => {
         <div class="payment-container">
           <div class="header">
             <div class="logo">🎥</div>
-            <h1>PNPtv Premium</h1>
-            <p>Complete your subscription payment</p>
+            <span class="badge">PNPtv! Digital Community</span>
+            <h1>Complete Payment</h1>
+            <p class="subtitle">Secure crypto payment via Daimo Pay</p>
           </div>
 
           <div class="plan-info">
@@ -265,7 +328,7 @@ app.get("/pay", async (req, res) => {
           </div>
 
           <div id="daimo-pay-container">
-            <button class="pay-button" id="pay-btn">Pay with USDC (Daimo)</button>
+            <button class="pay-button" id="pay-btn" disabled>Loading...</button>
           </div>
 
           <div class="loading" id="loading" style="display:none;">
@@ -273,6 +336,11 @@ app.get("/pay", async (req, res) => {
           </div>
 
           <div class="error" id="error"></div>
+
+          <div class="security-note">
+            🔒 Secure payment powered by Daimo Pay<br>
+            Your transaction is encrypted and secure
+          </div>
         </div>
 
         <script>
