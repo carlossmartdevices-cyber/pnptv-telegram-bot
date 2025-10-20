@@ -45,6 +45,15 @@ async function handleLanguageSelection(ctx) {
 async function handleAgeConfirmation(ctx) {
   try {
     const lang = ctx.session.language || "en";
+
+    // Answer callback query first to avoid timeout
+    try {
+      await ctx.answerCbQuery();
+    } catch (err) {
+      // Ignore if query already answered or expired
+      logger.warn(`Could not answer callback query: ${err.message}`);
+    }
+
     ctx.session.ageVerified = true;
     ctx.session.onboardingStep = "terms";
     ctx.session.ageVerifiedAt = new Date();
@@ -54,20 +63,46 @@ async function handleAgeConfirmation(ctx) {
 
     logger.info(`User ${ctx.from.id} confirmed age`);
 
-    await ctx.editMessageText(t("terms", lang), {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: t("accept", lang), callback_data: "accept_terms" },
-            { text: t("decline", lang), callback_data: "decline_terms" },
+    try {
+      await ctx.editMessageText(t("terms", lang), {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: t("accept", lang), callback_data: "accept_terms" },
+              { text: t("decline", lang), callback_data: "decline_terms" },
+            ],
           ],
-        ],
-      },
-      parse_mode: "Markdown",
-    });
+        },
+        parse_mode: "Markdown",
+      });
+    } catch (editError) {
+      // If message is the same or can't be edited, send new message
+      if (editError.description?.includes('message is not modified') ||
+          editError.description?.includes('message to edit not found')) {
+        await ctx.reply(t("terms", lang), {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: t("accept", lang), callback_data: "accept_terms" },
+                { text: t("decline", lang), callback_data: "decline_terms" },
+              ],
+            ],
+          },
+          parse_mode: "Markdown",
+        });
+      } else {
+        throw editError;
+      }
+    }
   } catch (error) {
     logger.error("Error in age confirmation:", error);
-    await ctx.answerCbQuery("An error occurred");
+    // Try to send error message to user
+    try {
+      await ctx.reply("An error occurred. Please try /start again.");
+    } catch (replyError) {
+      // Can't do anything else
+      logger.error("Could not send error message:", replyError);
+    }
   }
 }
 

@@ -3454,7 +3454,10 @@ async function handleAdminCallback(ctx) {
   const lang = ctx.session.language || "en";
 
   try {
-    await ctx.answerCbQuery();
+    // Don't answer callback query yet for broadcast wizard - it handles it internally
+    if (!action.startsWith("bcast_")) {
+      await ctx.answerCbQuery();
+    }
 
     if (action === "admin_stats") {
       await showStats(ctx);

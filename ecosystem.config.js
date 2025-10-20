@@ -19,8 +19,8 @@ module.exports = {
       // Application name
       name: 'pnptv-bot',
 
-      // Entry point
-      script: './start-bot.js',
+      // Entry point (use webhook.js for production with domain/HTTPS)
+      script: './src/bot/webhook.js',
 
       // Instances (use 'max' for all CPU cores, or a number)
       instances: 1,
@@ -110,8 +110,8 @@ module.exports = {
       // SSH user
       user: 'root',
 
-      // SSH host
-      host: 'srv1071867.hstgr.cloud',
+      // SSH host (can use IP or hostname)
+      host: '72.60.29.80',  // or 'srv1071867.hstgr.cloud'
 
       // SSH port
       port: '22',
@@ -126,7 +126,7 @@ module.exports = {
       ref: 'origin/main',
 
       // Path on server
-      path: '/var/www/pnptv-bot',
+      path: '/var/www/telegram-bot',
 
       // Pre-setup commands
       'pre-setup': [
