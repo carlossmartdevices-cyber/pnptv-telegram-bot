@@ -38,6 +38,12 @@ function formatPlanFeatures(plan, lang) {
 async function handleSubscription(ctx, planIdentifier, paymentMethod = null, retryCount = 0) {
   if (!ensureOnboarding(ctx)) return;
 
+  // Answer callback query IMMEDIATELY to prevent timeout
+  // This stops the loading spinner while we process
+  if (ctx.callbackQuery) {
+    await ctx.answerCbQuery().catch(() => {}); // Ignore errors if already answered
+  }
+
   try {
     const lang = ctx.session.language || "en";
     const identifier = String(planIdentifier || "").trim();
@@ -101,7 +107,7 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
         },
       ]);
 
-      await ctx.answerCbQuery();
+      // Already answered callback query at the start
       await ctx.editMessageText(planDetails, {
         parse_mode: "Markdown",
         reply_markup: {
@@ -118,7 +124,7 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
           ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💳 **Método de Pago: Nequi Negocios**\n\n⚠️ **Importante:** Después de completar el pago, envía tu comprobante al administrador para activar tu suscripción manualmente.\n\nHaz clic en el botón para ir a Nequi:`
           : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💳 **Payment Method: Nequi Negocios**\n\n⚠️ **Important:** After completing payment, send your receipt to the admin for manual subscription activation.\n\nClick the button to go to Nequi:`;
 
-      await ctx.answerCbQuery();
+      // Already answered callback query at the start
       await ctx.editMessageText(message, {
         parse_mode: "Markdown",
         reply_markup: {
@@ -179,7 +185,7 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
             ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: $${amountUSD.toFixed(2)} USD (USDC)\n- Precio COP: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💰 **Método de Pago: Daimo Pay (Stablecoin USDC)**\n\nPaga con USDC desde cualquier exchange, wallet o app de pago.\nTu suscripción se activará automáticamente tras el pago.\n\nHaz clic en el botón para continuar:`
             : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: $${amountUSD.toFixed(2)} USD (USDC)\n- Price COP: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💰 **Payment Method: Daimo Pay (USDC Stablecoin)**\n\nPay with USDC from any exchange, wallet, or payment app.\nYour subscription will be activated automatically after payment.\n\nClick the button to proceed:`;
 
-        await ctx.answerCbQuery();
+        // Already answered callback query at the start
         await ctx.editMessageText(message, {
           parse_mode: "Markdown",
           reply_markup: {
@@ -245,7 +251,7 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
           ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💳 **Método de Pago: ePayco (Automático)**\n\nTu suscripción se activará automáticamente tras el pago.\n\nHaz clic en el botón para continuar con el pago:`
           : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💳 **Payment Method: ePayco (Automatic)**\n\nYour subscription will be activated automatically after payment.\n\nClick the button to proceed with payment:`;
 
-      await ctx.answerCbQuery();
+      // Already answered callback query at the start
       await ctx.editMessageText(message, {
         parse_mode: "Markdown",
         reply_markup: {
@@ -311,7 +317,8 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
     }
 
     if (ctx.updateType === "callback_query") {
-      await ctx.answerCbQuery();
+      // Already answered callback query at the start, but try again in case of early errors
+      await ctx.answerCbQuery().catch(() => {});
       try {
         await ctx.editMessageText(errorMessage, {
           parse_mode: "Markdown",
