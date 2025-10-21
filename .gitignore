@@ -65,3 +65,11 @@ yarn-error.log*
 .next/
 out/
 *.tar.gz
+
+# Monorepo build directories
+server/dist/
+web/dist/
+web/.vite/
+
+# TypeScript
+*.tsbuildinfo

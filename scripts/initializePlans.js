@@ -9,22 +9,23 @@ const logger = require("../src/utils/logger");
 
 const DEFAULT_PLANS = [
   {
-    id: "silver",
-    name: "Silver",
-    displayName: "Silver Plan",
-    tier: "Silver",
-    price: 15,
-    priceInCOP: 60000, // ~$15 USD in COP (adjust based on exchange rate)
+    id: "trial-pass",
+    name: "Trial Pass",
+    displayName: "Trial Pass",
+    tier: "Trial",
+    price: 14.99,
+    priceInCOP: 59960, // ~$14.99 USD in COP (adjust based on exchange rate)
     currency: "USD",
-    duration: 30, // days
-    description: "Premium features with ad-free experience",
+    duration: 7, // days
+    description: "Try premium features for a week",
     features: [
-      "Ad-free experience",
-      "20 daily swipes",
-      "Verification badge",
-      "Standard support"
+      "Access to PNPtv! PRIME channel",
+      "Who is nearby? feature in bot",
+      "PNPtv! Live (coming soon!)",
+      "Members Telegram Group",
+      "7 days full access"
     ],
-    icon: "🥈",
+    icon: "🎫",
     recommended: false,
     paymentMethod: "epayco",
     requiresManualActivation: false,
@@ -33,31 +34,78 @@ const DEFAULT_PLANS = [
     updatedAt: new Date().toISOString()
   },
   {
-    id: "golden",
-    name: "Golden",
-    displayName: "Golden Plan",
-    tier: "Golden",
-    price: 25,
-    priceInCOP: 100000, // ~$25 USD in COP (adjust based on exchange rate)
+    id: "pnp-member",
+    name: "PNP Member",
+    displayName: "PNP Member",
+    tier: "PNP",
+    price: 24.99,
+    priceInCOP: 99960, // ~$24.99 USD in COP (adjust based on exchange rate)
     currency: "USD",
     duration: 30, // days
-    description: "Ultimate premium experience with crypto bonus",
+    description: "Full premium access for a month",
     features: [
-      "Everything in Silver",
-      "VIP channel access",
-      "Exclusive golden badges",
+      "Access to PNPtv! PRIME channel",
+      "Who is nearby? feature in bot",
+      "PNPtv! Live (coming soon!)",
+      "Members Telegram Group",
       "Priority support",
-      "5 USDT monthly crypto reward",
-      "Unlimited swipes",
-      "Early access to events"
+      "30 days access"
     ],
-    icon: "🥇",
-    cryptoBonus: {
-      amount: 5,
-      currency: "USDT",
-      description: "5 USDT monthly bonus"
-    },
+    icon: "💎",
     recommended: true,
+    paymentMethod: "epayco",
+    requiresManualActivation: false,
+    active: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "crystal-member",
+    name: "Crystal Member",
+    displayName: "Crystal Member",
+    tier: "Crystal",
+    price: 49.99,
+    priceInCOP: 199960, // ~$49.99 USD in COP (adjust based on exchange rate)
+    currency: "USD",
+    duration: 120, // days (4 months)
+    description: "Extended premium experience",
+    features: [
+      "Access to PNPtv! PRIME channel",
+      "Who is nearby? feature in bot",
+      "PNPtv! Live (coming soon!)",
+      "Members Telegram Group",
+      "Crystal member badge - early access to new features",
+      "120 days access (4 months)"
+    ],
+    icon: "💠",
+    recommended: false,
+    paymentMethod: "epayco",
+    requiresManualActivation: false,
+    active: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "diamond-member",
+    name: "Diamond Member",
+    displayName: "Diamond Member",
+    tier: "Diamond",
+    price: 99.99,
+    priceInCOP: 399960, // ~$99.99 USD in COP (adjust based on exchange rate)
+    currency: "USD",
+    duration: 365, // days (1 year)
+    description: "Ultimate premium experience for a full year",
+    features: [
+      "Access to PNPtv! PRIME channel",
+      "Who is nearby? feature in bot",
+      "PNPtv! Live (coming soon!)",
+      "Members Telegram Group",
+      "Diamond member badge - early access to new features",
+      "365 days access (1 year)"
+    ],
+    icon: "💎",
+    cryptoBonus: null,
+    recommended: false,
     paymentMethod: "epayco",
     requiresManualActivation: false,
     active: true,

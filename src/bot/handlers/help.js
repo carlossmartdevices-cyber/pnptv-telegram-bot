@@ -7,13 +7,41 @@ module.exports = async (ctx) => {
   }
 
   const language = ctx.session.language || "en";
-  const message = formatMessage(
-    "Help",
+  const message =
     language === "es"
-      ? "Comandos disponibles:\n\n/profile - Ver tu perfil\n/subscribe - Suscribirte\n/map - Ver mapa\n/help - Ayuda"
-      : "Available commands:\n\n/profile - View your profile\n/subscribe - Subscribe\n/map - View map\n/help - Help",
-    language
-  );
+      ? "❓ *Ayuda*\n\n*Comandos disponibles:*\n\n/start - Menu principal\n/profile - Ver tu perfil\n/subscribe - Suscribirte\n/nearby - Ver usuarios cercanos\n/help - Ayuda\n\n*¿Necesitas más ayuda?*\nContáctanos en nuestro canal."
+      : "❓ *Help*\n\n*Available commands:*\n\n/start - Main menu\n/profile - View your profile\n/subscribe - Subscribe\n/nearby - View nearby users\n/help - Help\n\n*Need more help?*\nContact us on our channel.";
 
-  await ctx.reply(message, { parse_mode: "Markdown" });
+  const keyboard = {
+    inline_keyboard: [
+      [
+        {
+          text: language === "es" ? "🔙 Volver al Menú" : "🔙 Back to Menu",
+          callback_data: "back_to_main",
+        },
+      ],
+    ],
+  };
+
+  // If from callback query, edit the message
+  if (ctx.callbackQuery) {
+    try {
+      await ctx.answerCbQuery();
+      await ctx.editMessageText(message, {
+        parse_mode: "Markdown",
+        reply_markup: keyboard,
+      });
+    } catch (editError) {
+      // If edit fails, send new message
+      await ctx.reply(message, {
+        parse_mode: "Markdown",
+        reply_markup: keyboard,
+      });
+    }
+  } else {
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: keyboard,
+    });
+  }
 };

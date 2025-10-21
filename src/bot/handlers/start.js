@@ -88,7 +88,6 @@ module.exports = async (ctx) => {
 
         logger.info(`Returning user ${userId} started bot`);
 
-        const mainMenu = getMenu("main", lang);
         await ctx.reply(t("mainMenuIntro", lang), {
           reply_markup: {
             inline_keyboard: [
@@ -98,14 +97,33 @@ module.exports = async (ctx) => {
                   url: "https://t.me/pnptvfree",
                 },
               ],
+              [
+                {
+                  text: lang === "es" ? "¡Suscríbete al canal PRIME!" : "Subscribe to PRIME channel!",
+                  callback_data: "show_subscription_plans",
+                },
+              ],
+              [
+                {
+                  text: lang === "es" ? "👤 Mi Perfil" : "👤 My Profile",
+                  callback_data: "show_my_profile",
+                },
+              ],
+              [
+                {
+                  text: lang === "es" ? "🌍 ¿Quién está cerca?" : "🌍 Who is nearby?",
+                  callback_data: "show_nearby",
+                },
+              ],
+              [
+                {
+                  text: lang === "es" ? "❓ Ayuda" : "❓ Help",
+                  callback_data: "show_help",
+                },
+              ],
             ],
           },
           parse_mode: "Markdown",
-        });
-
-        // Show the keyboard menu
-        await ctx.reply("👇", {
-          reply_markup: mainMenu,
         });
 
         return;

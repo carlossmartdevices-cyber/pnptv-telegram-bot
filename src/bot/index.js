@@ -135,6 +135,19 @@ bot.action("show_subscription_plans", async (ctx) => {
   await subscribeHandler(ctx);
 });
 
+// Main menu item handlers
+bot.action("show_my_profile", async (ctx) => {
+  await viewProfile(ctx);
+});
+
+bot.action("show_nearby", async (ctx) => {
+  await nearbyHandler(ctx);
+});
+
+bot.action("show_help", async (ctx) => {
+  await helpHandler(ctx);
+});
+
 // Payment method selection handlers
 bot.action(/^pay_epayco_(.+)$/, async (ctx) => {
   const planId = ctx.match[1];
@@ -147,6 +160,7 @@ bot.action(/^pay_daimo_(.+)$/, async (ctx) => {
 });
 
 bot.action("upgrade_tier", (ctx) => subscribeHandler(ctx));
+bot.action("subscribe_prime", (ctx) => subscribeHandler(ctx));
 
 // ===== PROFILE EDIT HANDLERS =====
 
@@ -225,19 +239,85 @@ bot.action(/^(start_live|view_lives)$/, handleLiveCallback);
 bot.action("back_to_main", async (ctx) => {
   try {
     const lang = ctx.session.language || "en";
-    const mainMenu = getMenu("main", lang);
 
     await ctx.answerCbQuery();
 
-    // Try to edit message, if fails send new message
+    // Edit the message to show main menu with inline keyboard
     try {
       await ctx.editMessageText(t("mainMenuIntro", lang), {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "¡Únete a nuestro canal gratis!" : "Join our free channel!",
+                url: "https://t.me/pnptvfree",
+              },
+            ],
+            [
+              {
+                text: lang === "es" ? "¡Suscríbete al canal PRIME!" : "Subscribe to PRIME channel!",
+                callback_data: "show_subscription_plans",
+              },
+            ],
+            [
+              {
+                text: lang === "es" ? "👤 Mi Perfil" : "👤 My Profile",
+                callback_data: "show_my_profile",
+              },
+            ],
+            [
+              {
+                text: lang === "es" ? "🌍 ¿Quién está cerca?" : "🌍 Who is nearby?",
+                callback_data: "show_nearby",
+              },
+            ],
+            [
+              {
+                text: lang === "es" ? "❓ Ayuda" : "❓ Help",
+                callback_data: "show_help",
+              },
+            ],
+          ],
+        },
         parse_mode: "Markdown",
       });
     } catch (editError) {
-      // Can't edit with regular keyboard, just send new message
+      // If edit fails, send new message
       await ctx.reply(t("mainMenuIntro", lang), {
-        reply_markup: mainMenu,
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "¡Únete a nuestro canal gratis!" : "Join our free channel!",
+                url: "https://t.me/pnptvfree",
+              },
+            ],
+            [
+              {
+                text: lang === "es" ? "¡Suscríbete al canal PRIME!" : "Subscribe to PRIME channel!",
+                callback_data: "show_subscription_plans",
+              },
+            ],
+            [
+              {
+                text: lang === "es" ? "👤 Mi Perfil" : "👤 My Profile",
+                callback_data: "show_my_profile",
+              },
+            ],
+            [
+              {
+                text: lang === "es" ? "🌍 ¿Quién está cerca?" : "🌍 Who is nearby?",
+                callback_data: "show_nearby",
+              },
+            ],
+            [
+              {
+                text: lang === "es" ? "❓ Ayuda" : "❓ Help",
+                callback_data: "show_help",
+              },
+            ],
+          ],
+        },
         parse_mode: "Markdown",
       });
     }

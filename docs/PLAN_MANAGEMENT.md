@@ -53,23 +53,23 @@ const planService = require('./services/planService');
 
 // Create a new plan
 const newPlan = await planService.createPlan({
-  name: 'PNPtv Platinum',
-  displayName: 'Platinum',
-  price: 50,
-  priceInCOP: 200000,
-  currency: 'COP',
-  duration: 30,
+  name: 'Trial Pass',
+  displayName: 'Trial Pass',
+  price: 14.99,
+  priceInCOP: 59960,
+  currency: 'USD',
+  duration: 7,
   features: [
-    'All Golden features',
-    'Unlimited swipes',
-    '10 USDT crypto bonus',
-    'Premium support'
+    'Ad-free experience',
+    'Basic premium access',
+    'Standard support',
+    '7 days full access'
   ],
-  tier: 'Platinum',
-  description: 'Our premium plan with all features',
-  icon: '💎',
-  cryptoBonus: '10 USDT',
-  recommended: true
+  tier: 'Trial',
+  description: 'Try premium features for a week',
+  icon: '🎫',
+  cryptoBonus: null,
+  recommended: false
 });
 
 // Update a plan
@@ -135,15 +135,15 @@ Get plan statistics
 {
   "success": true,
   "stats": {
-    "Silver": {
+    "PNP": {
       "planId": "abc123",
-      "planName": "PNPtv Silver",
-      "price": 15,
-      "priceInCOP": 60000,
+      "planName": "PNP Member",
+      "price": 24.99,
+      "priceInCOP": 99960,
       "activeSubscribers": 45,
       "expiredSubscribers": 10,
-      "totalRevenue": 675,
-      "estimatedMonthlyRevenue": 675
+      "totalRevenue": 1124.55,
+      "estimatedMonthlyRevenue": 1124.55
     }
   }
 }
@@ -158,9 +158,9 @@ Get a specific plan
   "success": true,
   "plan": {
     "id": "abc123",
-    "name": "PNPtv Silver",
-    "tier": "Silver",
-    "price": 15,
+    "name": "PNP Member",
+    "tier": "PNP",
+    "price": 24.99,
     ...
   }
 }
@@ -172,22 +172,27 @@ Create a new plan
 **Request Body:**
 ```json
 {
-  "name": "PNPtv Platinum",
-  "displayName": "Platinum",
-  "tier": "Platinum",
-  "price": 50,
-  "priceInCOP": 200000,
-  "currency": "COP",
-  "duration": 30,
+  "name": "Diamond Member",
+  "displayName": "Diamond Member",
+  "tier": "Diamond",
+  "price": 99.99,
+  "priceInCOP": 399960,
+  "currency": "USD",
+  "duration": 365,
   "features": [
-    "All Golden features",
-    "Unlimited swipes",
-    "10 USDT bonus"
+    "Everything in Crystal Member",
+    "VIP channel access",
+    "Diamond member badge",
+    "VIP support",
+    "365 days access (1 year)",
+    "Exclusive events access",
+    "Special crypto bonuses",
+    "Early feature access"
   ],
-  "description": "Premium plan",
+  "description": "Ultimate premium experience for a full year",
   "icon": "💎",
-  "cryptoBonus": "10 USDT",
-  "recommended": true
+  "cryptoBonus": "10 USDT yearly bonus",
+  "recommended": false
 }
 ```
 
@@ -300,10 +305,11 @@ Admins can access plan management through the bot with the `/admin` command.
 1. Send `/admin` to the bot
 2. Select "💰 Manage Plans"
 3. Choose from options:
-   - 🥈 View Silver
-   - 🥇 View Golden
-   - ✏️ Edit Silver
-   - ✏️ Edit Golden
+   - 🎫 View Trial Pass
+   - 💎 View PNP Member
+   - 💠 View Crystal Member
+   - 💎 View Diamond Member
+   - ✏️ Edit Plans
    - 📊 Statistics
 
 ### Editing Plans
@@ -324,12 +330,12 @@ Admins can access plan management through the bot with the `/admin` command.
 
 #### Example: Update Price
 ```
-Admin: Select "Edit Silver" > "USD Price"
-Bot: Current USD Price: $15
-     Send the new price in USD (example: 20):
-Admin: 18
-Bot: ✅ Silver Plan Updated
-     💵 USD Price updated to: $18
+Admin: Select "Edit PNP Member" > "USD Price"
+Bot: Current USD Price: $24.99
+     Send the new price in USD (example: 29.99):
+Admin: 27.99
+Bot: ✅ PNP Member Plan Updated
+     💵 USD Price updated to: $27.99
      ✨ Changes have been saved to Firestore.
 ```
 
@@ -340,24 +346,25 @@ Bot: ✅ Silver Plan Updated
 ```javascript
 {
   id: "auto-generated-id",
-  name: "PNPtv Silver",
-  displayName: "Silver",
-  tier: "Silver",
-  price: 15,
-  priceInCOP: 60000,
-  currency: "COP",
+  name: "PNP Member",
+  displayName: "PNP Member",
+  tier: "PNP",
+  price: 24.99,
+  priceInCOP: 99960,
+  currency: "USD",
   duration: 30,
   durationDays: 30,
   features: [
     "Ad-free experience",
-    "Daily swipe allowance",
-    "Verification badge",
-    "Priority listings"
+    "Full premium access",
+    "Priority support",
+    "30 days access",
+    "Member badge"
   ],
-  description: "Ad-free experience with daily swipe allowance and verification badge.",
-  icon: "🥈",
+  description: "Full premium access for a month",
+  icon: "💎",
   cryptoBonus: null,
-  recommended: false,
+  recommended: true,
   active: true,
   createdAt: 1234567890,
   updatedAt: 1234567890
@@ -397,37 +404,10 @@ The system now uses Firestore instead of the static `config/plans.js` file. The 
 To migrate existing plans from the config file to Firestore:
 
 ```javascript
-const planService = require('./src/services/planService');
-const staticPlans = require('./src/config/plans');
-
-// Migrate SILVER plan
-await planService.createPlan({
-  name: staticPlans.SILVER.name,
-  displayName: staticPlans.SILVER.displayName,
-  tier: staticPlans.SILVER.tier,
-  price: staticPlans.SILVER.price,
-  priceInCOP: staticPlans.SILVER.priceInCOP,
-  currency: staticPlans.SILVER.currency,
-  duration: staticPlans.SILVER.duration,
-  features: staticPlans.SILVER.features,
-  description: staticPlans.SILVER.description,
-  icon: '🥈'
-});
-
-// Migrate GOLDEN plan
-await planService.createPlan({
-  name: staticPlans.GOLDEN.name,
-  displayName: staticPlans.GOLDEN.displayName,
-  tier: staticPlans.GOLDEN.tier,
-  price: staticPlans.GOLDEN.price,
-  priceInCOP: staticPlans.GOLDEN.priceInCOP,
-  currency: staticPlans.GOLDEN.currency,
-  duration: staticPlans.GOLDEN.duration,
-  features: staticPlans.GOLDEN.features,
-  description: staticPlans.GOLDEN.description,
-  icon: '🥇',
-  cryptoBonus: staticPlans.GOLDEN.cryptoBonus
-});
+// Use the initialization script to create default plans
+// Run: npm run init:plans
+// This will create Trial Pass, PNP Member, Crystal Member, and Diamond Member plans
+// See scripts/initializePlans.js for the default plan definitions
 ```
 
 ## Security
@@ -518,9 +498,10 @@ curl -X POST http://localhost:3000/api/admin/plans \
 ### Common Issues
 
 #### "Plan not found" when editing
-- Plans from `config/plans.js` use lowercase IDs (silver, golden)
-- Ensure the plan exists in Firestore
+- Plans must exist in Firestore database
+- Ensure the plan exists in Firestore (check via /admin in bot)
 - Check the plan ID matches
+- Run scripts/initializePlans.js to create default plans if needed
 
 #### "Authentication required"
 - Verify `x-telegram-init-data` header is set

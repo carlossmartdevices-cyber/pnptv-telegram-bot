@@ -131,6 +131,12 @@ async function viewProfile(ctx) {
                   callback_data: "profile_settings",
                 },
               ],
+              [
+                {
+                  text: lang === "es" ? "🔙 Volver al Menú" : "🔙 Back to Menu",
+                  callback_data: "back_to_main",
+                },
+              ],
             ],
           },
         });
@@ -169,6 +175,12 @@ async function viewProfile(ctx) {
                 callback_data: "profile_settings",
               },
             ],
+            [
+              {
+                text: lang === "es" ? "🔙 Volver al Menú" : "🔙 Back to Menu",
+                callback_data: "back_to_main",
+              },
+            ],
           ],
         },
       });
@@ -205,6 +217,12 @@ async function sendProfileWithoutPhoto(ctx, profileText, lang) {
           {
             text: lang === "es" ? "⚙️ Configuración" : "⚙️ Settings",
             callback_data: "profile_settings",
+          },
+        ],
+        [
+          {
+            text: lang === "es" ? "🔙 Volver al Menú" : "🔙 Back to Menu",
+            callback_data: "back_to_main",
           },
         ],
       ],

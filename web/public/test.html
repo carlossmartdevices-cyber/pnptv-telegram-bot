@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Page</title>
+    <style>
+        body {
+            background: #28282B;
+            color: white;
+            font-family: Arial;
+            padding: 40px;
+            text-align: center;
+        }
+        h1 { color: #DF00FF; }
+        .success { color: #00ff00; font-size: 24px; }
+    </style>
+</head>
+<body>
+    <h1>✅ Web Server is Working!</h1>
+    <p class="success">If you see this, the server is running correctly.</p>
+    <hr>
+    <p>Now test the React app:</p>
+    <p><a href="/?plan=trial-pass&userId=test-123" style="color: #DF00FF;">Click here to test payment page</a></p>
+
+    <hr>
+    <h2>Debug Info:</h2>
+    <p>Server: http://localhost:5173</p>
+    <p>Time: <span id="time"></span></p>
+
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleTimeString();
+
+        // Test API
+        fetch('http://localhost:8080/api/plans/trial-pass')
+            .then(r => r.json())
+            .then(data => {
+                document.body.innerHTML += `
+                    <div style="background: #00ff00; color: black; padding: 20px; margin: 20px;">
+                        <h3>✅ API Connection Works!</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            })
+            .catch(err => {
+                document.body.innerHTML += `
+                    <div style="background: #ff0000; color: white; padding: 20px; margin: 20px;">
+                        <h3>❌ API Connection Failed</h3>
+                        <p>${err.message}</p>
+                    </div>
+                `;
+            });
+    </script>
+</body>
+</html>

@@ -60,12 +60,33 @@ module.exports = async (ctx) => {
       },
     ]);
 
-    await ctx.reply(channelDescription, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: buttons,
-      },
-    });
+    // Try to edit the message if it's from a callback, otherwise send new message
+    if (ctx.callbackQuery) {
+      try {
+        await ctx.answerCbQuery();
+        await ctx.editMessageText(channelDescription, {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: buttons,
+          },
+        });
+      } catch (editError) {
+        // If edit fails, send new message
+        await ctx.reply(channelDescription, {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: buttons,
+          },
+        });
+      }
+    } else {
+      await ctx.reply(channelDescription, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: buttons,
+        },
+      });
+    }
   } catch (error) {
     logger.error("Error in subscribe handler:", error);
     await ctx.reply(

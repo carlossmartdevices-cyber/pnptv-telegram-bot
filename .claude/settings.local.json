@@ -21,7 +21,14 @@
       "Read(//c/mnt/c/Users/carlo/Documents/Bots/**)",
       "Bash(npm install)",
       "Bash(npm cache clean:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm view:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx kill-port:*)",
+      "Bash(where:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

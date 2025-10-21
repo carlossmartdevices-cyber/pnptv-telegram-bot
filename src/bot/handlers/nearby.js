@@ -42,54 +42,45 @@ module.exports = async (ctx) => {
           "✨ Chat free with your first 3 users\n" +
           "🔓 Subscribe to unlock unlimited chats";
 
-    if (webAppUrl.startsWith("https://")) {
-      // Production - use Telegram Web App
-      await ctx.reply(message, {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text:
-                  lang === "es"
-                    ? "🚀 Abrir Mini App Cercanos"
-                    : "🚀 Open Nearby Users App",
-                web_app: { url: nearbyAppUrl },
-              },
-            ],
-            [
-              {
-                text: lang === "es" ? "📍 Ver Mapa" : "📍 View Map",
-                callback_data: "profile_view_map",
-              },
-            ],
-          ],
-        },
+    const keyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: lang === "es" ? "📍 Ver Mapa" : "📍 View Map",
+            callback_data: "profile_view_map",
+          },
+        ],
+        [
+          {
+            text: lang === "es" ? "🔙 Volver al Menú" : "🔙 Back to Menu",
+            callback_data: "back_to_main",
+          },
+        ],
+      ],
+    };
+
+    const finalMessage = message;
+
+    // If from callback query, edit the message
+    if (ctx.callbackQuery) {
+      try {
+        await ctx.answerCbQuery();
+        await ctx.editMessageText(finalMessage, {
+          reply_markup: keyboard,
+          parse_mode: "Markdown",
+        });
+      } catch (editError) {
+        // If edit fails, send new message
+        await ctx.reply(finalMessage, {
+          reply_markup: keyboard,
+          parse_mode: "Markdown",
+        });
+      }
+    } else {
+      await ctx.reply(finalMessage, {
+        reply_markup: keyboard,
         parse_mode: "Markdown",
       });
-    } else {
-      // Development - provide browser link
-      await ctx.reply(
-        message +
-          `\n\n🌐 ${
-            lang === "es" ? "Pruébala en tu navegador:" : "Try it in your browser:"
-          }\n\`${nearbyAppUrl}\`\n\n` +
-          (lang === "es"
-            ? "📱 Para usar en Telegram, configura HTTPS en producción"
-            : "📱 To use in Telegram, setup HTTPS in production"),
-        {
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: lang === "es" ? "📍 Ver Mapa" : "📍 View Map",
-                  callback_data: "profile_view_map",
-                },
-              ],
-            ],
-          },
-          parse_mode: "Markdown",
-        }
-      );
     }
 
     logger.info(`User ${ctx.from.id} opened nearby users mini app`);
