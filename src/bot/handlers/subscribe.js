@@ -39,11 +39,11 @@ module.exports = async (ctx) => {
       return;
     }
 
-    // Channel content description (placeholder)
+    // Channel content description
     const channelDescription =
       lang === "es"
-        ? "🎥 **Contenido Exclusivo del Canal**\n\n[Descripción del contenido del canal - Por actualizar]\n\nAccede a contenido premium exclusivo con nuestros planes de suscripción."
-        : "🎥 **Exclusive Channel Content**\n\n[Channel content description - To be updated]\n\nGet access to exclusive premium content with our subscription plans.";
+        ? "🎥 Canal con contenido exclusivo.\n\nÚnete a PNPtv! PRIME y al parche más chimba de todos: latinos fumando, slammeando y gozando sin filtros en Telegram.\n\n🔥 Lo que te espera:\n\n-Videos completos y sin censura de Santino y su combo.\n\n-Acceso al grupo privado solo para miembros activos.\n\n-Encuentra panas cerca de ti con la opción de geolocalización.\n\n\n💫 Peguémonos el viaje juntos."
+        : "🎥 Exclusive Channel Content\n\nBecome a member of PNPtv PRIME and enjoy the best amateur content — Latino men smoking and slamming on Telegram.\n\n🔥 What you'll get:\n\n-Dozens of full-length adult videos featuring Santino and his boys.\n\n-Access to our exclusive Telegram members group.\n\n-Connect with other members in your area using our geolocation tool.\n\n\nLet's get spun together! 💎";
 
     // Build inline keyboard with plans showing USD prices
     const buttons = plans.map((plan) => [

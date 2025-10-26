@@ -154,7 +154,7 @@ function CheckoutPage() {
             </div>
             <div className="info-item">
               <span className="info-icon">⚡</span>
-              <span className="info-text">Pay with USDC from any wallet or exchange</span>
+              <span className="info-text">Pay with USDC from any exchange, wallet, or payment app (Cash App, Zelle, Venmo, Revolut and Wise)</span>
             </div>
           </div>
         </div>

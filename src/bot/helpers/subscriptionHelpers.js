@@ -214,8 +214,8 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
 
         const message =
           lang === "es"
-            ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: $${amountUSD.toFixed(2)} USD (USDC)\n- Precio COP: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💰 **Método de Pago: Daimo Pay (Stablecoin USDC)**\n\nPaga con USDC desde cualquier exchange, wallet o app de pago.\nTu suscripción se activará automáticamente tras el pago.\n\nHaz clic en el botón para continuar:`
-            : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: $${amountUSD.toFixed(2)} USD (USDC)\n- Price COP: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💰 **Payment Method: Daimo Pay (USDC Stablecoin)**\n\nPay with USDC from any exchange, wallet, or payment app.\nYour subscription will be activated automatically after payment.\n\nClick the button to proceed:`;
+            ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: $${amountUSD.toFixed(2)} USD (USDC)\n- Precio COP: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💰 **Método de Pago: Daimo Pay (Stablecoin USDC)**\n\nPaga con USDC desde cualquier exchange, wallet o app de pago (Cash App, Zelle, Venmo, Revolut y Wise).\n\nTu suscripción se activará automáticamente tras el pago.\n\nHaz clic en el botón para continuar:`
+            : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: $${amountUSD.toFixed(2)} USD (USDC)\n- Price COP: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💰 **Payment Method: Daimo Pay (USDC Stablecoin)**\n\nPay with USDC from any exchange, wallet, or payment app (Cash App, Zelle, Venmo, Revolut and Wise).\n\nYour subscription will be activated automatically after payment.\n\nClick the button to proceed:`;
 
         // Edit message to show Daimo payment
         try {
@@ -302,8 +302,8 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
 
       const message =
         lang === "es"
-          ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💳 **Método de Pago: ePayco (Automático)**\n\nTu suscripción se activará automáticamente tras el pago.\n\nHaz clic en el botón para continuar con el pago:`
-          : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💳 **Payment Method: ePayco (Automatic)**\n\nYour subscription will be activated automatically after payment.\n\nClick the button to proceed with payment:`;
+          ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💳 **Método de Pago: ePayco (Automático)**\n\nPaga con cualquier tarjeta de débito o crédito.\n\nTu suscripción se activará automáticamente tras el pago.\n\nHaz clic en el botón para continuar con el pago:`
+          : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💳 **Payment Method: ePayco (Automatic)**\n\nPay with any debit or credit card.\n\nYour subscription will be activated automatically after payment.\n\nClick the button to proceed with payment:`;
 
       // Edit message to show ePayco payment
       try {

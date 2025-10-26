@@ -8,7 +8,7 @@ const { t } = require('../../utils/i18n');
 const logger = require('../../utils/logger');
 const { getMenu } = require('../../config/menus');
 
-const AGE_VERIFICATION_INTERVAL_HOURS = 72;
+const AGE_VERIFICATION_INTERVAL_HOURS = 168; // 7 days
 const AGE_VERIFICATION_INTERVAL_MS = AGE_VERIFICATION_INTERVAL_HOURS * 60 * 60 * 1000;
 
 /**
@@ -223,7 +223,7 @@ async function handlePrivacyAcceptance(ctx) {
         inline_keyboard: [
           [
             {
-              text: lang === "es" ? "¡Únete a nuestro canal gratis!" : "Join our free channel!",
+              text: lang === "es" ? "🪩 ¡Únete a nuestro Canal Gratis!" : "🪩 Join our Free Channel!",
               url: "https://t.me/pnptvfree",
             },
           ],

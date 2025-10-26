@@ -249,13 +249,13 @@ bot.action("back_to_main", async (ctx) => {
           inline_keyboard: [
             [
               {
-                text: lang === "es" ? "¡Únete a nuestro canal gratis!" : "Join our free channel!",
+                text: lang === "es" ? "🪩 ¡Únete a nuestro Canal Gratis!" : "🪩 Join our Free Channel!",
                 url: "https://t.me/pnptvfree",
               },
             ],
             [
               {
-                text: lang === "es" ? "¡Suscríbete al canal PRIME!" : "Subscribe to PRIME channel!",
+                text: lang === "es" ? "💎 Suscríbete al Canal PRIME" : "💎 Subscribe to PRIME Channel",
                 callback_data: "show_subscription_plans",
               },
             ],
@@ -288,13 +288,13 @@ bot.action("back_to_main", async (ctx) => {
           inline_keyboard: [
             [
               {
-                text: lang === "es" ? "¡Únete a nuestro canal gratis!" : "Join our free channel!",
+                text: lang === "es" ? "🪩 ¡Únete a nuestro Canal Gratis!" : "🪩 Join our Free Channel!",
                 url: "https://t.me/pnptvfree",
               },
             ],
             [
               {
-                text: lang === "es" ? "¡Suscríbete al canal PRIME!" : "Subscribe to PRIME channel!",
+                text: lang === "es" ? "💎 Suscríbete al Canal PRIME" : "💎 Subscribe to PRIME Channel",
                 callback_data: "show_subscription_plans",
               },
             ],

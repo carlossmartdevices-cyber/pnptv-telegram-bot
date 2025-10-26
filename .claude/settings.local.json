@@ -28,7 +28,11 @@
       "Bash(npx kill-port:*)",
       "Bash(where:*)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(PORT=8080 NODE_ENV=development node:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
