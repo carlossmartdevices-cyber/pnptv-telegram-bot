@@ -240,7 +240,13 @@ bot.action("back_to_main", async (ctx) => {
   try {
     const lang = ctx.session.language || "en";
 
-    await ctx.answerCbQuery();
+    // Answer callback query with error handling for expired queries
+    await ctx.answerCbQuery().catch((err) => {
+      // Silently ignore "query too old" errors - they're harmless
+      if (!err.message.includes('query is too old')) {
+        logger.error('Error answering callback query:', err);
+      }
+    });
 
     // Edit the message to show main menu with inline keyboard
     try {
