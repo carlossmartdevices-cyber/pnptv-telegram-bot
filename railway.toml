@@ -6,7 +6,7 @@ builder = "nixpacks"
 buildCommand = "npm install --production=false"
 
 [deploy]
-startCommand = "npm start"
+startCommand = "node start-production.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 5
 
