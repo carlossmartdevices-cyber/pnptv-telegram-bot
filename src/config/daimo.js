@@ -46,7 +46,6 @@ function validatePaymentParams(params) {
   const requiredParams = [
     "amount",
     "userId",
-    "userEmail",
     "plan",
   ];
 

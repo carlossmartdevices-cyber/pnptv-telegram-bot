@@ -90,7 +90,7 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
       ]);
 
       // Daimo Pay option (USDC stablecoin)
-      if (process.env.DAIMO_API_KEY) {
+      if (process.env.DAIMO_APP_ID) {
         paymentButtons.push([
           {
             text: lang === "es" ? "💰 Pagar con USDC (Daimo)" : "💰 Pay with USDC (Daimo)",
@@ -197,12 +197,7 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
         const paymentData = await daimo.createPaymentRequest({
           amount: amountUSD,
           userId,
-          userEmail,
-          userName: ctx.from.first_name || ctx.from.username || "User",
           plan: plan.id,
-          description:
-            plan.description ||
-            `${plan.name} subscription - ${plan.durationDays} days`,
         });
 
         if (!paymentData.success || !paymentData.paymentUrl) {
