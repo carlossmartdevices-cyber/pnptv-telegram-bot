@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { DaimoPayButton } from '@daimo/pay'
+import { getAddress } from 'viem'
 import './CheckoutPage.css'
 
 function CheckoutPage() {
@@ -36,33 +37,34 @@ function CheckoutPage() {
     }
   }, [planId])
 
-  const handlePaymentSuccess = async (result) => {
-    console.log('Payment successful:', result)
+  // Generate reference for tracking (plan_user_timestamp format)
+  const reference = `${planId}_${userId}_${Date.now()}`
 
-    // Notify backend
+  const handlePaymentStarted = async (data) => {
+    console.log('Payment started:', data)
+
+    // Store payment intent in database for webhook lookup
     try {
-      await fetch('/api/payments/completed', {
+      await fetch('/api/payments/started', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
           planId,
           amount,
-          transactionHash: result.transactionHash,
-          reference: `${planId}_${userId}_${Date.now()}`,
+          reference,
         }),
       })
-
-      // Redirect to success page
-      window.location.href = `/payment/success?plan=${planId}`
     } catch (err) {
-      console.error('Failed to notify backend:', err)
+      console.error('Failed to store payment intent:', err)
     }
   }
 
-  const handlePaymentError = (error) => {
-    console.error('Payment failed:', error)
-    setError(error.message || 'Payment failed. Please try again.')
+  const handlePaymentCompleted = (data) => {
+    console.log('Payment completed:', data)
+    // Webhook will handle subscription activation
+    // Redirect to success page
+    window.location.href = `/payment/success?plan=${planId}&ref=${reference}`
   }
 
   if (loading) {
@@ -133,15 +135,16 @@ function CheckoutPage() {
 
           <div className="payment-section">
             <DaimoPayButton
-              amount={amount.toString()}
-              recipientAddress={import.meta.env.VITE_TREASURY_ADDRESS || '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0'}
-              onSuccess={handlePaymentSuccess}
-              onError={handlePaymentError}
-              metadata={{
-                userId,
-                planId,
-                planName: planData?.name,
-              }}
+              appId={import.meta.env.VITE_DAIMO_APP_ID || 'pay-televisionlatina-VxZH9SQoHYasAoQmdWKuUw'}
+              intent="Pay"
+              toAddress={getAddress(import.meta.env.VITE_TREASURY_ADDRESS || '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0')}
+              toChain={10}
+              toToken={getAddress('0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85')}
+              toUnits={amount.toFixed(2)}
+              refundAddress={getAddress(import.meta.env.VITE_REFUND_ADDRESS || '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0')}
+              onPaymentStarted={handlePaymentStarted}
+              onPaymentCompleted={handlePaymentCompleted}
+              closeOnSuccess={true}
             >
               Complete Payment
             </DaimoPayButton>

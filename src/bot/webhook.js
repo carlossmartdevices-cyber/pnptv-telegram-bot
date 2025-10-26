@@ -758,19 +758,14 @@ app.post("/epayco/confirmation", async (req, res) => {
           return res.status(404).json({ error: "User not found" });
         }
 
-        // Calculate expiration date
-        const now = new Date();
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + (plan.duration || plan.durationDays || 30));
+        // Use membership manager to activate subscription and generate invite link
+        const { activateMembership } = require("../utils/membershipManager");
+        const durationDays = plan.duration || plan.durationDays || 30;
+        const result = await activateMembership(userId, plan.tier, "epayco_webhook", durationDays, bot);
 
-        // Update user subscription
+        // Store additional payment metadata
+        const now = new Date();
         await userRef.update({
-          tier: plan.tier,
-          tierUpdatedAt: now,
-          tierUpdatedBy: "epayco_webhook",
-          membershipIsPremium: true,
-          membershipActivatedAt: now,
-          membershipExpiresAt: expiresAt,
           membershipPlanId: plan.id,
           membershipPlanName: plan.displayName || plan.name,
           paymentMethod: "epayco",
@@ -786,9 +781,10 @@ app.post("/epayco/confirmation", async (req, res) => {
           userId,
           planId,
           tier: plan.tier,
-          expiresAt: expiresAt.toISOString(),
+          expiresAt: result.expiresAt?.toISOString(),
           amount: webhookData.x_amount,
           reference: webhookData.x_ref_payco,
+          inviteLink: result.inviteLink ? "generated" : "none",
         });
 
         // Send confirmation message to user via Telegram
@@ -796,19 +792,22 @@ app.post("/epayco/confirmation", async (req, res) => {
           const userData = userDoc.data();
           const userName = userData.username || userData.firstName || "Usuario";
 
-          await bot.telegram.sendMessage(
-            userId,
-            `✅ *¡Pago Confirmado!*\n\n` +
+          let message = `✅ *¡Pago Confirmado!*\n\n` +
             `Hola ${userName}! Tu suscripción *${plan.displayName || plan.name}* ha sido activada exitosamente.\n\n` +
             `📋 *Detalles:*\n` +
             `• Plan: ${plan.displayName || plan.name}\n` +
-            `• Duración: ${plan.duration || plan.durationDays} días\n` +
-            `• Expira: ${expiresAt.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}\n` +
+            `• Duración: ${durationDays} días\n` +
+            `• Expira: ${result.expiresAt.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}\n` +
             `• Monto: $${parseFloat(webhookData.x_amount).toLocaleString('es-CO')} ${webhookData.x_currency_code}\n` +
             `• Referencia: ${webhookData.x_ref_payco}\n\n` +
-            `¡Disfruta de tus beneficios premium! 💎`,
-            { parse_mode: "Markdown" }
-          );
+            `¡Disfruta de tus beneficios premium! 💎`;
+
+          // Add invite link if available
+          if (result.inviteLink) {
+            message += `\n\n🔗 *Únete al canal:*\n${result.inviteLink}`;
+          }
+
+          await bot.telegram.sendMessage(userId, message, { parse_mode: "Markdown" });
         } catch (msgError) {
           logger.warn("Failed to send ePayco confirmation message to user:", {
             userId,
@@ -870,11 +869,9 @@ app.post("/daimo/webhook", async (req, res) => {
 
     // Verify webhook authentication
     const authHeader = req.headers.authorization;
-    const expectedAuth = `Basic ${process.env.DAIMO_WEBHOOK_TOKEN}`;
+    const isValidAuth = daimo.verifyWebhookAuth(authHeader);
 
-    if (!process.env.DAIMO_WEBHOOK_TOKEN) {
-      logger.warn('DAIMO_WEBHOOK_TOKEN not configured - skipping authentication check');
-    } else if (authHeader !== expectedAuth) {
+    if (!isValidAuth) {
       logger.warn('Invalid Daimo webhook authentication', {
         received: authHeader ? 'present' : 'missing',
       });
@@ -905,7 +902,7 @@ app.post("/daimo/webhook", async (req, res) => {
           });
 
           // Get plan details
-          const planService = require('../../services/planService');
+          const planService = require('../services/planService');
           const plan = await planService.getPlanById(planId);
 
           if (!plan) {
@@ -913,7 +910,7 @@ app.post("/daimo/webhook", async (req, res) => {
             return res.status(404).json({ error: 'Plan not found' });
           }
 
-          // Activate subscription
+          // Check if user exists
           const userRef = db.collection('users').doc(userId);
           const userDoc = await userRef.get();
 
@@ -922,40 +919,42 @@ app.post("/daimo/webhook", async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
           }
 
-          const expiresAt = new Date();
-          expiresAt.setDate(expiresAt.getDate() + (plan.duration || plan.durationDays || 30));
+          // Use membership manager to activate subscription and generate invite link
+          const { activateMembership } = require('../utils/membershipManager');
+          const durationDays = plan.duration || plan.durationDays || 30;
+          const result = await activateMembership(userId, plan.tier, 'daimo_webhook', durationDays, bot);
 
+          // Store additional payment metadata
           await userRef.update({
-            tier: plan.tier,
-            membership: {
-              planId: plan.id,
-              planName: plan.displayName || plan.name,
-              tier: plan.tier,
-              activatedAt: Date.now(),
-              expiresAt: expiresAt.getTime(),
-              paymentMethod: 'daimo',
-              paymentReference: reference,
-            },
-            updatedAt: Date.now(),
+            membershipPlanId: plan.id,
+            membershipPlanName: plan.displayName || plan.name,
+            paymentMethod: 'daimo',
+            paymentReference: reference,
+            updatedAt: new Date(),
           });
 
           logger.info('Subscription activated via Daimo webhook', {
             userId,
             planId,
             tier: plan.tier,
-            expiresAt: expiresAt.toISOString(),
+            expiresAt: result.expiresAt?.toISOString(),
+            inviteLink: result.inviteLink ? 'generated' : 'none',
           });
 
           // Notify user in Telegram
           try {
-            await bot.telegram.sendMessage(
-              userId,
-              `✅ Payment confirmed!\n\n` +
+            let message = `✅ Payment confirmed!\n\n` +
               `Your ${plan.displayName || plan.name} subscription is now active.\n` +
-              `Duration: ${plan.duration || plan.durationDays} days\n` +
-              `Expires: ${expiresAt.toLocaleDateString()}\n\n` +
-              `Enjoy your premium features! 💎`
-            );
+              `Duration: ${durationDays} days\n` +
+              `Expires: ${result.expiresAt.toLocaleDateString()}\n\n` +
+              `Enjoy your premium features! 💎`;
+
+            // Add invite link if available
+            if (result.inviteLink) {
+              message += `\n\n🔗 Join the channel:\n${result.inviteLink}`;
+            }
+
+            await bot.telegram.sendMessage(userId, message);
           } catch (notifyError) {
             logger.warn('Failed to notify user', { userId, error: notifyError.message });
           }

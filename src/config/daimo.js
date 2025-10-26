@@ -1,7 +1,11 @@
 /**
  * Daimo Pay Configuration
  * Fast stablecoin deposits for subscription payments
- * Documentation: https://paydocs.daimo.com/
+ * Official Documentation: https://paydocs.daimo.com/
+ *
+ * IMPORTANT: Daimo Pay uses a React SDK (@daimo/pay) on the frontend.
+ * This config only handles webhook validation and configuration checks.
+ * Payment flow is handled entirely by DaimoPayButton component in payment-app.
  */
 
 require("./env");
@@ -13,8 +17,8 @@ const logger = require("../utils/logger");
  */
 function validateCredentials() {
   const requiredCredentials = {
-    DAIMO_API_KEY: process.env.DAIMO_API_KEY,
     DAIMO_APP_ID: process.env.DAIMO_APP_ID,
+    DAIMO_WEBHOOK_TOKEN: process.env.DAIMO_WEBHOOK_TOKEN,
   };
 
   const missingCredentials = [];
@@ -69,111 +73,27 @@ function validatePaymentParams(params) {
 
 /**
  * Create a payment link for Daimo Pay
- * Daimo Pay uses a React SDK on the frontend, so this generates a link to our payment page
+ * Generates a link to the React payment page which uses DaimoPayButton
  *
  * @param {Object} params - Payment parameters
- * @param {number} params.amount - Amount in USD (will be converted to USDC)
+ * @param {number} params.amount - Amount in USD (will be sent as USDC)
  * @param {string} params.userId - User ID
- * @param {string} params.userEmail - User email
  * @param {string} params.plan - Plan ID
- * @param {string} params.userName - User name (optional)
- * @param {string} params.description - Payment description (optional)
- * @returns {Promise<Object>} Payment data including payment URL and reference
+ * @returns {Promise<Object>} Payment data including payment URL
  */
-async function createPaymentRequest({
-  amount,
-  userId,
-  userEmail,
-  userName,
-  plan,
-  description,
-}) {
+async function createPaymentRequest({ amount, userId, plan }) {
   try {
     logger.info(
-      `Creating Daimo Pay payment request for user ${userId}, plan: ${plan}`
+      `Creating Daimo Pay payment link for user ${userId}, plan: ${plan}`
     );
 
-    // Validate credentials first
-    validateCredentials();
+    // Validate required parameters
+    validatePaymentParams({ amount, userId, plan });
 
-    // Validate all required parameters
-    validatePaymentParams({
-      amount,
-      userId,
-      userEmail,
-      plan,
-    });
-
-    // Generate unique reference ID
+    // Generate unique reference ID (format: planId_userId_timestamp)
     const referenceId = `${plan}_${userId}_${Date.now()}`;
 
-    // Use Daimo Pay API to create a payment request
-    const axios = require('axios');
-    const apiUrl = process.env.DAIMO_API_URL || 'https://api.daimo.com/v1';
-
-    const response = await axios.post(`${apiUrl}/payments`, {
-      amount: amount.toString(),
-      currency: 'USDC',
-      recipientAddress: process.env.NEXT_PUBLIC_TREASURY_ADDRESS,
-      description: description || `${plan} subscription - ${userName}`,
-      metadata: {
-        userId: userId,
-        planId: plan,
-        reference: referenceId,
-        userEmail: userEmail,
-        userName: userName,
-      },
-      returnUrl: process.env.DAIMO_RETURN_URL || `${process.env.BOT_URL}/payment/success`,
-      webhookUrl: process.env.DAIMO_WEBHOOK_URL || `${process.env.BOT_URL}/daimo/webhook`,
-    }, {
-      headers: {
-        'Authorization': `Bearer ${process.env.DAIMO_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const paymentData = response.data;
-
-    logger.info("Daimo Pay payment request created:", {
-      reference: referenceId,
-      paymentId: paymentData.id,
-      amount: amount,
-      currency: "USDC",
-      userId: userId,
-      plan: plan,
-      paymentUrl: paymentData.paymentUrl,
-    });
-
-    return {
-      success: true,
-      paymentUrl: paymentData.paymentUrl || paymentData.url,
-      reference: referenceId,
-      data: {
-        id: paymentData.id,
-        url: paymentData.paymentUrl || paymentData.url,
-        reference: referenceId,
-        amount: amount,
-        currency: "USDC",
-        status: "pending",
-      },
-    };
-  } catch (error) {
-    logger.error("Error creating Daimo Pay payment request:", {
-      errorMessage: error.message,
-      errorStack: error.stack,
-      errorResponse: error.response?.data,
-      userId,
-      plan,
-      amount,
-    });
-
-    // Fallback: Use React payment page
-    logger.warn("Using React payment page (Daimo API unavailable or disabled)");
-
-    const referenceId = `${plan}_${userId}_${Date.now()}`;
-
-    // For local development, use BOT_URL if set (for ngrok), otherwise use a dummy URL
-    // Telegram doesn't accept http://localhost URLs in inline keyboards
+    // Build payment page URL with query parameters
     const paymentPageUrl = process.env.NODE_ENV === 'development'
       ? (process.env.PAYMENT_PAGE_URL || process.env.BOT_URL || 'https://example.com/pay')
       : `${process.env.BOT_URL}/pay`;
@@ -182,6 +102,15 @@ async function createPaymentRequest({
     paymentUrl.searchParams.set('plan', plan);
     paymentUrl.searchParams.set('user', userId);
     paymentUrl.searchParams.set('amount', amount.toFixed(2));
+
+    logger.info("Daimo Pay payment link created:", {
+      reference: referenceId,
+      amount: amount,
+      currency: "USDC",
+      userId: userId,
+      plan: plan,
+      paymentUrl: paymentUrl.toString(),
+    });
 
     return {
       success: true,
@@ -195,72 +124,32 @@ async function createPaymentRequest({
         status: "pending",
       },
     };
-  }
-}
-
-/**
- * Verify payment status
- * @param {string} reference - Payment reference ID
- * @returns {Promise<Object>} Payment status data
- */
-async function verifyPayment(reference) {
-  try {
-    logger.info(`Verifying Daimo Pay payment: ${reference}`);
-
-    validateCredentials();
-
-    // In production, you would make an API call to Daimo to verify the payment
-    // For now, we return a placeholder response
-
-    return {
-      success: true,
-      status: "pending", // Can be: pending, completed, failed, expired
-      reference: reference,
-      data: {
-        reference: reference,
-        status: "pending",
-        timestamp: Date.now(),
-      },
-    };
   } catch (error) {
-    logger.error("Error verifying Daimo Pay payment:", error);
-    throw error;
-  }
-}
-
-/**
- * Process webhook notification from Daimo Pay
- * @param {Object} webhookData - Webhook payload from Daimo
- * @returns {Promise<Object>} Processed webhook data
- */
-async function processWebhook(webhookData) {
-  try {
-    logger.info("Processing Daimo Pay webhook:", {
-      reference: webhookData.reference,
-      status: webhookData.status,
+    logger.error("Error creating Daimo Pay payment link:", {
+      errorMessage: error.message,
+      errorStack: error.stack,
+      userId,
+      plan,
+      amount,
     });
-
-    // Validate webhook signature (implement based on Daimo's documentation)
-    // const isValid = validateWebhookSignature(webhookData);
-    // if (!isValid) {
-    //   throw new Error("Invalid webhook signature");
-    // }
-
-    const { reference, status, amount, metadata } = webhookData;
-
-    return {
-      success: true,
-      reference: reference,
-      status: status, // completed, failed, etc.
-      amount: amount,
-      userId: metadata?.userId,
-      plan: metadata?.plan,
-      timestamp: Date.now(),
-    };
-  } catch (error) {
-    logger.error("Error processing Daimo Pay webhook:", error);
     throw error;
   }
+}
+
+/**
+ * Verify webhook authentication
+ * According to Daimo docs: webhooks use Basic auth with the webhook token
+ * @param {string} authHeader - Authorization header from webhook request
+ * @returns {boolean} True if authentication is valid
+ */
+function verifyWebhookAuth(authHeader) {
+  if (!process.env.DAIMO_WEBHOOK_TOKEN) {
+    logger.warn('DAIMO_WEBHOOK_TOKEN not configured - skipping authentication');
+    return true; // Allow in development
+  }
+
+  const expectedAuth = `Basic ${process.env.DAIMO_WEBHOOK_TOKEN}`;
+  return authHeader === expectedAuth;
 }
 
 /**
@@ -269,19 +158,16 @@ async function processWebhook(webhookData) {
  */
 function getConfig() {
   return {
-    apiKey: process.env.DAIMO_API_KEY,
     appId: process.env.DAIMO_APP_ID,
-    apiUrl: process.env.DAIMO_API_URL || "https://api.daimo.com/v1",
-    webhookUrl: process.env.DAIMO_WEBHOOK_URL || `${process.env.BOT_URL}/daimo/webhook`,
-    returnUrl: process.env.DAIMO_RETURN_URL || `${process.env.BOT_URL}/payment/success`,
-    enabled: !!process.env.DAIMO_API_KEY && !!process.env.DAIMO_APP_ID,
+    webhookToken: process.env.DAIMO_WEBHOOK_TOKEN,
+    webhookUrl: `${process.env.BOT_URL}/daimo/webhook`,
+    enabled: !!process.env.DAIMO_APP_ID && !!process.env.DAIMO_WEBHOOK_TOKEN,
   };
 }
 
 module.exports = {
   createPaymentRequest,
-  verifyPayment,
-  processWebhook,
+  verifyWebhookAuth,
   validateCredentials,
   validatePaymentParams,
   getConfig,

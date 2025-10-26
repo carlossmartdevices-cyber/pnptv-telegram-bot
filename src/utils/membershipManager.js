@@ -14,6 +14,11 @@ function calculateExpirationDate(durationDays = 0) {
     return null;
   }
 
+  // Treat 999999 or any duration >= 36500 days (100 years) as lifetime
+  if (days >= 36500) {
+    return null;
+  }
+
   const now = new Date();
   const expirationDate = new Date(now);
   expirationDate.setDate(expirationDate.getDate() + Math.round(days));

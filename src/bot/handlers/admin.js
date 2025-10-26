@@ -1808,38 +1808,58 @@ async function processActivationUserId(ctx, userIdInput) {
           ],
           [
             {
-              text: "🥈 Silver (30 days)",
+              text: "🥈 Silver (1 week)",
+              callback_data: `admin_quick_activate_${userId}_Silver_7`,
+            },
+            {
+              text: "🥈 Silver (1 month)",
               callback_data: `admin_quick_activate_${userId}_Silver_30`,
             },
           ],
           [
             {
-              text: "🥈 Silver (60 days)",
-              callback_data: `admin_quick_activate_${userId}_Silver_60`,
+              text: "🥈 Silver (4 months)",
+              callback_data: `admin_quick_activate_${userId}_Silver_120`,
+            },
+            {
+              text: "🥈 Silver (1 year)",
+              callback_data: `admin_quick_activate_${userId}_Silver_365`,
             },
           ],
           [
             {
-              text: "🥈 Silver (90 days)",
-              callback_data: `admin_quick_activate_${userId}_Silver_90`,
+              text: "🥇 Golden (1 week)",
+              callback_data: `admin_quick_activate_${userId}_Golden_7`,
             },
-          ],
-          [
             {
-              text: "🥇 Golden (30 days)",
+              text: "🥇 Golden (1 month)",
               callback_data: `admin_quick_activate_${userId}_Golden_30`,
             },
           ],
           [
             {
-              text: "🥇 Golden (60 days)",
-              callback_data: `admin_quick_activate_${userId}_Golden_60`,
+              text: "🥇 Golden (4 months)",
+              callback_data: `admin_quick_activate_${userId}_Golden_120`,
+            },
+            {
+              text: "🥇 Golden (1 year)",
+              callback_data: `admin_quick_activate_${userId}_Golden_365`,
             },
           ],
           [
             {
-              text: "🥇 Golden (90 days)",
-              callback_data: `admin_quick_activate_${userId}_Golden_90`,
+              text: "💎 Silver (Lifetime)",
+              callback_data: `admin_quick_activate_${userId}_Silver_999999`,
+            },
+            {
+              text: "💎 Golden (Lifetime)",
+              callback_data: `admin_quick_activate_${userId}_Golden_999999`,
+            },
+          ],
+          [
+            {
+              text: "👑 VIP (Lifetime)",
+              callback_data: `admin_quick_activate_${userId}_VIP_999999`,
             },
           ],
           [
@@ -1892,6 +1912,10 @@ async function executeQuickActivation(ctx, userId, tier, durationDays) {
         message += userLang === "es"
           ? `⏰ Vence el: ${expiresDate} (${durationDays} días)\n\n`
           : `⏰ Expires on: ${expiresDate} (${durationDays} days)\n\n`;
+      } else {
+        message += userLang === "es"
+          ? `💎 Membresía **VITALICIA** - ¡Nunca expira!\n\n`
+          : `💎 **LIFETIME** Membership - Never expires!\n\n`;
       }
 
       message += userLang === "es"
@@ -1906,10 +1930,11 @@ async function executeQuickActivation(ctx, userId, tier, durationDays) {
     }
 
     // Confirm to admin
+    const isLifetime = !result.expiresAt;
     await ctx.answerCbQuery(
-      lang === "es"
-        ? `✅ Membresía activada: ${tier} (${durationDays}d)`
-        : `✅ Membership activated: ${tier} (${durationDays}d)`
+      isLifetime
+        ? (lang === "es" ? `✅ Membresía activada: ${tier} (Vitalicia)` : `✅ Membership activated: ${tier} (Lifetime)`)
+        : (lang === "es" ? `✅ Membresía activada: ${tier} (${durationDays}d)` : `✅ Membership activated: ${tier} (${durationDays}d)`)
     );
 
     let confirmMessage = lang === "es"
@@ -1921,6 +1946,10 @@ async function executeQuickActivation(ctx, userId, tier, durationDays) {
       confirmMessage += lang === "es"
         ? `⏰ Vence: ${expiresDate}\n📅 Duración: ${durationDays} días`
         : `⏰ Expires: ${expiresDate}\n📅 Duration: ${durationDays} days`;
+    } else {
+      confirmMessage += lang === "es"
+        ? `⏰ Expiración: **Nunca** 💎\n📅 Tipo: **Vitalicia**`
+        : `⏰ Expiration: **Never** 💎\n📅 Type: **Lifetime**`;
     }
 
     await ctx.reply(confirmMessage, {
@@ -2164,32 +2193,28 @@ async function processExtendUserId(ctx, userIdInput) {
         inline_keyboard: [
           [
             {
-              text: "+7 días",
+              text: lang === "es" ? "+1 semana" : "+1 week",
               callback_data: `admin_extend_days_${userId}_7`,
             },
             {
-              text: "+15 días",
-              callback_data: `admin_extend_days_${userId}_15`,
-            },
-          ],
-          [
-            {
-              text: "+30 días",
+              text: lang === "es" ? "+1 mes" : "+1 month",
               callback_data: `admin_extend_days_${userId}_30`,
             },
+          ],
+          [
             {
-              text: "+60 días",
-              callback_data: `admin_extend_days_${userId}_60`,
+              text: lang === "es" ? "+4 meses" : "+4 months",
+              callback_data: `admin_extend_days_${userId}_120`,
+            },
+            {
+              text: lang === "es" ? "+1 año" : "+1 year",
+              callback_data: `admin_extend_days_${userId}_365`,
             },
           ],
           [
             {
-              text: "+90 días",
-              callback_data: `admin_extend_days_${userId}_90`,
-            },
-            {
-              text: "+180 días",
-              callback_data: `admin_extend_days_${userId}_180`,
+              text: lang === "es" ? "💎 Hacer Vitalicio" : "💎 Make Lifetime",
+              callback_data: `admin_extend_days_${userId}_999999`,
             },
           ],
           [
@@ -2233,21 +2258,36 @@ async function executeExtendMembership(ctx, userId, daysToAdd) {
 
     const userData = userDoc.data();
 
-    if (!userData.membershipExpiresAt) {
+    // Check if user has a premium tier (not Free)
+    if (!userData.tier || userData.tier === "Free") {
       await ctx.answerCbQuery(
-        lang === "es" ? "❌ Sin membresía activa" : "❌ No active membership"
+        lang === "es" ? "❌ Sin membresía premium activa" : "❌ No premium membership active"
       );
       return;
     }
 
-    // Calculate new expiration date
-    const currentExpiration = userData.membershipExpiresAt.toDate();
-    const newExpiration = new Date(currentExpiration);
-    newExpiration.setDate(newExpiration.getDate() + daysToAdd);
+    let newExpiration;
+    let isLifetime = false;
+
+    // Check if extending to lifetime (999999 or >= 36500 days)
+    if (daysToAdd >= 36500) {
+      newExpiration = null;
+      isLifetime = true;
+    } else if (!userData.membershipExpiresAt) {
+      // Already lifetime, extending by normal days keeps it lifetime
+      newExpiration = null;
+      isLifetime = true;
+    } else {
+      // Calculate new expiration date
+      const currentExpiration = userData.membershipExpiresAt.toDate();
+      newExpiration = new Date(currentExpiration);
+      newExpiration.setDate(newExpiration.getDate() + daysToAdd);
+    }
 
     // Update membership expiration
     await db.collection("users").doc(userId).update({
       membershipExpiresAt: newExpiration,
+      membershipIsPremium: true,
       lastActive: new Date(),
     });
 
@@ -2259,9 +2299,15 @@ async function executeExtendMembership(ctx, userId, daysToAdd) {
         ? `🎉 ¡Buenas noticias!\n\nTu membresía **${userData.tier}** ha sido extendida.\n\n`
         : `🎉 Good news!\n\nYour **${userData.tier}** membership has been extended.\n\n`;
 
-      message += userLang === "es"
-        ? `⏰ Nueva fecha de expiración: ${newExpiration.toLocaleDateString()}\n📅 Días agregados: ${daysToAdd}`
-        : `⏰ New expiration date: ${newExpiration.toLocaleDateString()}\n📅 Days added: ${daysToAdd}`;
+      if (isLifetime) {
+        message += userLang === "es"
+          ? `💎 Tu membresía ahora es **VITALICIA** - ¡Nunca expira!`
+          : `💎 Your membership is now **LIFETIME** - Never expires!`;
+      } else {
+        message += userLang === "es"
+          ? `⏰ Nueva fecha de expiración: ${newExpiration.toLocaleDateString()}\n📅 Días agregados: ${daysToAdd}`
+          : `⏰ New expiration date: ${newExpiration.toLocaleDateString()}\n📅 Days added: ${daysToAdd}`;
+      }
 
       await ctx.telegram.sendMessage(userId, message, {
         parse_mode: "Markdown",
@@ -2272,14 +2318,21 @@ async function executeExtendMembership(ctx, userId, daysToAdd) {
 
     // Confirm to admin
     await ctx.answerCbQuery(
-      lang === "es"
-        ? `✅ Extendida ${daysToAdd} días`
-        : `✅ Extended ${daysToAdd} days`
+      isLifetime
+        ? (lang === "es" ? `✅ Convertida a Vitalicia` : `✅ Converted to Lifetime`)
+        : (lang === "es" ? `✅ Extendida ${daysToAdd} días` : `✅ Extended ${daysToAdd} days`)
     );
 
-    let confirmMessage = lang === "es"
-      ? `✅ **Membresía Extendida**\n\n👤 Usuario: \`${userId}\`\n💎 Tier: **${userData.tier}**\n📅 Días agregados: ${daysToAdd}\n⏰ Nueva expiración: ${newExpiration.toLocaleDateString()}`
-      : `✅ **Membership Extended**\n\n👤 User: \`${userId}\`\n💎 Tier: **${userData.tier}**\n📅 Days added: ${daysToAdd}\n⏰ New expiration: ${newExpiration.toLocaleDateString()}`;
+    let confirmMessage;
+    if (isLifetime) {
+      confirmMessage = lang === "es"
+        ? `✅ **Membresía Vitalicia**\n\n👤 Usuario: \`${userId}\`\n💎 Tier: **${userData.tier}**\n⏰ Expiración: **Nunca** 💎`
+        : `✅ **Lifetime Membership**\n\n👤 User: \`${userId}\`\n💎 Tier: **${userData.tier}**\n⏰ Expiration: **Never** 💎`;
+    } else {
+      confirmMessage = lang === "es"
+        ? `✅ **Membresía Extendida**\n\n👤 Usuario: \`${userId}\`\n💎 Tier: **${userData.tier}**\n📅 Días agregados: ${daysToAdd}\n⏰ Nueva expiración: ${newExpiration.toLocaleDateString()}`
+        : `✅ **Membership Extended**\n\n👤 User: \`${userId}\`\n💎 Tier: **${userData.tier}**\n📅 Days added: ${daysToAdd}\n⏰ New expiration: ${newExpiration.toLocaleDateString()}`;
+    }
 
     await ctx.reply(confirmMessage, {
       parse_mode: "Markdown",
