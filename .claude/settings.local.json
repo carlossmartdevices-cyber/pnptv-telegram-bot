@@ -40,7 +40,9 @@
       "Bash(./deploy-windows.sh:*)",
       "Bash(./deploy-auto.sh:*)",
       "Bash(scp .env.production root@72.60.29.80:/var/www/telegram-bot/.env)",
-      "Bash(scp:*)"
+      "Bash(scp:*)",
+      "Bash(cp:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nPrepare for pnptv.app production deployment\n\n- Add deployment documentation (DEPLOY_PNPTV_APP.md)\n- Add automated deployment script (deploy-pnptv.app.sh)\n- Add Nginx configuration for pnptv.app\n- Add production environment template (.env.production.example)\n- Update ecosystem.config.js for production setup\n- Update webhook configuration for production\n- Update Daimo configuration\n- Update payment page with latest build\n- Resolve merge conflicts in settings\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

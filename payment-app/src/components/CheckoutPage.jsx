@@ -140,8 +140,13 @@ function CheckoutPage() {
               toAddress={getAddress(import.meta.env.VITE_TREASURY_ADDRESS || '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0')}
               toChain={10}
               toToken={getAddress('0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85')}
-              toUnits={amount.toFixed(2)}
+              toUnits={(amount * 1000000).toString()}
               refundAddress={getAddress(import.meta.env.VITE_REFUND_ADDRESS || '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0')}
+              metadata={{
+                userId: userId,
+                plan: planId,
+                reference: reference,
+              }}
               onPaymentStarted={handlePaymentStarted}
               onPaymentCompleted={handlePaymentCompleted}
               closeOnSuccess={true}

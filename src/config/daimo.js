@@ -77,17 +77,18 @@ function validatePaymentParams(params) {
  * @param {Object} params - Payment parameters
  * @param {number} params.amount - Amount in USD (will be sent as USDC)
  * @param {string} params.userId - User ID
+ * @param {string} params.userEmail - User email (for validation)
  * @param {string} params.plan - Plan ID
  * @returns {Promise<Object>} Payment data including payment URL
  */
-async function createPaymentRequest({ amount, userId, plan }) {
+async function createPaymentRequest({ amount, userId, userEmail, plan }) {
   try {
     logger.info(
       `Creating Daimo Pay payment link for user ${userId}, plan: ${plan}`
     );
 
     // Validate required parameters
-    validatePaymentParams({ amount, userId, plan });
+    validatePaymentParams({ amount, userId, userEmail, plan });
 
     // Generate unique reference ID (format: planId_userId_timestamp)
     const referenceId = `${plan}_${userId}_${Date.now()}`;
