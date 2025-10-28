@@ -48,7 +48,8 @@
       "Read(//c/Users/carlo/.ssh/**)",
       "Bash(cat:*)",
       "Bash(scp .env.production root@72.60.29.80:/var/www/pnptv-bot/.env)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(tar:*)"
     ],
     "deny": [],
     "ask": []
