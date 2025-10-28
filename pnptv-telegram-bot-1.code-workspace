@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"name": "pnptv-telegram-bot-1",
+			"path": "."
+		}
+	],
+	"settings": {
+		"claudeCode.allowDangerouslySkipPermissions": true
+	}
+}
