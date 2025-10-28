@@ -34,10 +34,14 @@ module.exports = {
       // Max memory restart threshold (restart if exceeds)
       max_memory_restart: '500M',
 
+      // Node.js arguments - increase heap size for better performance
+      // Use interpreter_args for PM2 (node_args is deprecated)
+      interpreter_args: '--max-old-space-size=512',
+
       // Environment variables (production)
       env: {
         NODE_ENV: 'production',
-        PORT: 3000,
+        PORT: 8080,
       },
 
       // Environment variables (development)
