@@ -47,8 +47,8 @@ async function handleDaimoPlanSelection(bot, callbackQuery) {
   }
 
   // Use environment variable or default to localhost for testing
-  const WEB_APP_URL = process.env.WEB_APP_URL || 'http://localhost:5173';
-  const paymentLink = `${WEB_APP_URL}?plan=${planId}&userId=${userId}`;
+  const PAYMENT_PAGE_URL = process.env.PAYMENT_PAGE_URL || process.env.BOT_URL + '/pay';
+  const paymentLink = `${PAYMENT_PAGE_URL}?plan=${planId}&user=${userId}&amount=${plan.price}`;
 
   await bot.sendMessage(chatId, {
     text: `💎 **${plan.name}**\n\n` +

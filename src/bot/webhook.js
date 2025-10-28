@@ -146,8 +146,16 @@ app.get("/pay", async (req, res) => {
 });
 
 // Webhook endpoint for Telegram
-app.post(`/bot${process.env.TELEGRAM_TOKEN}`, (req, res) => {
-  bot.handleUpdate(req.body, res);
+app.post(`/bot${process.env.TELEGRAM_TOKEN}`, async (req, res) => {
+  try {
+    // Respond immediately to avoid timeout
+    res.sendStatus(200);
+
+    // Process update asynchronously
+    await bot.handleUpdate(req.body);
+  } catch (error) {
+    logger.error('Webhook error:', error);
+  }
 });
 
 // ePayco payment response endpoint (user redirect after payment)
