@@ -95,6 +95,16 @@ async function viewProfile(ctx) {
       bio: bioDisplay,
     });
 
+    // If coming from callback query, delete the old message first
+    if (ctx.callbackQuery) {
+      try {
+        await ctx.answerCbQuery();
+        await ctx.deleteMessage();
+      } catch (deleteError) {
+        // Ignore delete errors
+      }
+    }
+
     // Send photo if exists
     if (userData.photoFileId) {
       try {

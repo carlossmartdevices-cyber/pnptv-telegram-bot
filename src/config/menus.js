@@ -8,14 +8,16 @@ const menus = {
     en: {
       keyboard: [
         ["👤 My Profile", "💎 Subscription Plans"],
-        ["🌐 Nearby Members", "❓ Help"],
+        ["🌐 Nearby Members", "💎 Cristina Crystal"],
+        ["❓ Help"],
       ],
       resize_keyboard: true,
     },
     es: {
       keyboard: [
         ["👤 Mi Perfil", "💎 Planes de Suscripción"],
-        ["🌐 Miembros en el Área", "❓ Ayuda"],
+        ["🌐 Miembros en el Área", "💎 Cristina Crystal"],
+        ["❓ Ayuda"],
       ],
       resize_keyboard: true,
     },

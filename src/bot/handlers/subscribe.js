@@ -71,7 +71,12 @@ module.exports = async (ctx) => {
           },
         });
       } catch (editError) {
-        // If edit fails, send new message
+        // If edit fails, delete old and send new message
+        try {
+          await ctx.deleteMessage();
+        } catch (deleteError) {
+          // Ignore delete errors
+        }
         await ctx.reply(channelDescription, {
           parse_mode: "Markdown",
           reply_markup: {

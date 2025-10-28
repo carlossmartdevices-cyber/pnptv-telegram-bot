@@ -116,7 +116,12 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
           },
         });
       } catch (editError) {
-        // If edit fails, send new message
+        // If edit fails, delete old and send new message
+        try {
+          await ctx.deleteMessage();
+        } catch (deleteError) {
+          // Ignore delete errors
+        }
         await ctx.reply(planDetails, {
           parse_mode: "Markdown",
           reply_markup: {
@@ -156,6 +161,12 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
           },
         });
       } catch (editError) {
+        // If edit fails, delete old and send new message
+        try {
+          await ctx.deleteMessage();
+        } catch (deleteError) {
+          // Ignore delete errors
+        }
         await ctx.reply(message, {
           parse_mode: "Markdown",
           reply_markup: {
@@ -234,6 +245,12 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
             },
           });
         } catch (editError) {
+          // If edit fails, delete old and send new message
+          try {
+            await ctx.deleteMessage();
+          } catch (deleteError) {
+            // Ignore delete errors
+          }
           await ctx.reply(message, {
             parse_mode: "Markdown",
             reply_markup: {
@@ -345,6 +362,12 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
           },
         });
       } catch (editError) {
+        // If edit fails, delete old and send new message
+        try {
+          await ctx.deleteMessage();
+        } catch (deleteError) {
+          // Ignore delete errors
+        }
         await ctx.reply(message, {
           parse_mode: "Markdown",
           reply_markup: {
@@ -434,6 +457,12 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
           },
         });
       } catch (editError) {
+        // If edit fails, delete old and send new message
+        try {
+          await ctx.deleteMessage();
+        } catch (deleteError) {
+          // Ignore delete errors
+        }
         await ctx.reply(errorMessage, { parse_mode: "Markdown" });
       }
     } else {

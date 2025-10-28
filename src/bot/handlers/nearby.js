@@ -70,7 +70,12 @@ module.exports = async (ctx) => {
           parse_mode: "Markdown",
         });
       } catch (editError) {
-        // If edit fails, send new message
+        // If edit fails, delete old and send new message
+        try {
+          await ctx.deleteMessage();
+        } catch (deleteError) {
+          // Ignore delete errors
+        }
         await ctx.reply(finalMessage, {
           reply_markup: keyboard,
           parse_mode: "Markdown",

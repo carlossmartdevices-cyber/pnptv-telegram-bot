@@ -66,6 +66,7 @@ const {
 const { handleMapCallback, handleLocation } = require("./handlers/map");
 const { handleNearbyCallback } = require("./handlers/nearby");
 const { handleLiveCallback } = require("./handlers/live");
+const { startAIChat, endAIChat, handleChatMessage, handleAIChatCallback } = require("./handlers/aiChat");
 
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
@@ -115,6 +116,8 @@ bot.command("admin", adminMiddleware(), adminPanel);
 bot.command("plans", adminMiddleware(), async (ctx) => {
   await showPlanDashboard(ctx);
 });
+bot.command("aichat", startAIChat);
+bot.command("endchat", endAIChat);
 
 // ===== ONBOARDING FLOW =====
 bot.action(/language_(.+)/, onboardingHelpers.handleLanguageSelection);
@@ -147,6 +150,9 @@ bot.action("show_nearby", async (ctx) => {
 bot.action("show_help", async (ctx) => {
   await helpHandler(ctx);
 });
+
+// AI Chat callback handler
+bot.action("start_ai_chat", handleAIChatCallback);
 
 // Payment method selection handlers
 bot.action(/^pay_epayco_(.+)$/, async (ctx) => {
@@ -288,7 +294,12 @@ bot.action("back_to_main", async (ctx) => {
         parse_mode: "Markdown",
       });
     } catch (editError) {
-      // If edit fails, send new message
+      // If edit fails, delete old and send new message
+      try {
+        await ctx.deleteMessage();
+      } catch (deleteError) {
+        // Ignore delete errors
+      }
       await ctx.reply(t("mainMenuIntro", lang), {
         reply_markup: {
           inline_keyboard: [
@@ -513,6 +524,9 @@ bot.on("text", async (ctx) => {
         const planName = parts[1];
         await executePlanEdit(ctx, planName, field, ctx.message.text);
       }
+    } else if (ctx.session.aiChatActive) {
+      // Handle AI chat messages when in chat mode
+      await handleChatMessage(ctx);
     } else {
       // Handle keyboard button texts
       const text = ctx.message.text.toLowerCase();
@@ -529,6 +543,9 @@ bot.on("text", async (ctx) => {
         await subscribeHandler(ctx);
       } else if (text.includes("help") || text.includes("ayuda")) {
         await helpHandler(ctx);
+      } else if (text.includes("cristina") || text.includes("crystal") || text.includes("ai chat") || text.includes("chat ia")) {
+        // Handle Cristina Crystal / AI Chat keyboard button
+        await startAIChat(ctx);
       } else if (text.includes("pnptv app") || text.includes("app pnptv") || text.includes("mini app") || text.includes("abrir mini")) {
         // Handle PNPTv App / Mini App keyboard button
         await appHandler(ctx);

@@ -1,5 +1,6 @@
 const { formatMessage } = require("../../utils/formatters");
 const { ensureOnboarding } = require("../../utils/guards");
+const i18n = require("../../config/i18n");
 
 module.exports = async (ctx) => {
   if (!ensureOnboarding(ctx)) {
@@ -7,13 +8,16 @@ module.exports = async (ctx) => {
   }
 
   const language = ctx.session.language || "en";
-  const message =
-    language === "es"
-      ? "❓ *Ayuda*\n\n*Comandos disponibles:*\n\n/start - Menu principal\n/profile - Ver tu perfil\n/subscribe - Suscribirte\n/nearby - Ver usuarios cercanos\n/help - Ayuda\n\n*¿Necesitas más ayuda?*\nContáctanos en nuestro canal."
-      : "❓ *Help*\n\n*Available commands:*\n\n/start - Main menu\n/profile - View your profile\n/subscribe - Subscribe\n/nearby - View nearby users\n/help - Help\n\n*Need more help?*\nContact us on our channel.";
+  const message = i18n.t(language, "helpInfo");
 
   const keyboard = {
     inline_keyboard: [
+      [
+        {
+          text: language === "es" ? "💎 Hablar con Cristina Crystal" : "💎 Talk with Cristina Crystal",
+          callback_data: "start_ai_chat",
+        },
+      ],
       [
         {
           text: language === "es" ? "🔙 Volver al Menú" : "🔙 Back to Menu",
@@ -32,7 +36,12 @@ module.exports = async (ctx) => {
         reply_markup: keyboard,
       });
     } catch (editError) {
-      // If edit fails, send new message
+      // If edit fails (e.g., message too old), delete old and send new
+      try {
+        await ctx.deleteMessage();
+      } catch (deleteError) {
+        // Ignore delete errors
+      }
       await ctx.reply(message, {
         parse_mode: "Markdown",
         reply_markup: keyboard,
