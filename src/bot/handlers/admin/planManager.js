@@ -19,10 +19,10 @@ const PLAN_CREATION_STEPS = [
   },
   {
     key: 'tier',
-    prompt: 'Enter the tier (e.g. Free, Silver, Golden):',
+    prompt: 'Enter the tier (e.g. Basic, Premium, VIP):',
     transform: (value) => value.trim(),
     validate: (value) => value.length >= 3,
-    errorMessage: 'Tier must be provided (e.g. Silver).'
+    errorMessage: 'Tier must be provided (e.g. Premium).'
   },
   {
     key: 'currency',

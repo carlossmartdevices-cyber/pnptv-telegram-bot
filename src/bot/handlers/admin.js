@@ -46,8 +46,7 @@ async function showStats(ctx) {
 
     // Initialize counters
     let freeTier = 0;
-    let silverTier = 0;
-    let goldenTier = 0;
+    let premiumTier = 0;
     let activeToday = 0;
     let activeThisWeek = 0;
     let withPhotos = 0;
@@ -66,8 +65,7 @@ async function showStats(ctx) {
       // Count tiers
       const tier = userData.tier || "Free";
       if (tier === "Free") freeTier++;
-      else if (tier === "Silver") silverTier++;
-      else if (tier === "Golden") goldenTier++;
+      else premiumTier++;
 
       // Count active users
       if (userData.lastActive) {
@@ -87,9 +85,9 @@ async function showStats(ctx) {
     const locationPercentage = totalUsers > 0 ? Math.round((withLocations / totalUsers) * 100) : 0;
     const onboardingPercentage = totalUsers > 0 ? Math.round((onboardingComplete / totalUsers) * 100) : 0;
 
-    // Calculate revenue (estimates)
-    const monthlyRevenue = (silverTier * 15) + (goldenTier * 25);
-    const annualRevenue = monthlyRevenue * 12;
+    // Calculate revenue estimates from active subscriptions
+    let monthlyRevenue = 0;
+    // Revenue calculation now based on actual subscription plans
 
     try {
       await ctx.deleteMessage(loadingMsg.message_id);
@@ -113,8 +111,7 @@ async function showStats(ctx) {
       ? `💎 **Niveles**\n`
       : `💎 **Tiers**\n`;
     message += `• Free: ${freeTier} (${totalUsers > 0 ? Math.round((freeTier / totalUsers) * 100) : 0}%)\n`;
-    message += `• Silver: ${silverTier} (${totalUsers > 0 ? Math.round((silverTier / totalUsers) * 100) : 0}%)\n`;
-    message += `• Golden: ${goldenTier} (${totalUsers > 0 ? Math.round((goldenTier / totalUsers) * 100) : 0}%)\n\n`;
+    message += `• Premium: ${premiumTier} (${totalUsers > 0 ? Math.round((premiumTier / totalUsers) * 100) : 0}%)\n\n`;
 
     message += lang === "es"
       ? `✨ **Características**\n`
@@ -245,7 +242,7 @@ async function listAllUsers(ctx, page = 1) {
 
     users.forEach((user, index) => {
       const num = startIndex + index + 1;
-      const tierIcon = user.tier === "Golden" ? "🥇" : user.tier === "Silver" ? "🥈" : "⚪";
+      const tierIcon = user.tier && user.tier !== "Free" ? "💎" : "⚪";
       const photoIcon = user.photoFileId ? "📸" : "";
       const locationIcon = user.location ? "📍" : "";
 
@@ -466,42 +463,6 @@ async function editUserTier(ctx, userId) {
           ],
           [
             {
-              text: "🥈 Silver (30 days)",
-              callback_data: `admin_set_tier_${userId}_Silver_30`,
-            },
-          ],
-          [
-            {
-              text: "🥈 Silver (60 days)",
-              callback_data: `admin_set_tier_${userId}_Silver_60`,
-            },
-          ],
-          [
-            {
-              text: "🥈 Silver (90 days)",
-              callback_data: `admin_set_tier_${userId}_Silver_90`,
-            },
-          ],
-          [
-            {
-              text: "🥇 Golden (30 days)",
-              callback_data: `admin_set_tier_${userId}_Golden_30`,
-            },
-          ],
-          [
-            {
-              text: "🥇 Golden (60 days)",
-              callback_data: `admin_set_tier_${userId}_Golden_60`,
-            },
-          ],
-          [
-            {
-              text: "🥇 Golden (90 days)",
-              callback_data: `admin_set_tier_${userId}_Golden_90`,
-            },
-          ],
-          [
-            {
               text: lang === "es" ? "« Cancelar" : "« Cancel",
               callback_data: `admin_user_${userId}`,
             },
@@ -596,8 +557,8 @@ async function broadcastMessage(ctx) {
     };
 
     const message = lang === "es"
-      ? "📢 **Asistente de Mensaje Masivo Mejorado**\n\n**Paso 1 de 7:** Selecciona el idioma de los usuarios:\n\n💡 _Nuevo: Ahora puedes probar mensajes y programar envíos_"
-      : "📢 **Enhanced Broadcast Wizard**\n\n**Step 1 of 7:** Select target user language:\n\n💡 _New: Test messages and schedule broadcasts_";
+      ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 1 de 5:** Selecciona el idioma de los usuarios:\n\n💡 _Puedes probar mensajes antes de enviar_"
+      : "📢 **Broadcast Wizard**\n\n**Step 1 of 5:** Select target user language:\n\n💡 _You can test messages before sending_";
 
     const keyboard = {
       inline_keyboard: [
@@ -665,8 +626,8 @@ async function handleBroadcastWizard(ctx, action) {
       wizard.step = 2;
 
       const message = lang === "es"
-        ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 2 de 6:** Selecciona el estado de los usuarios:"
-        : "📢 **Broadcast Wizard**\n\n**Step 2 of 6:** Select target user status:";
+        ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 2 de 5:** Selecciona el estado de los usuarios:"
+        : "📢 **Broadcast Wizard**\n\n**Step 2 of 5:** Select target user status:";
 
       const keyboard = {
         inline_keyboard: [
@@ -720,8 +681,8 @@ async function handleBroadcastWizard(ctx, action) {
       wizard.step = 3;
 
       const message = lang === "es"
-        ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 3 de 6:** ¿Quieres incluir un archivo multimedia?\n\nPuedes enviar una foto, video o documento, o presiona 'Omitir' para continuar sin multimedia."
-        : "📢 **Broadcast Wizard**\n\n**Step 3 of 6:** Do you want to include media?\n\nYou can send a photo, video, or document, or press 'Skip' to continue without media.";
+        ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 3 de 5:** ¿Quieres incluir un archivo multimedia?\n\nPuedes enviar una foto, video o documento, o presiona 'Omitir' para continuar sin multimedia."
+        : "📢 **Broadcast Wizard**\n\n**Step 3 of 5:** Do you want to include media?\n\nYou can send a photo, video, or document, or press 'Skip' to continue without media.";
 
       const keyboard = {
         inline_keyboard: [
@@ -760,8 +721,8 @@ async function handleBroadcastWizard(ctx, action) {
       ctx.session.waitingFor = "broadcast_text";
 
       const message = lang === "es"
-        ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 4 de 6:** Escribe el mensaje de texto que quieres enviar:"
-        : "📢 **Broadcast Wizard**\n\n**Step 4 of 6:** Type the text message you want to send:";
+        ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 4 de 5:** Escribe el mensaje de texto que quieres enviar:"
+        : "📢 **Broadcast Wizard**\n\n**Step 4 of 5:** Type the text message you want to send:";
 
       await ctx.editMessageText(message, { parse_mode: "Markdown" });
       await ctx.answerCbQuery();
@@ -946,7 +907,7 @@ function filterUsersByWizard(users, wizard) {
         break;
 
       case "subscribers":
-        // Active subscribers with Silver or Golden tier and not expired
+        // Active subscribers with premium tier and not expired
         if (!userData.tier || userData.tier === "Free") return false;
         if (!userData.expiresAt) return false;
         const expiresAt = userData.expiresAt.toDate();
@@ -1167,8 +1128,8 @@ async function sendBroadcast(ctx, message) {
     ctx.session.waitingFor = "broadcast_buttons";
 
     const msg = lang === "es"
-      ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 5 de 6:** ¿Quieres agregar botones al mensaje?\n\nEnvía los botones en formato:\n```\nTexto | URL\nTexto | URL\n```\n\nEjemplo:\n```\nVisitar sitio | https://ejemplo.com\nMás info | https://ejemplo.com/info\n```\n\nO presiona 'Omitir' para continuar sin botones."
-      : "📢 **Broadcast Wizard**\n\n**Step 5 of 6:** Do you want to add buttons to the message?\n\nSend buttons in format:\n```\nText | URL\nText | URL\n```\n\nExample:\n```\nVisit site | https://example.com\nMore info | https://example.com/info\n```\n\nOr press 'Skip' to continue without buttons.";
+      ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 5 de 5:** ¿Quieres agregar botones al mensaje?\n\nEnvía los botones en formato:\n```\nTexto | URL\nTexto | URL\n```\n\nEjemplo:\n```\nVisitar sitio | https://ejemplo.com\nMás info | https://ejemplo.com/info\n```\n\nO presiona 'Omitir' para continuar sin botones."
+      : "📢 **Broadcast Wizard**\n\n**Step 5 of 5:** Do you want to add buttons to the message?\n\nSend buttons in format:\n```\nText | URL\nText | URL\n```\n\nExample:\n```\nVisit site | https://example.com\nMore info | https://example.com/info\n```\n\nOr press 'Skip' to continue without buttons.";
 
     const keyboard = {
       inline_keyboard: [
@@ -1246,7 +1207,7 @@ async function showExpiringMemberships(ctx) {
       : `Total: ${expiringUsers.length} users\n\n`;
 
     expiringUsers.forEach((user, index) => {
-      const tierIcon = user.tier === "Golden" ? "🥇" : "🥈";
+      const tierIcon = "💎";
       const expiresDate = user.expiresAt.toLocaleDateString();
 
       message += `${index + 1}. ${tierIcon} @${user.username || "Anonymous"}\n`;
@@ -1564,13 +1525,22 @@ async function listPremiumUsers(ctx) {
       lang === "es" ? "🥇 Cargando usuarios premium..." : "🥇 Loading premium users..."
     );
 
-    // Get premium users
-    const premiumSnapshot = await db
+    // Get premium users (all non-Free tiers)
+    const allUsersSnapshot = await db
       .collection("users")
-      .where("tier", "in", ["Silver", "Golden"])
       .orderBy("tierUpdatedAt", "desc")
-      .limit(50)
+      .limit(200)
       .get();
+
+    // Filter for premium users
+    const premiumUsers = [];
+    allUsersSnapshot.forEach((doc) => {
+      const userData = doc.data();
+      if (userData.tier && userData.tier !== "Free") {
+        premiumUsers.push({ id: doc.id, ...userData });
+      }
+    });
+    const premiumSnapshot = { empty: premiumUsers.length === 0, size: premiumUsers.length };
 
     try {
       await ctx.deleteMessage(loadingMsg.message_id);
@@ -1601,21 +1571,20 @@ async function listPremiumUsers(ctx) {
       ? `🥇 **Usuarios Premium**\n\nTotal: ${premiumSnapshot.size}\n\n`
       : `🥇 **Premium Users**\n\nTotal: ${premiumSnapshot.size}\n\n`;
 
-    premiumSnapshot.forEach((doc, index) => {
-      const userData = doc.data();
-      const tierIcon = userData.tier === "Golden" ? "🥇" : "🥈";
+    premiumUsers.forEach((user, index) => {
+      const tierIcon = "💎";
 
       let expiryInfo = "";
-      if (userData.membershipExpiresAt) {
-        const expiresAt = userData.membershipExpiresAt.toDate();
+      if (user.membershipExpiresAt) {
+        const expiresAt = user.membershipExpiresAt.toDate();
         const now = new Date();
         const diffTime = expiresAt.getTime() - now.getTime();
         const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         expiryInfo = daysRemaining > 0 ? ` (${daysRemaining}d)` : ` (⚠️)`;
       }
 
-      message += `${index + 1}. ${tierIcon} @${userData.username || "Anonymous"}${expiryInfo}\n`;
-      message += `   ID: \`${doc.id}\`\n\n`;
+      message += `${index + 1}. ${tierIcon} @${user.username || "Anonymous"}${expiryInfo}\n`;
+      message += `   ID: \`${user.id}\`\n\n`;
     });
 
     await ctx.reply(message, {
@@ -1697,7 +1666,7 @@ async function listNewUsers(ctx) {
 
     newUsersSnapshot.forEach((doc, index) => {
       const userData = doc.data();
-      const tierIcon = userData.tier === "Golden" ? "🥇" : userData.tier === "Silver" ? "🥈" : "⚪";
+      const tierIcon = userData.tier && userData.tier !== "Free" ? "💎" : "⚪";
       const createdAt = userData.createdAt?.toDate();
       const daysAgo = Math.floor((new Date() - createdAt) / (1000 * 60 * 60 * 24));
 
@@ -1804,62 +1773,6 @@ async function processActivationUserId(ctx, userIdInput) {
             {
               text: "⚪ Free",
               callback_data: `admin_quick_activate_${userId}_Free_0`,
-            },
-          ],
-          [
-            {
-              text: "🥈 Silver (1 week)",
-              callback_data: `admin_quick_activate_${userId}_Silver_7`,
-            },
-            {
-              text: "🥈 Silver (1 month)",
-              callback_data: `admin_quick_activate_${userId}_Silver_30`,
-            },
-          ],
-          [
-            {
-              text: "🥈 Silver (4 months)",
-              callback_data: `admin_quick_activate_${userId}_Silver_120`,
-            },
-            {
-              text: "🥈 Silver (1 year)",
-              callback_data: `admin_quick_activate_${userId}_Silver_365`,
-            },
-          ],
-          [
-            {
-              text: "🥇 Golden (1 week)",
-              callback_data: `admin_quick_activate_${userId}_Golden_7`,
-            },
-            {
-              text: "🥇 Golden (1 month)",
-              callback_data: `admin_quick_activate_${userId}_Golden_30`,
-            },
-          ],
-          [
-            {
-              text: "🥇 Golden (4 months)",
-              callback_data: `admin_quick_activate_${userId}_Golden_120`,
-            },
-            {
-              text: "🥇 Golden (1 year)",
-              callback_data: `admin_quick_activate_${userId}_Golden_365`,
-            },
-          ],
-          [
-            {
-              text: "💎 Silver (Lifetime)",
-              callback_data: `admin_quick_activate_${userId}_Silver_999999`,
-            },
-            {
-              text: "💎 Golden (Lifetime)",
-              callback_data: `admin_quick_activate_${userId}_Golden_999999`,
-            },
-          ],
-          [
-            {
-              text: "👑 VIP (Lifetime)",
-              callback_data: `admin_quick_activate_${userId}_VIP_999999`,
             },
           ],
           [
@@ -2608,7 +2521,7 @@ async function viewPlanDetails(ctx, planName) {
 async function editPlanMenu(ctx, planName) {
   try {
     const lang = ctx.session.language || "en";
-    const icon = planName.toLowerCase() === "silver" ? "🥈" : "🥇";
+    const icon = "💎";
     const tierName = planName.charAt(0).toUpperCase() + planName.slice(1);
 
     const message = lang === "es"
@@ -2637,12 +2550,6 @@ async function editPlanMenu(ctx, planName) {
               callback_data: `admin_plan_edit_duration_${planName.toLowerCase()}`,
             },
           ],
-          planName.toLowerCase() === "golden" ? [
-            {
-              text: lang === "es" ? "💎 Crypto Bonus" : "💎 Crypto Bonus",
-              callback_data: `admin_plan_edit_crypto_${planName.toLowerCase()}`,
-            },
-          ] : [],
           [
             {
               text: lang === "es" ? "📝 Descripción" : "📝 Description",
@@ -2680,7 +2587,7 @@ async function startPlanEdit(ctx, planName, field) {
     const lang = ctx.session.language || "en";
     const plans = require("../../config/plans");
     const plan = plans[planName.toUpperCase()];
-    const icon = planName.toLowerCase() === "silver" ? "🥈" : "🥇";
+    const icon = "💎";
     const tierName = planName.charAt(0).toUpperCase() + planName.slice(1);
 
     ctx.session.waitingFor = `admin_plan_edit_${field}_${planName}`;
@@ -2889,12 +2796,8 @@ async function showPlanStats(ctx) {
     // Get all users with tiers
     const usersSnapshot = await db.collection("users").get();
 
-    let silverActive = 0;
-    let goldenActive = 0;
-    let silverExpired = 0;
-    let goldenExpired = 0;
-    let silverRevenue = 0;
-    let goldenRevenue = 0;
+    let premiumActive = 0;
+    let premiumExpired = 0;
 
     const now = new Date();
 
@@ -2902,23 +2805,13 @@ async function showPlanStats(ctx) {
       const userData = doc.data();
       const tier = userData.tier;
 
-      if (tier === "Silver" || tier === "Golden") {
+      if (tier && tier !== "Free") {
         const isActive = !userData.membershipExpiresAt || userData.membershipExpiresAt.toDate() > now;
 
-        if (tier === "Silver") {
-          if (isActive) {
-            silverActive++;
-            silverRevenue += plans.SILVER.price;
-          } else {
-            silverExpired++;
-          }
-        } else if (tier === "Golden") {
-          if (isActive) {
-            goldenActive++;
-            goldenRevenue += plans.GOLDEN.price;
-          } else {
-            goldenExpired++;
-          }
+        if (isActive) {
+          premiumActive++;
+        } else {
+          premiumExpired++;
         }
       }
     });
@@ -2933,34 +2826,21 @@ async function showPlanStats(ctx) {
       ? "📊 **Estadísticas de Planes**\n\n"
       : "📊 **Plan Statistics**\n\n";
 
-    // Silver Stats
-    message += "🥈 **Silver**\n";
-    message += `• ${lang === "es" ? "Activos" : "Active"}: ${silverActive}\n`;
-    message += `• ${lang === "es" ? "Expirados" : "Expired"}: ${silverExpired}\n`;
-    message += `• ${lang === "es" ? "Total histórico" : "Total historical"}: ${silverActive + silverExpired}\n`;
-    message += `• ${lang === "es" ? "Ingresos/mes" : "Revenue/month"}: $${silverRevenue}\n`;
-    message += `• ${lang === "es" ? "Ingresos/año" : "Revenue/year"}: $${silverRevenue * 12}\n\n`;
-
-    // Golden Stats
-    message += "🥇 **Golden**\n";
-    message += `• ${lang === "es" ? "Activos" : "Active"}: ${goldenActive}\n`;
-    message += `• ${lang === "es" ? "Expirados" : "Expired"}: ${goldenExpired}\n`;
-    message += `• ${lang === "es" ? "Total histórico" : "Total historical"}: ${goldenActive + goldenExpired}\n`;
-    message += `• ${lang === "es" ? "Ingresos/mes" : "Revenue/month"}: $${goldenRevenue}\n`;
-    message += `• ${lang === "es" ? "Ingresos/año" : "Revenue/year"}: $${goldenRevenue * 12}\n\n`;
+    // Premium Stats
+    message += "💎 **Premium Members**\n";
+    message += `• ${lang === "es" ? "Activos" : "Active"}: ${premiumActive}\n`;
+    message += `• ${lang === "es" ? "Expirados" : "Expired"}: ${premiumExpired}\n`;
+    message += `• ${lang === "es" ? "Total histórico" : "Total historical"}: ${premiumActive + premiumExpired}\n\n`;
 
     // Totals
-    const totalActive = silverActive + goldenActive;
-    const totalRevenue = silverRevenue + goldenRevenue;
     const conversionRate = usersSnapshot.size > 0
-      ? ((totalActive / usersSnapshot.size) * 100).toFixed(2)
+      ? ((premiumActive / usersSnapshot.size) * 100).toFixed(2)
       : 0;
 
     message += lang === "es" ? "💰 **Totales**\n" : "💰 **Totals**\n";
-    message += `• ${lang === "es" ? "Suscriptores activos" : "Active subscribers"}: ${totalActive}\n`;
-    message += `• ${lang === "es" ? "Ingresos mensuales" : "Monthly revenue"}: $${totalRevenue}\n`;
-    message += `• ${lang === "es" ? "Ingresos anuales" : "Annual revenue"}: $${totalRevenue * 12}\n`;
+    message += `• ${lang === "es" ? "Suscriptores activos" : "Active subscribers"}: ${premiumActive}\n`;
     message += `• ${lang === "es" ? "Tasa de conversión" : "Conversion rate"}: ${conversionRate}%\n`;
+    message += `\n${lang === "es" ? "ℹ️ Para ingresos detallados, usar los reportes de Firestore o ePayco" : "ℹ️ For detailed revenue, use Firestore or ePayco reports"}`;
 
     await ctx.reply(message, {
       parse_mode: "Markdown",
@@ -3439,8 +3319,8 @@ async function handleBroadcastMedia(ctx, mediaType) {
     ctx.session.waitingFor = "broadcast_text";
 
     const message = lang === "es"
-      ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 4 de 6:** Escribe el mensaje de texto que quieres enviar:\n\n(Este será el caption del archivo multimedia)"
-      : "📢 **Broadcast Wizard**\n\n**Step 4 of 6:** Type the text message you want to send:\n\n(This will be the caption for the media)";
+      ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 4 de 5:** Escribe el mensaje de texto que quieres enviar:\n\n(Este será el caption del archivo multimedia)"
+      : "📢 **Broadcast Wizard**\n\n**Step 4 of 5:** Type the text message you want to send:\n\n(This will be the caption for the media)";
 
     await ctx.reply(message, { parse_mode: "Markdown" });
 

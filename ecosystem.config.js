@@ -19,8 +19,8 @@ module.exports = {
       // Application name
       name: 'pnptv-bot',
 
-      // Entry point (use webhook.js for production with domain/HTTPS)
-      script: './src/bot/webhook.js',
+      // Entry point (index.js handles both webhook and polling modes)
+      script: './src/bot/index.js',
 
       // Instances (use 'max' for all CPU cores, or a number)
       instances: 1,
@@ -111,7 +111,7 @@ module.exports = {
       user: 'root',
 
       // SSH host (can use IP or hostname)
-      host: '72.60.29.80',  // or 'srv1071867.hstgr.cloud'
+      host: 'srv1071867.hstgr.cloud',  // Hostinger VPS
 
       // SSH port
       port: '22',

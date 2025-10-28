@@ -61,15 +61,6 @@ const menus = {
 
   subscription: {
     inline_keyboard: [
-      [
-        { text: "🥈 Silver ($15/month)", callback_data: "subscribe_silver" },
-      ],
-      [
-        {
-          text: "🥇 Golden ($25+5USDT/month)",
-          callback_data: "subscribe_golden",
-        },
-      ],
       [{ text: "« Back", callback_data: "back_to_main" }],
     ],
   },

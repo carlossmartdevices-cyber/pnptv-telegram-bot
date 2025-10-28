@@ -257,6 +257,29 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
         return;
       } catch (daimoError) {
         logger.error("[Subscription] Daimo payment error:", daimoError);
+
+        // If it's an HTTPS requirement error in development, show user-friendly message
+        if (daimoError.message && daimoError.message.includes('HTTPS')) {
+          const devMessage = lang === "es"
+            ? `⚠️ **Daimo Pay no disponible en desarrollo local**\n\nDaimo Pay requiere HTTPS para funcionar en Telegram.\n\n💡 **Alternativas:**\n- Usa el método de pago ePayco\n- O contacta al administrador para activación manual\n\nDisculpa las molestias.`
+            : `⚠️ **Daimo Pay not available in local development**\n\nDaimo Pay requires HTTPS to work in Telegram.\n\n💡 **Alternatives:**\n- Use ePayco payment method\n- Or contact admin for manual activation\n\nSorry for the inconvenience.`;
+
+          await ctx.reply(devMessage, {
+            parse_mode: "Markdown",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
+                    callback_data: "show_subscription_plans",
+                  },
+                ],
+              ],
+            },
+          });
+          return;
+        }
+
         throw new PaymentGatewayError(daimoError.message, {
           originalError: daimoError,
         });

@@ -33,7 +33,14 @@
       "Bash(node:*)",
       "Bash(PORT=8080 NODE_ENV=development node:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(chmod:*)",
+      "Bash(ssh-keygen:*)",
+      "Bash(ssh:*)",
+      "Bash(./deploy-windows.sh:*)",
+      "Bash(./deploy-auto.sh:*)",
+      "Bash(scp .env.production root@72.60.29.80:/var/www/telegram-bot/.env)",
+      "Bash(scp:*)"
     ],
     "deny": [],
     "ask": []
