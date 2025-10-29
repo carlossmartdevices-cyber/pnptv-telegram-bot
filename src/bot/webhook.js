@@ -145,6 +145,37 @@ app.get("/pay", async (req, res) => {
   }
 });
 
+// Legal pages - Terms of Service, Privacy Policy, Refund Policy
+app.get("/terms-en", (req, res) => {
+  const termsPath = path.join(__dirname, "../../public/legal/terms-en.html");
+  res.sendFile(termsPath);
+});
+
+app.get("/terms-es", (req, res) => {
+  const termsPath = path.join(__dirname, "../../public/legal/terms-es.html");
+  res.sendFile(termsPath);
+});
+
+app.get("/privacy-en", (req, res) => {
+  // Privacy policy is included in terms page, redirect to #privacy section
+  res.redirect("/terms-en#privacy");
+});
+
+app.get("/privacy-es", (req, res) => {
+  // Privacy policy is included in terms page, redirect to #privacidad section
+  res.redirect("/terms-es#privacidad");
+});
+
+app.get("/refunds-en", (req, res) => {
+  // Refund policy is included in terms page, redirect to #refund section
+  res.redirect("/terms-en#refund");
+});
+
+app.get("/refunds-es", (req, res) => {
+  // Refund policy is included in terms page, redirect to #reembolsos section
+  res.redirect("/terms-es#reembolsos");
+});
+
 // Webhook endpoint for Telegram
 app.post(`/bot${process.env.TELEGRAM_TOKEN}`, async (req, res) => {
   try {
