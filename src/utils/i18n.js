@@ -23,12 +23,25 @@ try {
 
 /**
  * Get translated message
- * @param {string} key - Translation key
- * @param {string} lang - Language code (en, es)
+ * @param {string} langOrKey - Language code (en, es) or translation key (backwards compatible)
+ * @param {string} keyOrLang - Translation key or language code (backwards compatible)
  * @param {Object} params - Parameters to interpolate
  * @returns {string} Translated message
  */
-function t(key, lang = "en", params = {}) {
+function t(langOrKey, keyOrLang, params = {}) {
+  // Support both t(lang, key) and t(key, lang) for backwards compatibility
+  let lang, key;
+
+  // If first param is a valid language code, use new signature: t(lang, key)
+  if (locales[langOrKey]) {
+    lang = langOrKey;
+    key = keyOrLang;
+  } else {
+    // Otherwise use old signature: t(key, lang)
+    key = langOrKey;
+    lang = keyOrLang || "en";
+  }
+
   const language = locales[lang] || locales.en;
   let message = language[key] || locales.en[key] || key;
 

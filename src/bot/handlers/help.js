@@ -1,6 +1,6 @@
 const { formatMessage } = require("../../utils/formatters");
 const { ensureOnboarding } = require("../../utils/guards");
-const i18n = require("../../config/i18n");
+const i18n = require("../../utils/i18n");
 
 module.exports = async (ctx) => {
   if (!ensureOnboarding(ctx)) {
