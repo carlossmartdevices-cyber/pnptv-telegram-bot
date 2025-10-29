@@ -272,10 +272,14 @@
     const userId = params.get('user') || 'unknown';
     const amount = parseFloat(params.get('amount') || '0');
 
+    // Convert amount to USDC format (6 decimals for USDC)
+    // Amount is in USD, so we multiply by 1,000,000 to get USDC units
+    const amountInUSDC = BigInt(Math.floor(amount * 1000000));
+
     // Update UI with parameters
     document.getElementById('plan-name').textContent = planId.toUpperCase();
     document.getElementById('user-id').textContent = userId;
-    document.getElementById('amount-display').textContent = `$${amount.toFixed(2)} USDC`;
+    document.getElementById('amount-display').textContent = `$${amount.toFixed(0)} USDC`;
 
     // Wagmi configuration
     const config = createConfig(
@@ -337,11 +341,12 @@
             DaimoPayProvider,
             { apiKey: 'pay-televisionlatina-VxZH9SQoHYasAoQmdWKuUw' },
             h(DaimoPayButton, {
-              appId: 'pnptv-bot',
+              appId: 'pay-televisionlatina',
               intent: 'Deposit',
               toChain: optimismUSDC.chainId,
               toToken: getAddress(optimismUSDC.token),
               toAddress: RECIPIENT_ADDRESS,
+              toAmount: amountInUSDC,
               onPaymentStarted: handlePaymentStarted,
               onPaymentCompleted: handlePaymentCompleted,
             })
