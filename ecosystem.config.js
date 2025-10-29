@@ -19,8 +19,8 @@ module.exports = {
       // Application name
       name: 'pnptv-bot',
 
-      // Entry point (index.js handles both webhook and polling modes)
-      script: './src/bot/index.js',
+      // Entry point (webhook.js for production deployment)
+      script: './src/bot/webhook.js',
 
       // Instances (use 'max' for all CPU cores, or a number)
       instances: 1,
@@ -41,7 +41,7 @@ module.exports = {
       // Environment variables (production)
       env: {
         NODE_ENV: 'production',
-        PORT: 8080,
+        PORT: 3000,
       },
 
       // Environment variables (development)

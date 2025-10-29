@@ -3,8 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 
-console.log('[PNPtv Payment] App starting...')
-console.log('[PNPtv Payment] Environment:', import.meta.env.MODE)
+console.log('[PNPtv Payment] Starting app...')
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

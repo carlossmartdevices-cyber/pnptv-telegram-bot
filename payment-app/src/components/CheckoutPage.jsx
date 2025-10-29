@@ -15,15 +15,22 @@ function CheckoutPage() {
   const amount = parseFloat(params.get('amount'))
 
   useEffect(() => {
+    console.log('[PNPtv Payment] Initializing...')
+    console.log('[PNPtv Payment] Plan:', planId, 'User:', userId, 'Amount:', amount)
+
     // Fetch plan details from API
     const fetchPlanData = async () => {
       try {
+        console.log('[PNPtv Payment] Fetching /api/plans/' + planId)
         const response = await fetch(`/api/plans/${planId}`)
+        console.log('[PNPtv Payment] Response status:', response.status)
         if (!response.ok) throw new Error('Failed to load plan')
         const data = await response.json()
+        console.log('[PNPtv Payment] Plan loaded successfully')
         setPlanData(data)
         setLoading(false)
       } catch (err) {
+        console.error('[PNPtv Payment] Error:', err)
         setError(err.message)
         setLoading(false)
       }
@@ -32,6 +39,7 @@ function CheckoutPage() {
     if (planId) {
       fetchPlanData()
     } else {
+      console.error('[PNPtv Payment] Missing plan ID')
       setError('Invalid payment link')
       setLoading(false)
     }
@@ -135,13 +143,17 @@ function CheckoutPage() {
 
           <div className="payment-section">
             <DaimoPayButton
-              appId={import.meta.env.VITE_DAIMO_APP_ID || 'pay-televisionlatina-VxZH9SQoHYasAoQmdWKuUw'}
+              appId={import.meta.env.VITE_DAIMO_APP_ID || 'pnptv-bot'}
               intent="Pay"
               toAddress={getAddress(import.meta.env.VITE_TREASURY_ADDRESS || '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0')}
               toChain={10}
               toToken={getAddress('0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85')}
-              toUnits={(amount * 1000000).toString()}
+              toUnits={amount.toFixed(2)}
               refundAddress={getAddress(import.meta.env.VITE_REFUND_ADDRESS || '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0')}
+              preferredChains={[10]}
+              preferredTokens={[
+                { chain: 10, address: getAddress('0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85') }
+              ]}
               metadata={{
                 userId: userId,
                 plan: planId,
