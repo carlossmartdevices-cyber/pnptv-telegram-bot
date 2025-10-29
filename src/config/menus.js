@@ -9,7 +9,7 @@ const menus = {
       keyboard: [
         ["👤 My Profile", "💎 Subscription Plans"],
         ["🌐 Nearby Members", "💎 Cristina Crystal"],
-        ["❓ Help"],
+        ["🤖 PNPtv! Support"],
       ],
       resize_keyboard: true,
     },
@@ -17,7 +17,7 @@ const menus = {
       keyboard: [
         ["👤 Mi Perfil", "💎 Planes de Suscripción"],
         ["🌐 Miembros en el Área", "💎 Cristina Crystal"],
-        ["❓ Ayuda"],
+        ["🤖 PNPtv! Soporte"],
       ],
       resize_keyboard: true,
     },

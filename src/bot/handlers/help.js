@@ -14,6 +14,12 @@ module.exports = async (ctx) => {
     inline_keyboard: [
       [
         {
+          text: language === "es" ? "💎 Ver Planes Premium" : "💎 View Premium Plans",
+          callback_data: "show_subscription_plans",
+        },
+      ],
+      [
+        {
           text: language === "es" ? "💎 Hablar con Cristina Crystal" : "💎 Talk with Cristina Crystal",
           callback_data: "start_ai_chat",
         },

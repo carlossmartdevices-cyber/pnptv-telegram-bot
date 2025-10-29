@@ -285,7 +285,7 @@ bot.action("back_to_main", async (ctx) => {
             ],
             [
               {
-                text: lang === "es" ? "❓ Ayuda" : "❓ Help",
+                text: lang === "es" ? "🤖 PNPtv! Soporte" : "🤖 PNPtv! Support",
                 callback_data: "show_help",
               },
             ],
@@ -329,7 +329,7 @@ bot.action("back_to_main", async (ctx) => {
             ],
             [
               {
-                text: lang === "es" ? "❓ Ayuda" : "❓ Help",
+                text: lang === "es" ? "🤖 PNPtv! Soporte" : "🤖 PNPtv! Support",
                 callback_data: "show_help",
               },
             ],

@@ -20,7 +20,7 @@
   "profileInfo": "👤 **Tu Perfil PNPtv**\n\n🆔 ID: `{userId}`\n💋 Usuario: @{username}\n💎 Nivel: {tier}\n{membershipInfo}\n📍 Ubicación: {location}\n📝 Bio: {bio}",
   "mapInfo": "📍 **Mapa PNP**\n\nDescubre quién está cerca de ti.\n\nActiva tu ubicación y explora conexiones reales a tu alrededor.",
   "liveInfo": "📡 **Shows en Vivo**\n\nTransmite, mira e interactúa en tiempo real.\n\n🔥 ¡Muy pronto!",
-  "helpInfo": "❓ **Menú de Ayuda PNPtv**\n\n👤 /profile - Tu perfil\n🗺️ /map - Explorar cercanos\n📡 /live - Ver en vivo\n💎 /subscribe - Mejorar plan\n⚙️ /admin - Panel admin\n❓ /help - Mostrar ayuda\n\n📧 **Soporte:** support@pnptv.app\n📜 **Términos:** https://pnptv.app/terms-es",
+  "helpInfo": "🤖 **PNPtv! Soporte**\n\n👤 /profile - Tu perfil\n🗺️ /map - Explorar cercanos\n📡 /live - Ver en vivo\n💎 /subscribe - Mejorar plan\n⚙️ /admin - Panel admin\n\n📧 **Soporte:** support@pnptv.app\n📜 **Términos:** https://pnptv.app/terms-es\n\n💡 **Consejo:** ¡Actualiza a Premium para acceso exclusivo a nuestro canal PRIME, shows en vivo y miembros cercanos!",
   "silverFeatures": "🥈 **Plan Silver — $15/mes**\n\n✨ Incluye:\n• Experiencia sin anuncios\n• 20 swipes diarios\n• Insignia de verificación\n• Soporte estándar",
   "goldenFeatures": "🥇 **Plan Golden — $25/mes + 5 USDT de bono**\n\n💫 Todo lo de Silver, además de:\n• Acceso a canales VIP\n• Insignias doradas exclusivas\n• Soporte prioritario\n• 5 USDT mensuales en cripto\n• Swipes ilimitados\n• Acceso anticipado a eventos",
   "editBio": "📝 Editar Bio",
