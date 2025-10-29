@@ -20,7 +20,7 @@ module.exports = async (ctx) => {
       ],
       [
         {
-          text: language === "es" ? "💎 Hablar con Cristina Crystal" : "💎 Talk with Cristina Crystal",
+          text: language === "es" ? "🤖 Chat Bot de Soporte al Cliente" : "🤖 Customer Support Chat Bot",
           callback_data: "start_ai_chat",
         },
       ],

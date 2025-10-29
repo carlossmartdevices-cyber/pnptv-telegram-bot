@@ -8,7 +8,7 @@ const menus = {
     en: {
       keyboard: [
         ["👤 My Profile", "💎 Subscription Plans"],
-        ["🌐 Nearby Members", "💎 Cristina Crystal"],
+        ["🌐 Nearby Members", "🤖 Customer Support"],
         ["🤖 PNPtv! Support"],
       ],
       resize_keyboard: true,
@@ -16,7 +16,7 @@ const menus = {
     es: {
       keyboard: [
         ["👤 Mi Perfil", "💎 Planes de Suscripción"],
-        ["🌐 Miembros en el Área", "💎 Cristina Crystal"],
+        ["🌐 Miembros en el Área", "🤖 Soporte al Cliente"],
         ["🤖 PNPtv! Soporte"],
       ],
       resize_keyboard: true,

@@ -106,11 +106,11 @@
   "adminMenuMediaDeletedSuccess": "✅ **Media Deleted**\n\nRemoved media from {menuType}/{itemId}",
   "adminMenuPreviewCaption": "👁️ **Preview: {menuType} Menu**\n\nThis is how your menu will look with media.",
   "adminMenuPreviewNoMedia": "👁️ **Preview: {menuType} Menu**\n\nNo media attached. The menu will be displayed as text only.",
-  "chatWithAI": "💎 Chat with Cristina",
-  "aiChatWelcome": "💎 **Hello, Beautiful Soul**\n\nI'm Cristina Crystal — your guide through the neon clarity of PNPtv.\n\nI'm here to help you with:\n• Membership plans & subscriptions\n• Technical support & account access\n• Privacy, security & legal information\n• Community guidelines & wellness\n• Any questions about your PNPtv experience\n\nFeel free to ask me anything. I speak your language and I'm here for you. ✨\n\nType /endchat when you're ready to return to the main menu.",
-  "aiChatThinking": "💫 Crystal clarity coming your way...",
-  "aiChatError": "💎 My apologies — something flickered in the connection. Let's try again, or type /endchat to exit gracefully.",
-  "aiChatEnded": "💎 Until we meet again in the neon glow. Returning to main menu...",
-  "aiChatNoAPI": "💎 Cristina Crystal is currently unavailable. Please reach out to support@pnptv.app for assistance.",
+  "chatWithAI": "🤖 Customer Support Chat Bot",
+  "aiChatWelcome": "🤖 **Hello! Welcome to PNPtv Support**\n\nI'm your AI customer support assistant, here to help you with everything PNPtv!\n\nI can assist you with:\n• Membership plans & subscriptions\n• Technical support & account access\n• Privacy, security & legal information\n• Community guidelines & wellness\n• Any questions about your PNPtv experience\n\nFeel free to ask me anything. I'm here for you 24/7! ✨\n\nType /endchat when you're ready to return to the main menu.",
+  "aiChatThinking": "💭 Thinking...",
+  "aiChatError": "❌ Sorry, something went wrong. Let's try again, or type /endchat to exit.",
+  "aiChatEnded": "✅ Chat ended. Returning to main menu...",
+  "aiChatNoAPI": "🤖 AI support is currently unavailable. Please reach out to support@pnptv.app for assistance.",
   "aiChatRateLimit": "💫 Easy, love — let's take a breath. Give me just a moment before your next message."
 }

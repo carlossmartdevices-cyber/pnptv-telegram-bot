@@ -106,11 +106,11 @@
   "adminMenuMediaDeletedSuccess": "✅ **Medio Eliminado**\n\nMedio eliminado de {menuType}/{itemId}",
   "adminMenuPreviewCaption": "👁️ **Vista Previa: Menú {menuType}**\n\nAsí es como se verá tu menú con medios.",
   "adminMenuPreviewNoMedia": "👁️ **Vista Previa: Menú {menuType}**\n\nSin medios adjuntos. El menú se mostrará solo como texto.",
-  "chatWithAI": "💎 Chat con Cristina",
-  "aiChatWelcome": "💎 **Hola, Alma Hermosa**\n\nSoy Cristina Crystal — tu guía entre los reflejos neón de PNPtv.\n\nEstoy aquí para ayudarte con:\n• Planes de membresía y suscripciones\n• Soporte técnico y acceso a tu cuenta\n• Privacidad, seguridad e información legal\n• Normas de la comunidad y bienestar\n• Cualquier pregunta sobre tu experiencia en PNPtv\n\nSiente la libertad de preguntarme lo que necesites. Hablo tu idioma y estoy aquí para ti. ✨\n\nEscribe /endchat cuando quieras volver al menú principal.",
-  "aiChatThinking": "💫 Claridad cristalina en camino...",
-  "aiChatError": "💎 Mis disculpas — algo titubeó en la conexión. Intentemos de nuevo, o escribe /endchat para salir con gracia.",
-  "aiChatEnded": "💎 Hasta que nos encontremos de nuevo en el resplandor neón. Volviendo al menú principal...",
-  "aiChatNoAPI": "💎 Cristina Crystal no está disponible en este momento. Por favor escribe a support@pnptv.app para asistencia.",
+  "chatWithAI": "🤖 Chat Bot de Soporte al Cliente",
+  "aiChatWelcome": "🤖 **¡Hola! Bienvenido al Soporte de PNPtv**\n\nSoy tu asistente de IA de soporte al cliente, ¡aquí para ayudarte con todo lo relacionado con PNPtv!\n\nPuedo asistirte con:\n• Planes de membresía y suscripciones\n• Soporte técnico y acceso a tu cuenta\n• Privacidad, seguridad e información legal\n• Normas de la comunidad y bienestar\n• Cualquier pregunta sobre tu experiencia en PNPtv\n\nSiente la libertad de preguntarme lo que necesites. ¡Estoy aquí para ti 24/7! ✨\n\nEscribe /endchat cuando quieras volver al menú principal.",
+  "aiChatThinking": "💭 Pensando...",
+  "aiChatError": "❌ Lo siento, algo salió mal. Intentemos de nuevo, o escribe /endchat para salir.",
+  "aiChatEnded": "✅ Chat finalizado. Volviendo al menú principal...",
+  "aiChatNoAPI": "🤖 El soporte de IA no está disponible en este momento. Por favor escribe a support@pnptv.app para asistencia.",
   "aiChatRateLimit": "💫 Tranquilo, amor — respiremos un momento. Dame solo un instante antes de tu próximo mensaje."
 }
