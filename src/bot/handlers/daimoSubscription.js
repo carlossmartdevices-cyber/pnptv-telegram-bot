@@ -2,10 +2,10 @@
 const { firestore } = require('../../config/firebase');
 
 const PLANS = [
-  { id: 'trial-pass', name: 'Trial Pass', price: '14.99', periodLabel: 'week', days: 7 },
-  { id: 'pnp-member', name: 'PNP Member', price: '24.99', periodLabel: 'month', days: 30 },
-  { id: 'crystal-member', name: 'Crystal Member', price: '49.99', periodLabel: '4 months', days: 120 },
-  { id: 'diamond-member', name: 'Diamond Member', price: '99.99', periodLabel: '1 year', days: 365 },
+  { id: 'trial-pass', name: 'Trial Week', price: '15', periodLabel: 'week', days: 7 },
+  { id: 'pnp-member', name: 'Prime Member', price: '25', periodLabel: 'month', days: 30 },
+  { id: 'crystal-member', name: 'Crystal Member', price: '50', periodLabel: '4 months', days: 120 },
+  { id: 'diamond-member', name: 'Diamond Member', price: '100', periodLabel: '1 year', days: 365 },
 ];
 
 /**

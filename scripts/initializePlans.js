@@ -10,11 +10,11 @@ const logger = require("../src/utils/logger");
 const DEFAULT_PLANS = [
   {
     id: "trial-pass",
-    name: "Trial Pass",
-    displayName: "Trial Pass",
+    name: "Trial Week",
+    displayName: "Trial Week",
     tier: "Trial",
-    price: 14.99,
-    priceInCOP: 59960, // ~$14.99 USD in COP (adjust based on exchange rate)
+    price: 15,
+    priceInCOP: 60000, // ~$15 USD in COP (adjust based on exchange rate)
     currency: "USD",
     duration: 7, // days
     description: "Try premium features for a week",
@@ -35,11 +35,11 @@ const DEFAULT_PLANS = [
   },
   {
     id: "pnp-member",
-    name: "PNP Member",
-    displayName: "PNP Member",
-    tier: "PNP",
-    price: 24.99,
-    priceInCOP: 99960, // ~$24.99 USD in COP (adjust based on exchange rate)
+    name: "Prime Member",
+    displayName: "Prime Member",
+    tier: "Prime",
+    price: 25,
+    priceInCOP: 100000, // ~$25 USD in COP (adjust based on exchange rate)
     currency: "USD",
     duration: 30, // days
     description: "Full premium access for a month",
@@ -64,8 +64,8 @@ const DEFAULT_PLANS = [
     name: "Crystal Member",
     displayName: "Crystal Member",
     tier: "Crystal",
-    price: 49.99,
-    priceInCOP: 199960, // ~$49.99 USD in COP (adjust based on exchange rate)
+    price: 50,
+    priceInCOP: 200000, // ~$50 USD in COP (adjust based on exchange rate)
     currency: "USD",
     duration: 120, // days (4 months)
     description: "Extended premium experience",
@@ -90,8 +90,8 @@ const DEFAULT_PLANS = [
     name: "Diamond Member",
     displayName: "Diamond Member",
     tier: "Diamond",
-    price: 99.99,
-    priceInCOP: 399960, // ~$99.99 USD in COP (adjust based on exchange rate)
+    price: 100,
+    priceInCOP: 400000, // ~$100 USD in COP (adjust based on exchange rate)
     currency: "USD",
     duration: 365, // days (1 year)
     description: "Ultimate premium experience for a full year",
