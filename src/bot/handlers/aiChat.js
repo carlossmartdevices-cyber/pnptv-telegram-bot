@@ -4,11 +4,18 @@ const logger = require("../../utils/logger");
 
 // Mistral AI integration
 let mistral = null;
+let AGENT_ID = null;
+
 try {
   const { Mistral } = require("@mistralai/mistralai");
   if (process.env.MISTRAL_API_KEY) {
     mistral = new Mistral({
       apiKey: process.env.MISTRAL_API_KEY,
+    });
+
+    // Initialize agent on startup (will be created if not exists)
+    initializeAgent().catch(err => {
+      logger.error("Failed to initialize Mistral agent:", err);
     });
   }
 } catch (error) {
@@ -20,9 +27,9 @@ const messageTimestamps = new Map();
 const RATE_LIMIT_MS = 3000; // 3 seconds between messages
 
 /**
- * System prompt - PNPtv Customer Support AI
+ * Agent instructions - PNPtv Customer Support AI
  */
-const SYSTEM_PROMPT = `You are the PNPtv Customer Support AI Assistant - a professional, helpful, and friendly support chatbot.
+const AGENT_INSTRUCTIONS = `You are the PNPtv Customer Support AI Assistant - a professional, helpful, and friendly support chatbot.
 
 🎯 YOUR ROLE
 
@@ -91,6 +98,32 @@ You CANNOT:
 - Keep responses concise (max 3-4 paragraphs)`;
 
 /**
+ * Initialize or get the Mistral AI Agent
+ * Note: Agents must be created via Mistral console (https://console.mistral.ai)
+ * or the environment variable MISTRAL_AGENT_ID can be set
+ */
+async function initializeAgent() {
+  if (!mistral) return null;
+
+  try {
+    // Check if agent ID is provided in environment
+    if (process.env.MISTRAL_AGENT_ID) {
+      AGENT_ID = process.env.MISTRAL_AGENT_ID;
+      logger.info(`Using Mistral agent from env: ${AGENT_ID}`);
+      return AGENT_ID;
+    }
+
+    // If no agent ID provided, we'll use chat completion instead
+    logger.info("No MISTRAL_AGENT_ID configured, will use standard chat completion API");
+    AGENT_ID = null;
+    return null;
+  } catch (error) {
+    logger.error("Error initializing Mistral agent:", error);
+    return null;
+  }
+}
+
+/**
  * Start AI chat session
  */
 async function startAIChat(ctx) {
@@ -112,14 +145,14 @@ async function startAIChat(ctx) {
     return;
   }
 
+  // Ensure agent is initialized (optional - will fall back to chat completion if not)
+  if (AGENT_ID === null && mistral) {
+    await initializeAgent();
+  }
+
   // Initialize chat session
   ctx.session.aiChatActive = true;
-  ctx.session.aiChatHistory = [
-    {
-      role: "system",
-      content: SYSTEM_PROMPT + (language === "es" ? "\n\nRespond in Spanish." : "\n\nRespond in English."),
-    },
-  ];
+  ctx.session.aiChatHistory = [];
 
   const welcomeMessage = i18n.t(language, "aiChatWelcome");
 
@@ -207,29 +240,67 @@ async function handleChatMessage(ctx) {
   });
 
   try {
+    // Ensure agent is initialized
+    if (AGENT_ID === null && mistral) {
+      await initializeAgent();
+    }
+
     // Add user message to history
     ctx.session.aiChatHistory.push({
       role: "user",
       content: userMessage,
     });
 
-    // Keep only last 10 messages (plus system prompt) to manage token usage
-    if (ctx.session.aiChatHistory.length > 21) {
-      ctx.session.aiChatHistory = [
-        ctx.session.aiChatHistory[0], // Keep system prompt
-        ...ctx.session.aiChatHistory.slice(-20), // Keep last 20 messages
-      ];
+    // Keep only last 20 messages to manage token usage
+    if (ctx.session.aiChatHistory.length > 20) {
+      ctx.session.aiChatHistory = ctx.session.aiChatHistory.slice(-20);
     }
 
-    // Call Mistral AI API
-    const completion = await mistral.chat.complete({
-      model: "mistral-small-latest", // Using cost-effective model
-      messages: ctx.session.aiChatHistory,
-      maxTokens: 500,
-      temperature: 0.7,
-    });
+    // Prepare messages with language preference
+    const languagePrompt = language === "es"
+      ? "Responde en español."
+      : "Respond in English.";
 
-    const aiResponse = completion.choices[0].message.content;
+    let completion;
+    let aiResponse;
+
+    // Use Agents API if agent ID is configured
+    if (AGENT_ID) {
+      const messages = [
+        ...ctx.session.aiChatHistory.slice(-10), // Last 10 messages for context
+        {
+          role: "user",
+          content: `${languagePrompt}\n\n${userMessage}`,
+        }
+      ];
+
+      completion = await mistral.agents.complete({
+        agentId: AGENT_ID,
+        messages: messages,
+      });
+
+      aiResponse = completion.choices?.[0]?.message?.content ||
+                  completion.message?.content ||
+                  "I apologize, but I couldn't process your request. Please try again.";
+    } else {
+      // Fall back to Chat Completions API
+      const messages = [
+        {
+          role: "system",
+          content: AGENT_INSTRUCTIONS + `\n\n${languagePrompt}`,
+        },
+        ...ctx.session.aiChatHistory.slice(-10), // Last 10 messages
+      ];
+
+      completion = await mistral.chat.complete({
+        model: "mistral-small-latest",
+        messages: messages,
+        maxTokens: 500,
+        temperature: 0.7,
+      });
+
+      aiResponse = completion.choices[0].message.content;
+    }
 
     // Add AI response to history
     ctx.session.aiChatHistory.push({

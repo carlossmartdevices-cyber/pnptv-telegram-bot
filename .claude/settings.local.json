@@ -49,7 +49,18 @@
       "Bash(cat:*)",
       "Bash(scp .env.production root@72.60.29.80:/var/www/pnptv-bot/.env)",
       "Bash(python3:*)",
-      "Bash(tar:*)"
+      "Bash(tar:*)",
+      "Read(//c/**)",
+      "Bash(npx vite:*)",
+      "Bash(git fsck:*)",
+      "Bash(timeout 10 bash:*)",
+      "Bash(./deploy-pnptv.app.sh)",
+      "Bash(timeout 60 bash:*)",
+      "Bash(timeout 15 bash:*)",
+      "Bash(timeout 20 bash:*)",
+      "Bash(git fetch:*)",
+      "Bash(timeout 180 bash:*)",
+      "Bash(bash:*)"
     ],
     "deny": [],
     "ask": []

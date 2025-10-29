@@ -9,7 +9,7 @@ set -e
 # Configuration
 SERVER="72.60.29.80"  # Using IP address for reliability
 USER="root"
-REMOTE_DIR="/var/www/telegram-bot"
+REMOTE_DIR="/var/www/pnptv-bot"
 
 echo "=========================================
 PNPtv Bot - Deploying to Hostinger
