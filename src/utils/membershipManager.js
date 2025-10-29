@@ -31,9 +31,10 @@ function calculateExpirationDate(durationDays = 0) {
  * @param {string} tier - Tier to activate (Silver or Golden)
  * @param {string} activatedBy - Who activated it (admin, payment, system)
  * @param {number} durationDays - Optional custom duration in days (default: 30)
- * @returns {Promise<Object>} Updated user data
+ * @param {Object} bot - Telegram bot instance for generating invite links
+ * @returns {Promise<Object>} Updated user data with invite link
  */
-async function activateMembership(userId, tier, activatedBy = "admin", durationDays = 30) {
+async function activateMembership(userId, tier, activatedBy = "admin", durationDays = 30, bot = null) {
   try {
     if (!userId || !tier) {
       throw new Error("userId and tier are required");
@@ -62,10 +63,33 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
       }
     );
 
+    // Generate unique invite link to channel if bot instance is provided
+    let inviteLink = null;
+    if (bot && isPremium && process.env.CHANNEL_ID) {
+      try {
+        const channelId = process.env.CHANNEL_ID;
+        const expireDate = expirationDate ? Math.floor(expirationDate.getTime() / 1000) : null;
+
+        // Create a unique invite link that expires when membership expires
+        const invite = await bot.telegram.createChatInviteLink(channelId, {
+          member_limit: 1, // One-time use link
+          expire_date: expireDate,
+          name: `${tier} - User ${userId}`,
+        });
+
+        inviteLink = invite.invite_link;
+        logger.info(`Generated invite link for user ${userId}: ${inviteLink}`);
+      } catch (inviteError) {
+        logger.warn(`Failed to generate invite link for user ${userId}:`, inviteError.message);
+        // Continue even if invite link generation fails
+      }
+    }
+
     return {
       success: true,
       tier,
       expiresAt: expirationDate,
+      inviteLink,
     };
   } catch (error) {
     logger.error(`Error activating membership for user ${userId}:`, error);
