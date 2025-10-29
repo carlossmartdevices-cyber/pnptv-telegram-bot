@@ -121,6 +121,44 @@ router.post('/payments/completed', async (req, res) => {
 });
 
 /**
+ * POST /api/daimo/payment-completed
+ * Called from payment page when Daimo payment completes
+ */
+router.post('/daimo/payment-completed', async (req, res) => {
+  try {
+    const { plan, user, amount, txHash } = req.body;
+
+    logger.info(`API: Daimo payment completed - User: ${user}, Plan: ${plan}, TxHash: ${txHash}`);
+
+    // Store payment info (webhook will confirm and activate)
+    try {
+      const reference = `${plan}_${user}_${Date.now()}`;
+      await db.collection('payment_intents').doc(reference).set({
+        userId: user,
+        planId: plan,
+        amount: parseFloat(amount),
+        txHash: txHash,
+        reference,
+        status: 'completed_client',
+        provider: 'daimo',
+        createdAt: Date.now(),
+        completedAt: Date.now(),
+      });
+    } catch (dbError) {
+      logger.warn('Failed to store payment completion:', dbError);
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('API: Error handling Daimo payment completion:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to process payment',
+    });
+  }
+});
+
+/**
  * GET /api/payments/status
  * Check payment status (for polling from payment page)
  */

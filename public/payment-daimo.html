@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete Your Payment - PNPtv</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 480px;
+      width: 100%;
+      padding: 40px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .logo p {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .plan-details {
+      background: #f8f9fa;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .plan-details h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 16px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #e1e4e8;
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .detail-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .amount-total {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .amount-total .label {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .amount-total .value {
+      font-size: 36px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .payment-methods {
+      margin-bottom: 32px;
+    }
+
+    .payment-methods h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 16px;
+    }
+
+    .daimo-pay-container {
+      min-height: 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    #root {
+      width: 100%;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    .loading::after {
+      content: '...';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+
+    .error {
+      background: #fee;
+      border: 1px solid #fcc;
+      border-radius: 8px;
+      padding: 16px;
+      color: #c33;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+
+    .info-box {
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 24px;
+      font-size: 13px;
+      color: #1565c0;
+      line-height: 1.6;
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .footer {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #e1e4e8;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .footer a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Daimo Button Custom Styling */
+    button[class*="DaimoPay"] {
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h1>🎬 PNPtv Premium</h1>
+      <p>Complete your subscription payment</p>
+    </div>
+
+    <div class="plan-details">
+      <h2>Subscription Details</h2>
+      <div class="detail-row">
+        <span class="detail-label">Plan</span>
+        <span class="detail-value" id="plan-name">Loading...</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Duration</span>
+        <span class="detail-value">30 days</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">User ID</span>
+        <span class="detail-value" id="user-id">-</span>
+      </div>
+    </div>
+
+    <div class="amount-total">
+      <div class="label">Total Amount</div>
+      <div class="value" id="amount-display">$0.00 USDC</div>
+    </div>
+
+    <div class="payment-methods">
+      <h3>Pay with Crypto</h3>
+      <div class="daimo-pay-container">
+        <div id="root">
+          <div class="loading">Loading payment options</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>💡 About Daimo Pay:</strong>
+      Pay with any cryptocurrency from any chain. Daimo automatically converts your payment to USDC.
+      Supports 1000+ tokens across multiple blockchains.
+    </div>
+
+    <div class="footer">
+      <p>Powered by <a href="https://daimo.com" target="_blank">Daimo Pay</a></p>
+      <p>Secure crypto payments made simple</p>
+    </div>
+  </div>
+
+  <!-- React and required dependencies -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Daimo Pay SDK (React-based, will need to be imported as module) -->
+  <script type="module">
+    import { createRoot } from 'https://esm.sh/react-dom@18/client';
+    import { createElement as h } from 'https://esm.sh/react@18';
+    import { QueryClient, QueryClientProvider } from 'https://esm.sh/@tanstack/react-query@5';
+    import { WagmiProvider, createConfig } from 'https://esm.sh/wagmi@2';
+    import { DaimoPayButton, DaimoPayProvider, getDefaultConfig } from 'https://esm.sh/@daimo/pay@latest';
+    import { getAddress } from 'https://esm.sh/viem@2';
+
+    // Get URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const planId = params.get('plan') || 'unknown';
+    const userId = params.get('user') || 'unknown';
+    const amount = parseFloat(params.get('amount') || '0');
+
+    // Update UI with parameters
+    document.getElementById('plan-name').textContent = planId.toUpperCase();
+    document.getElementById('user-id').textContent = userId;
+    document.getElementById('amount-display').textContent = `$${amount.toFixed(2)} USDC`;
+
+    // Wagmi configuration
+    const config = createConfig(
+      getDefaultConfig({
+        appName: 'PNPtv Premium',
+      })
+    );
+
+    const queryClient = new QueryClient();
+
+    // Payment recipient address (treasury wallet)
+    const RECIPIENT_ADDRESS = '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0';
+
+    // Optimism USDC token address
+    const optimismUSDC = {
+      chainId: 10, // Optimism
+      token: '0x0b2c639c533813f4aa9d7837caf62653d097ff85', // USDC on Optimism
+    };
+
+    // Create Daimo Pay Button
+    function PaymentApp() {
+      const handlePaymentStarted = (event) => {
+        console.log('Payment started:', event);
+      };
+
+      const handlePaymentCompleted = (event) => {
+        console.log('Payment completed:', event);
+
+        // Notify backend
+        fetch(`/api/daimo/payment-completed`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            plan: planId,
+            user: userId,
+            amount: amount,
+            txHash: event.transactionHash,
+          }),
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            // Redirect to success page
+            window.location.href = '/payment/success';
+          }
+        })
+        .catch(err => {
+          console.error('Error notifying backend:', err);
+        });
+      };
+
+      return h(
+        WagmiProvider,
+        { config },
+        h(
+          QueryClientProvider,
+          { client: queryClient },
+          h(
+            DaimoPayProvider,
+            { apiKey: 'pay-televisionlatina-VxZH9SQoHYasAoQmdWKuUw' },
+            h(DaimoPayButton, {
+              appId: 'pnptv-bot',
+              intent: 'Deposit',
+              toChain: optimismUSDC.chainId,
+              toToken: getAddress(optimismUSDC.token),
+              toAddress: RECIPIENT_ADDRESS,
+              onPaymentStarted: handlePaymentStarted,
+              onPaymentCompleted: handlePaymentCompleted,
+            })
+          )
+        )
+      );
+    }
+
+    // Mount React app
+    const root = createRoot(document.getElementById('root'));
+    root.render(h(PaymentApp));
+  </script>
+</body>
+</html>

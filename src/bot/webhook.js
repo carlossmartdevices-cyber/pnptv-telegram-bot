@@ -87,7 +87,7 @@ app.use('/api', apiRoutes);
 // Serve static assets for payment page
 app.use("/assets", express.static(path.join(__dirname, "../../public/payment/assets")));
 
-// Payment page endpoint for Daimo Pay - serves React app with DaimoPayButton
+// Payment page endpoint for Daimo Pay - serves standalone HTML page with Daimo SDK
 app.get("/pay", async (req, res) => {
   try {
     const { plan, user, amount } = req.query;
@@ -136,8 +136,8 @@ app.get("/pay", async (req, res) => {
 
     logger.info("Payment page accessed:", { plan, user, amount });
 
-    // Serve the React app with Daimo Pay button
-    const paymentPagePath = path.join(__dirname, "../../public/payment/index.html");
+    // Serve the standalone Daimo payment page
+    const paymentPagePath = path.join(__dirname, "../../public/payment-daimo.html");
     res.sendFile(paymentPagePath);
   } catch (error) {
     logger.error("Error serving payment page:", error);
