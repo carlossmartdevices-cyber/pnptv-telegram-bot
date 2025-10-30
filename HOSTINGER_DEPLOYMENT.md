@@ -71,7 +71,7 @@ nano /var/www/telegram-bot/.env
 Key variables to update:
 ```bash
 # Telegram
-TELEGRAM_BOT_TOKEN=8499797477:AAFo--MV4tUfIhv_Al2MaLMFzvi2TbI1eso
+TELEGRAM_BOT_TOKEN=<YOUR_BOT_TOKEN>
 CHANNEL_ID=-1002997324714
 ADMIN_IDS=8365312597
 

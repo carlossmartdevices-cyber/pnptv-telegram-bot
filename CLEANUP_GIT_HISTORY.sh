@@ -28,7 +28,7 @@ echo ""
 cat > passwords.txt << 'EOF'
 # Add your OLD credentials here (one per line)
 # Example:
-# 8499797477:AAGT1J46sOped2ciSJ1d2Z81VnOcp6aB_4s
+# <OLD_BOT_TOKEN_EXAMPLE>
 # 0NvRbVCh0-pz6ETv7LP6x2vGtIRVQYaS0t5tgy64uJo
 # eyCIpLDdqLLqQ_oPS8q_Aw
 

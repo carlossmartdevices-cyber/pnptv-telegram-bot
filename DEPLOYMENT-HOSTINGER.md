@@ -150,8 +150,8 @@ nano /var/www/telegram-bot/.env
 NODE_ENV=production
 
 # Telegram Bot Configuration
-TELEGRAM_BOT_TOKEN=8499797477:AAGxHvVkK2DazymRAX0_iE1ioG4mrY1TRoc
-TELEGRAM_TOKEN=8499797477:AAGxHvVkK2DazymRAX0_iE1ioG4mrY1TRoc
+TELEGRAM_BOT_TOKEN=<YOUR_BOT_TOKEN>
+TELEGRAM_TOKEN=<YOUR_BOT_TOKEN>
 CHANNEL_ID=-1002997324714
 TELEGRAM_BOT_USERNAME=PNPtvBot
 NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=PNPtvBot
@@ -366,10 +366,10 @@ sudo ufw status
 ```bash
 # Set the webhook URL (replace with your bot token)
 curl -F "url=https://pnptv.app/webhook" \
-     https://api.telegram.org/bot8499797477:AAGxHvVkK2DazymRAX0_iE1ioG4mrY1TRoc/setWebhook
+     https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook
 
 # Verify webhook is set
-curl https://api.telegram.org/bot8499797477:AAGxHvVkK2DazymRAX0_iE1ioG4mrY1TRoc/getWebhookInfo
+curl https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
 ```
 
 ## 🔧 Post-Deployment Configuration

@@ -102,12 +102,12 @@
 ### 14. Set Telegram Webhook
 ```bash
 curl -F "url=https://pnptv.app/webhook" \
-     https://api.telegram.org/bot8499797477:AAGxHvVkK2DazymRAX0_iE1ioG4mrY1TRoc/setWebhook
+     https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook
 ```
 - [ ] Run webhook command
 - [ ] Verify webhook:
 ```bash
-curl https://api.telegram.org/bot8499797477:AAGxHvVkK2DazymRAX0_iE1ioG4mrY1TRoc/getWebhookInfo
+curl https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
 ```
 - [ ] Should show: `"url":"https://pnptv.app/webhook"`
 

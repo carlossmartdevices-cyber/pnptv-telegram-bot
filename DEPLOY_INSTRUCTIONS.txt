@@ -1,0 +1,197 @@
+╔══════════════════════════════════════════════════════════════╗
+║          PNPtv Bot - Hostinger Deployment Guide              ║
+║                  Quick Start Instructions                    ║
+╚══════════════════════════════════════════════════════════════╝
+
+📦 DEPLOYMENT PACKAGE: pnptv-bot-deploy.tar.gz (21MB)
+🌐 SERVER: 72.60.29.80 (srv1071867.hstgr.cloud)
+🔗 DOMAIN: pnptv.app
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 STEP 1: UPLOAD FILES TO SERVER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Option A - Using File Manager (Easiest):
+  1. Go to: https://hpanel.hostinger.com/
+  2. Select your VPS → File Manager
+  3. Upload pnptv-bot-deploy.tar.gz to /root/
+
+Option B - Using SCP (if you have password):
+  scp pnptv-bot-deploy.tar.gz root@72.60.29.80:/root/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 STEP 2: CONNECT TO SERVER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Option A - Web Terminal (Easiest):
+  Go to Hostinger hPanel → VPS → Terminal
+
+Option B - SSH:
+  ssh root@72.60.29.80
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 STEP 3: EXTRACT AND DEPLOY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Run these commands on the server:
+
+# Navigate to root directory
+cd /root
+
+# Create application directory
+mkdir -p /var/www/telegram-bot
+
+# Extract files
+tar -xzf pnptv-bot-deploy.tar.gz -C /var/www/telegram-bot
+
+# Navigate to application directory
+cd /var/www/telegram-bot
+
+# Make setup script executable
+chmod +x server-setup.sh
+
+# Run automated setup
+./server-setup.sh
+
+The script will automatically:
+  ✅ Install Node.js 20.x
+  ✅ Install PM2
+  ✅ Install Nginx
+  ✅ Configure firewall
+  ✅ Install dependencies
+  ✅ Setup .env file
+  ✅ Start the bot
+  ✅ Configure Nginx
+  ✅ Offer to install SSL
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 STEP 4: VERIFY BOT IS RUNNING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+pm2 status
+pm2 logs pnptv-bot
+
+Expected output:
+│ pnptv-bot  │ 0   │ online │
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 STEP 5: SET TELEGRAM WEBHOOK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Run this command:
+
+curl -F "url=https://pnptv.app/webhook" \
+  https://api.telegram.org/bot8499797477:AAGd98d3HuIGI3xefqB7OM8dKZ2Tc5DKmqc/setWebhook
+
+Verify webhook:
+
+curl https://api.telegram.org/bot8499797477:AAGd98d3HuIGI3xefqB7OM8dKZ2Tc5DKmqc/getWebhookInfo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 STEP 6: CONFIGURE PAYMENT WEBHOOKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ePayco Dashboard (https://dashboard.epayco.co/):
+  Settings → Webhooks:
+    - Confirmation URL: https://pnptv.app/epayco/confirmation
+    - Response URL: https://pnptv.app/epayco/response
+
+Daimo Pay Dashboard (https://pay.daimo.com/dashboard):
+  Webhooks settings:
+    - Webhook URL: https://pnptv.app/daimo/webhook
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 STEP 7: TEST YOUR BOT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Open Telegram
+2. Search for: @PNPtvBot
+3. Send: /start
+
+You should receive a welcome message!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 USEFUL COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+View logs:          pm2 logs pnptv-bot
+Check status:       pm2 status
+Restart bot:        pm2 restart pnptv-bot
+Stop bot:           pm2 stop pnptv-bot
+Edit environment:   nano /var/www/telegram-bot/.env
+View error logs:    tail -f /var/www/telegram-bot/logs/pm2-error.log
+Check Nginx:        systemctl status nginx
+Reload Nginx:       systemctl reload nginx
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🐛 TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Bot not starting:
+  pm2 logs pnptv-bot --lines 100
+  cd /var/www/telegram-bot
+  node src/bot/webhook.js
+
+Port issues:
+  sudo lsof -i :3000
+  netstat -tlnp | grep 3000
+
+Restart everything:
+  pm2 restart pnptv-bot
+  systemctl restart nginx
+
+Check firewall:
+  ufw status
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ DEPLOYMENT CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+□ Files uploaded to /root/pnptv-bot-deploy.tar.gz
+□ Files extracted to /var/www/telegram-bot
+□ server-setup.sh script executed successfully
+□ PM2 shows pnptv-bot as "online"
+□ Nginx is running (systemctl status nginx)
+□ SSL certificate installed
+□ Domain (pnptv.app) points to server IP
+□ Telegram webhook set and verified
+□ ePayco webhooks configured
+□ Daimo webhooks configured
+□ Bot responds to /start command
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 DOCUMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Full guides available:
+  - HOSTINGER_DEPLOY_NOW.md (detailed step-by-step)
+  - DEPLOYMENT-HOSTINGER.md (complete reference)
+  - HOSTINGER_DEPLOYMENT.md (comprehensive guide)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎉 SUCCESS!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your bot is live at:
+  🌐 Website: https://pnptv.app
+  🤖 Telegram: https://t.me/PNPtvBot
+  🔗 Webhook: https://pnptv.app/webhook
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Need help? Check the logs:
+  pm2 logs pnptv-bot
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -11,7 +11,7 @@ echo "Using Heroku app: $APP_NAME"
 echo ""
 
 # Telegram Configuration
-heroku config:set TELEGRAM_BOT_TOKEN="8499797477:AAENAxfDXTwoKw2aaDOjA--ANmCOtP2haFQ" --app $APP_NAME
+heroku config:set TELEGRAM_BOT_TOKEN="<YOUR_BOT_TOKEN>" --app $APP_NAME
 heroku config:set CHANNEL_ID="-1002997324714" --app $APP_NAME
 heroku config:set ADMIN_IDS="8365312597" --app $APP_NAME
 

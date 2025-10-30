@@ -274,7 +274,7 @@ EPAYCO_ALLOW_UNSIGNED_WEBHOOKS=false  # Always in production!
 
 1. **Use strong, unique credentials:**
    ```env
-   ✅ TELEGRAM_BOT_TOKEN=8499797477:AAFo--MV4tUfIhv_Al2MaLMFzvi2TbI1eso
+   ✅ TELEGRAM_BOT_TOKEN=<VALID_BOT_TOKEN_FROM_BOTFATHER>
    ❌ TELEGRAM_BOT_TOKEN=123:ABC
    ```
 

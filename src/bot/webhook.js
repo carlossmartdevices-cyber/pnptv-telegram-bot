@@ -136,8 +136,8 @@ app.get("/pay", async (req, res) => {
 
     logger.info("Payment page accessed:", { plan, user, amount });
 
-    // Serve the standalone Daimo payment page
-    const paymentPagePath = path.join(__dirname, "../../public/payment-daimo.html");
+    // Serve the improved Daimo payment page with plan details loading
+    const paymentPagePath = path.join(__dirname, "../../public/payment-daimo-new.html");
     res.sendFile(paymentPagePath);
   } catch (error) {
     logger.error("Error serving payment page:", error);

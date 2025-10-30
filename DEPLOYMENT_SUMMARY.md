@@ -179,7 +179,7 @@ pm2 restart pnptv-bot --update-env
 
 ```bash
 # Get webhook info
-curl "https://api.telegram.org/bot8499797477:AAFo--MV4tUfIhv_Al2MaLMFzvi2TbI1eso/getWebhookInfo"
+curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo"
 
 # The webhook should be set automatically by webhook.js
 # If not, it will be set when the bot starts

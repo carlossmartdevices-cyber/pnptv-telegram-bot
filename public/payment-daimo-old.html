@@ -219,7 +219,7 @@
       </div>
       <div class="detail-row">
         <span class="detail-label">Duration</span>
-        <span class="detail-value" id="plan-duration">Loading...</span>
+        <span class="detail-value">30 days</span>
       </div>
       <div class="detail-row">
         <span class="detail-label">User ID</span>
@@ -229,7 +229,7 @@
 
     <div class="amount-total">
       <div class="label">Total Amount</div>
-      <div class="value" id="amount-display">Loading...</div>
+      <div class="value" id="amount-display">$0.00 USDC</div>
     </div>
 
     <div class="payment-methods">
@@ -243,7 +243,8 @@
 
     <div class="info-box">
       <strong>💡 About Daimo Pay:</strong>
-      Pay with USDC stablecoin from any wallet or exchange. Fast, secure, and automatic subscription activation.
+      Pay with any cryptocurrency from any chain. Daimo automatically converts your payment to USDC.
+      Supports 1000+ tokens across multiple blockchains.
     </div>
 
     <div class="footer">
@@ -271,44 +272,14 @@
     const userId = params.get('user') || 'unknown';
     const amount = parseFloat(params.get('amount') || '0');
 
-    console.log('Payment page loaded', { planId, userId, amount });
-
-    // Fetch plan details from API
-    async function loadPlanDetails() {
-      try {
-        const response = await fetch(`/api/plans/${planId}`);
-        if (!response.ok) {
-          throw new Error('Failed to load plan details');
-        }
-        const plan = await response.json();
-
-        // Update UI with plan details
-        document.getElementById('plan-name').textContent = plan.displayName || plan.name || planId.toUpperCase();
-        document.getElementById('plan-duration').textContent = `${plan.durationDays || plan.duration || 30} days`;
-
-        console.log('Plan details loaded', plan);
-        return plan;
-      } catch (error) {
-        console.error('Error loading plan details:', error);
-        // Fallback to URL parameters
-        document.getElementById('plan-name').textContent = planId.toUpperCase().replace(/-/g, ' ');
-        document.getElementById('plan-duration').textContent = '30 days'; // Default
-        return null;
-      }
-    }
-
-    // Update UI with basic parameters
-    document.getElementById('user-id').textContent = userId;
-    document.getElementById('amount-display').textContent = `$${amount.toFixed(2)} USDC`;
-
-    // Load plan details
-    loadPlanDetails();
-
     // Convert amount to USDC format (6 decimals for USDC)
-    // Amount is already in USD, so we multiply by 1,000,000 to get USDC units
+    // Amount is in USD, so we multiply by 1,000,000 to get USDC units
     const amountInUSDC = BigInt(Math.floor(amount * 1000000));
 
-    console.log('USDC amount:', amountInUSDC.toString());
+    // Update UI with parameters
+    document.getElementById('plan-name').textContent = planId.toUpperCase();
+    document.getElementById('user-id').textContent = userId;
+    document.getElementById('amount-display').textContent = `$${amount.toFixed(0)} USDC`;
 
     // Wagmi configuration
     const config = createConfig(
@@ -322,10 +293,10 @@
     // Payment recipient address (treasury wallet)
     const RECIPIENT_ADDRESS = '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0';
 
-    // Base USDC token address (Base chain is recommended for best experience)
-    const baseUSDC = {
-      chainId: 8453, // Base
-      token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
+    // Optimism USDC token address
+    const optimismUSDC = {
+      chainId: 10, // Optimism
+      token: '0x0b2c639c533813f4aa9d7837caf62653d097ff85', // USDC on Optimism
     };
 
     // Create Daimo Pay Button
@@ -346,32 +317,18 @@
             user: userId,
             amount: amount,
             txHash: event.transactionHash,
-            chainId: event.chainId,
           }),
         })
         .then(res => res.json())
         .then(data => {
-          console.log('Backend notified:', data);
           if (data.success) {
-            // Redirect to success page or show success message
-            alert('Payment successful! Your subscription has been activated.');
-            // Close window or redirect
-            if (window.opener) {
-              window.close();
-            } else {
-              window.location.href = 'https://t.me/PNPtvBot';
-            }
+            // Redirect to success page
+            window.location.href = '/payment/success';
           }
         })
         .catch(err => {
           console.error('Error notifying backend:', err);
-          alert('Payment completed but there was an error activating your subscription. Please contact support.');
         });
-      };
-
-      const handlePaymentError = (error) => {
-        console.error('Payment error:', error);
-        alert('Payment failed: ' + (error.message || 'Unknown error'));
       };
 
       return h(
@@ -386,13 +343,12 @@
             h(DaimoPayButton, {
               appId: 'pay-televisionlatina',
               intent: 'Deposit',
-              toChain: baseUSDC.chainId,
-              toToken: getAddress(baseUSDC.token),
+              toChain: optimismUSDC.chainId,
+              toToken: getAddress(optimismUSDC.token),
               toAddress: RECIPIENT_ADDRESS,
               toAmount: amountInUSDC,
               onPaymentStarted: handlePaymentStarted,
               onPaymentCompleted: handlePaymentCompleted,
-              onError: handlePaymentError,
             })
           )
         )
@@ -400,20 +356,8 @@
     }
 
     // Mount React app
-    try {
-      console.log('Mounting Daimo Pay button...');
-      const root = createRoot(document.getElementById('root'));
-      root.render(h(PaymentApp));
-      console.log('Daimo Pay button mounted successfully');
-    } catch (error) {
-      console.error('Error mounting Daimo Pay button:', error);
-      document.getElementById('root').innerHTML = `
-        <div class="error">
-          Failed to load payment button. Please refresh the page or contact support.
-          <br><small>${error.message}</small>
-        </div>
-      `;
-    }
+    const root = createRoot(document.getElementById('root'));
+    root.render(h(PaymentApp));
   </script>
 </body>
 </html>
