@@ -184,8 +184,7 @@ function PaymentPageContent() {
             toChain={optimismUSDC.chainId}
             toToken={getAddress(optimismUSDC.token)}
             toUnits={amount || '0'}
-            paymentOptions={['AllExchanges', 'Coinbase', 'Binance', 'Venmo', 'CashApp']}
-            defaultOpen={false}
+            defaultOpen={true}
             closeOnSuccess={true}
             onPaymentStarted={(payment) => {
               console.log('Payment started:', payment)
