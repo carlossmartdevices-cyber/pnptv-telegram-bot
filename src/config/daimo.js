@@ -159,7 +159,17 @@ async function createPaymentRequest({ amount, userId, plan }) {
     validatePaymentParams({ amount, userId, plan });
 
     // Generate unique reference ID (format: planId_userId_timestamp)
-    const referenceId = `${plan}_${userId}_${Date.now()}`;
+    const timestamp = Date.now();
+    const referenceId = `${plan}_${userId}_${timestamp}`;
+
+    // Generate payment signature for verification
+    const crypto = require('crypto');
+    const secret = process.env.PAYMENT_SIGNATURE_SECRET || 'pnptv-daimo-payment-secret';
+    const signatureData = `${userId}:${plan}:${timestamp}`;
+    const signature = crypto
+      .createHmac('sha256', secret)
+      .update(signatureData)
+      .digest('hex');
 
     // Build payment page URL with query parameters
     // Use dedicated payment app URL if available, otherwise fall back to bot URL
@@ -187,6 +197,8 @@ async function createPaymentRequest({ amount, userId, plan }) {
     paymentUrl.searchParams.set('plan', plan);
     paymentUrl.searchParams.set('user', userId);
     paymentUrl.searchParams.set('amount', amount.toFixed(2));
+    paymentUrl.searchParams.set('ts', timestamp.toString());
+    paymentUrl.searchParams.set('sig', signature);
 
     logger.info("Daimo Pay payment link created:", {
       reference: referenceId,
