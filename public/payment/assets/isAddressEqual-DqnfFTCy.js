@@ -1,1 +1,0 @@
-import{a6 as e,a7 as t}from"./index-By-z2tYg.js";function d(s,r){if(!e(s,{strict:!1}))throw new t({address:s});if(!e(r,{strict:!1}))throw new t({address:r});return s.toLowerCase()===r.toLowerCase()}export{d as i};

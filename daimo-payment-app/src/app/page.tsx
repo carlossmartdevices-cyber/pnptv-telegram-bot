@@ -12,43 +12,102 @@ const baseUSDC = {
   token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' // USDC on Base
 };
 
+interface Plan {
+  id: string;
+  name: string;
+  displayName: string;
+  description: string;
+  price: number;
+  priceInCOP: number;
+  currency: string;
+  duration: number;
+  durationDays: number;
+  tier: string;
+  features: string[];
+  icon: string;
+  active: boolean;
+}
+
 export default function PaymentPage() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 
   const amount = searchParams.get('amount');
   const planId = searchParams.get('plan');
   const userId = searchParams.get('user');
 
   // Convert amount to USDC units (6 decimal places)
-  const amountUSD = amount ? parseFloat(amount) : 0;
+  const amountUSD = amount ? parseFloat(amount) : (selectedPlan ? selectedPlan.price : 0);
   const amountInUSDC = BigInt(Math.round(amountUSD * 1000000));
 
+  // Load plans on component mount
   useEffect(() => {
-    if (!amount || !planId || !userId) {
-      setError('Missing required parameters');
+    const loadPlans = async () => {
+      try {
+        const response = await fetch('/api/plans');
+        const data = await response.json();
+        
+        if (data.success) {
+          setPlans(data.plans);
+          console.log('Loaded plans:', data.plans.length, 'source:', data.source);
+        } else {
+          throw new Error(data.error || 'Failed to load plans');
+        }
+      } catch (error) {
+        console.error('Error loading plans:', error);
+        setError('Failed to load subscription plans');
+      }
+    };
+
+    loadPlans();
+  }, []);
+
+  // Handle plan selection and validation
+  useEffect(() => {
+    if (plans.length === 0) {
+      return; // Still loading plans
+    }
+
+    // If no parameters provided, show plan selection
+    if (!planId || !userId) {
       setIsLoading(false);
       return;
     }
 
-    if (amountUSD < 0.01) {
+    // Find the selected plan
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) {
+      setError(`Plan "${planId}" not found`);
+      setIsLoading(false);
+      return;
+    }
+
+    setSelectedPlan(plan);
+
+    // Use plan price if amount not specified
+    const finalAmount = amount ? parseFloat(amount) : plan.price;
+    
+    if (finalAmount < 0.01) {
       setError('Amount too small. Minimum is $0.01 USD');
       setIsLoading(false);
       return;
     }
 
     console.log('Payment details:', {
-      amount: amountUSD,
-      amountInUSDC: amountInUSDC.toString(), 
-      planId, 
+      amount: finalAmount,
+      amountInUSDC: BigInt(Math.round(finalAmount * 1000000)).toString(), 
+      planId: plan.id,
+      planName: plan.displayName,
       userId,
       chain: baseUSDC.chainId,
       token: baseUSDC.token
     });
 
     setIsLoading(false);
-  }, [amount, planId, userId, amountUSD, amountInUSDC]);
+  }, [plans, amount, planId, userId]);
 
   const handlePaymentStarted = async (event: any) => {
     try {
@@ -58,8 +117,8 @@ export default function PaymentPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount,
-          planId,
+          amount: amountUSD,
+          planId: selectedPlan?.id || planId,
           userId,
           reference: event.detail.reference,
         }),
@@ -81,8 +140,8 @@ export default function PaymentPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount,
-          planId,
+          amount: amountUSD,
+          planId: selectedPlan?.id || planId,
           userId,
           reference: event.detail.reference,
         }),

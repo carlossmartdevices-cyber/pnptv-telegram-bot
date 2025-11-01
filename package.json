@@ -23,9 +23,6 @@
     "cleanup:sessions:dry-run": "node src/scripts/cleanup-sessions.js --dry-run",
     "cleanup:sessions:verbose": "node src/scripts/cleanup-sessions.js --verbose",
     "build": "npm run build:payment && npm run build:webapp",
-    "railway:deploy": "railway up",
-    "railway:logs": "railway logs",
-    "railway:status": "railway status",
     "init:plans": "node scripts/initializePlans.js",
     "test:plans": "node scripts/testPlanUpdate.js"
   },

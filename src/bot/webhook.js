@@ -840,15 +840,13 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal Server Error" });
 });
 
-// Set webhook with Railway URL detection
+// Set webhook with BOT_URL configuration
 async function setupWebhook() {
-  // Railway provides RAILWAY_PUBLIC_DOMAIN or construct from service
+  // Use WEBHOOK_URL (preferred) or BOT_URL from environment
   const webhookUrl =
     process.env.WEBHOOK_URL ||
     process.env.BOT_URL ||
-    (process.env.RAILWAY_PUBLIC_DOMAIN
-      ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
-      : "https://yourdomain.com");
+    "https://yourdomain.com";
 
   const path = `/bot${process.env.TELEGRAM_TOKEN}`;
 
