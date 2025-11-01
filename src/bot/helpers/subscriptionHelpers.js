@@ -202,8 +202,17 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
         ? `${ctx.from.username}@telegram.user`
         : `user${userId}@telegram.bot`;
 
-      // Convert COP to USD if needed (Daimo uses USDC/USD)
-      const amountUSD = plan.currency === "USD" ? plan.price : plan.price / 4000; // Simple conversion, adjust as needed
+      // Use USD price directly since our plans are already in USD
+      // Daimo uses USDC which is pegged 1:1 to USD
+      const amountUSD = plan.price; // Plans are already in USD (see plans.js)
+      
+      // Validate amount is reasonable for USDC payments
+      if (amountUSD < 0.01) {
+        throw new PaymentGatewayError(
+          `Amount too small for Daimo: $${amountUSD}. Minimum is $0.01 USD`,
+          { amount: amountUSD, plan: plan.id }
+        );
+      }
 
       try {
         const paymentData = await daimo.createPaymentRequest({

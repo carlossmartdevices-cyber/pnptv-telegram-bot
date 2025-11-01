@@ -3,8 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { DaimoPayButton, DaimoPayProvider } from '@daimo/pay';
-import { optimismUSDC } from '@daimo/pay-common';
+import { getAddress } from 'viem';
 import AnimatedLogo from '../components/AnimatedLogo';
+
+// Base USDC configuration (preferred over Optimism for better UX)
+const baseUSDC = {
+  chainId: 8453, // Base mainnet
+  token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' // USDC on Base
+};
 
 export default function PaymentPage() {
   const searchParams = useSearchParams();
@@ -15,6 +21,10 @@ export default function PaymentPage() {
   const planId = searchParams.get('plan');
   const userId = searchParams.get('user');
 
+  // Convert amount to USDC units (6 decimal places)
+  const amountUSD = amount ? parseFloat(amount) : 0;
+  const amountInUSDC = BigInt(Math.round(amountUSD * 1000000));
+
   useEffect(() => {
     if (!amount || !planId || !userId) {
       setError('Missing required parameters');
@@ -22,8 +32,23 @@ export default function PaymentPage() {
       return;
     }
 
+    if (amountUSD < 0.01) {
+      setError('Amount too small. Minimum is $0.01 USD');
+      setIsLoading(false);
+      return;
+    }
+
+    console.log('Payment details:', {
+      amount: amountUSD,
+      amountInUSDC: amountInUSDC.toString(), 
+      planId, 
+      userId,
+      chain: baseUSDC.chainId,
+      token: baseUSDC.token
+    });
+
     setIsLoading(false);
-  }, [amount, planId, userId]);
+  }, [amount, planId, userId, amountUSD, amountInUSDC]);
 
   const handlePaymentStarted = async (event: any) => {
     try {
@@ -127,7 +152,7 @@ export default function PaymentPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Network:</span>
-                <span className="font-semibold">Optimism</span>
+                <span className="font-semibold">Base</span>
               </div>
             </div>
 
@@ -142,12 +167,18 @@ export default function PaymentPage() {
 
             <div className="w-full">
               <DaimoPayButton
-                app-id={process.env.NEXT_PUBLIC_DAIMO_APP_ID!}
-                to-address={process.env.NEXT_PUBLIC_TREASURY_ADDRESS!}
-                to-chain={optimismUSDC.chainId}
-                to-token={optimismUSDC.token}
-                to-units={amount}
-                refund-address={process.env.NEXT_PUBLIC_REFUND_ADDRESS}
+                appId={process.env.NEXT_PUBLIC_DAIMO_APP_ID!}
+                intent="Subscribe"
+                toChain={baseUSDC.chainId}
+                toToken={getAddress(baseUSDC.token)}
+                toAddress={getAddress(process.env.NEXT_PUBLIC_TREASURY_ADDRESS!)}
+                toUnits={amountInUSDC.toString()}
+                refundAddress={getAddress(process.env.NEXT_PUBLIC_REFUND_ADDRESS!)}
+                metadata={{
+                  userId: userId!,
+                  planId: planId!,
+                  amount: amountUSD.toString()
+                }}
                 onPaymentStarted={handlePaymentStarted}
                 onPaymentCompleted={handlePaymentCompleted}
               />
@@ -156,7 +187,7 @@ export default function PaymentPage() {
 
           <div className="mt-8 text-center text-sm text-gray-500">
             <p>Secure payment powered by Daimo Pay</p>
-            <p>Settlement on Optimism Network (USDC)</p>
+            <p>Settlement on Base Network (USDC)</p>
           </div>
         </div>
       </div>
