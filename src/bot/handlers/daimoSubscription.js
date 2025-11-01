@@ -145,16 +145,51 @@ async function handleDaimoPlanSelection(ctx) {
       return;
     }
 
-    // Get configured payment page URL
-    const PAYMENT_PAGE_URL = process.env.PAYMENT_PAGE_URL || process.env.BOT_URL + '/pay';
-    if (!PAYMENT_PAGE_URL) {
-      throw new Error('Payment page URL not configured');
-    }
+    // Show loading message
+    await ctx.answerCbQuery('🔄 Creating secure payment link...', { show_alert: false });
 
-    // Generate payment link with signature
-    const timestamp = Date.now();
-    const signature = generatePaymentSignature(userId, planId, timestamp);
-    const paymentLink = `${PAYMENT_PAGE_URL}?plan=${planId}&user=${userId}&amount=${plan.price}&ts=${timestamp}&sig=${signature}`;
+    // Create payment link via server-side Daimo API
+    const axios = require('axios');
+    const BOT_URL = process.env.BOT_URL || 'http://localhost:3000';
+    
+    let paymentLink;
+    try {
+      const response = await axios.post(`${BOT_URL}/api/daimo/create-payment`, {
+        userId: userId.toString(),
+        planId: planId,
+        amount: plan.price
+      });
+
+      if (!response.data.success) {
+        throw new Error('Failed to create payment link');
+      }
+
+      paymentLink = response.data.paymentUrl;
+      
+      logger.info('Daimo payment link created:', {
+        userId,
+        planId,
+        paymentId: response.data.paymentId,
+        paymentUrl: paymentLink
+      });
+    } catch (error) {
+      logger.error('Error creating Daimo payment link:', error);
+      await ctx.editMessageText(
+        '❌ *Payment Error*\n\n' +
+        'Sorry, we couldn\'t create your payment link. Please try again in a moment.\n\n' +
+        'If this issue persists, please contact support.',
+        {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔄 Try Again', callback_data: `daimo_plan_${planId}` }],
+              [{ text: '« Back to Plans', callback_data: 'daimo_show_plans' }]
+            ]
+          }
+        }
+      );
+      return;
+    }
 
     // Format features list
     const features = plan.features.map(f => `• ${f}`).join('\n');
@@ -166,16 +201,21 @@ async function handleDaimoPlanSelection(ctx) {
       `⏰ *Duration:* ${plan.periodLabel} (${plan.days} days)\n` +
       `📝 *Description:* ${plan.description}\n\n` +
       `✨ *Features:*\n${features}\n\n` +
-      `🔒 *Secure Payment:*\n` +
-      `• Instant activation\n` +
-      `• Pay with any cryptocurrency\n` +
-      `• Secure blockchain transaction\n\n` +
-      `Click the button below to complete your payment:`,
+      `� *Payment Options via Daimo Pay:*\n` +
+      `• 🏦 Coinbase / Binance\n` +
+      `• 💰 Venmo / Cash App\n` +
+      `• 💎 Crypto Wallets\n` +
+      `• 📍 Direct Transfer\n\n` +
+      `🔒 *Secure & Instant:*\n` +
+      `• Blockchain verified payment\n` +
+      `• Instant subscription activation\n` +
+      `• Full refund protection\n\n` +
+      `Click below to choose your payment method:`,
       {
         parse_mode: 'Markdown',
         reply_markup: {
           inline_keyboard: [
-            [{ text: `💳 Secure Payment - $${plan.price} USDC`, url: paymentLink }],
+            [{ text: `💳 Pay $${plan.price} USDC - Choose Method`, url: paymentLink }],
             [
               { text: '« Back to Plans', callback_data: 'daimo_show_plans' },
               { text: '❓ Help', callback_data: 'daimo_help' }
