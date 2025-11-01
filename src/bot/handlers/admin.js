@@ -450,34 +450,98 @@ async function showUserDetails(ctx, userId, userData) {
 }
 
 /**
- * Edit user tier
+ * Edit user tier - Show all current subscription plans
  */
 async function editUserTier(ctx, userId) {
   try {
     const lang = ctx.session.language || "en";
 
     const message = lang === "es"
-      ? `✏️ **Cambiar Tier**\n\nUsuario: \`${userId}\`\n\nSelecciona el nuevo tier:`
-      : `✏️ **Edit Tier**\n\nUser: \`${userId}\`\n\nSelect new tier:`;
+      ? `✏️ **Cambiar Membresía**\n\nUsuario: \`${userId}\`\n\nSelecciona la nueva membresía:`
+      : `✏️ **Edit Membership**\n\nUser: \`${userId}\`\n\nSelect new membership:`;
+
+    // Current active plans with their durations
+    const plans = [
+      {
+        id: 'trial-week',
+        name: lang === "es" ? 'Semana de Prueba' : 'Trial Week',
+        icon: '⏱️',
+        duration: 7,
+        price: 14.99
+      },
+      {
+        id: 'pnp-member',
+        name: lang === "es" ? 'Miembro PNP' : 'PNP Member',
+        icon: '⭐',
+        duration: 30,
+        price: 24.99
+      },
+      {
+        id: 'crystal-member',
+        name: lang === "es" ? 'Miembro Cristal' : 'PNP Crystal',
+        icon: '💎',
+        duration: 120,
+        price: 49.99
+      },
+      {
+        id: 'diamond-member',
+        name: lang === "es" ? 'Miembro Diamante' : 'PNP Diamond',
+        icon: '👑',
+        duration: 365,
+        price: 99.99
+      }
+    ];
+
+    const keyboard = {
+      inline_keyboard: [
+        // Trial Week
+        [
+          {
+            text: `⏱️ Trial Week - 7d`,
+            callback_data: `admin_tier:trial-week:7:${userId}`,
+          },
+        ],
+        // PNP Member
+        [
+          {
+            text: `⭐ PNP Member - 30d`,
+            callback_data: `admin_tier:pnp-member:30:${userId}`,
+          },
+        ],
+        // Crystal Member
+        [
+          {
+            text: `💎 PNP Crystal - 120d`,
+            callback_data: `admin_tier:crystal-member:120:${userId}`,
+          },
+        ],
+        // Diamond Member
+        [
+          {
+            text: `👑 PNP Diamond - 365d`,
+            callback_data: `admin_tier:diamond-member:365:${userId}`,
+          },
+        ],
+        // Free tier
+        [
+          {
+            text: lang === "es" ? "⚪ Gratis (sin expiración)" : "⚪ Free (no expiration)",
+            callback_data: `admin_tier:free:0:${userId}`,
+          },
+        ],
+        // Cancel
+        [
+          {
+            text: lang === "es" ? "« Cancelar" : "« Cancel",
+            callback_data: `admin_user_${userId}`,
+          },
+        ],
+      ],
+    };
 
     await ctx.reply(message, {
       parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: "⚪ Free",
-              callback_data: `admin_set_tier_${userId}_Free_0`,
-            },
-          ],
-          [
-            {
-              text: lang === "es" ? "« Cancelar" : "« Cancel",
-              callback_data: `admin_user_${userId}`,
-            },
-          ],
-        ],
-      },
+      reply_markup: keyboard,
     });
 
     logger.info(`Admin ${ctx.from.id} editing tier for user: ${userId}`);
@@ -3453,7 +3517,15 @@ async function handleAdminCallback(ctx) {
     } else if (action.startsWith("admin_edit_tier_")) {
       const userId = action.replace("admin_edit_tier_", "");
       await editUserTier(ctx, userId);
+    } else if (action.startsWith("admin_tier:")) {
+      // New format: admin_tier:tier:duration:userId
+      const parts = action.replace("admin_tier:", "").split(":");
+      const tier = parts[0];
+      const durationDays = parseInt(parts[1]) || 30;
+      const userId = parts[2];
+      await setUserTier(ctx, userId, tier, durationDays);
     } else if (action.startsWith("admin_set_tier_")) {
+      // Legacy format support
       const parts = action.replace("admin_set_tier_", "").split("_");
       const userId = parts[0];
       const tier = parts[1];

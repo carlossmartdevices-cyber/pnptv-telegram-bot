@@ -16,13 +16,15 @@ The bot now includes a comprehensive membership management system with automatic
 
 ### 2. Manual Membership Activation (Admin)
 
-Admins can now manually activate memberships with custom durations:
+Admins can now manually activate memberships with current subscription plans:
 
 - **Access**: `/admin` → User Management → Search/Select User → Edit Tier
-- **Options**:
-  - Free (no expiration)
-  - Silver: 30, 60, or 90 days
-  - Golden: 30, 60, or 90 days
+- **Available Plans**:
+  - ⏱️ Trial Week: 7 days
+  - ⭐ PNP Member: 30 days
+  - 💎 PNP Crystal Member: 120 days
+  - 👑 PNP Diamond Member: 365 days
+  - ⚪ Free: No expiration
 - **User Notification**: User receives a notification with expiration date
 - **Database Update**: Expiration date is automatically calculated and stored
 
@@ -116,7 +118,12 @@ runManualExpirationCheck()
 3. Click "🔍 Search User" or "📋 List All"
 4. Select the user
 5. Click "✏️ Edit Tier"
-6. Choose tier and duration (e.g., "🥇 Golden (60 days)")
+6. Choose plan and duration:
+   - ⏱️ Trial Week - 7 days
+   - ⭐ PNP Member - 30 days
+   - 💎 PNP Crystal - 120 days
+   - 👑 PNP Diamond - 365 days
+   - ⚪ Free - No expiration
 7. User receives notification with expiration date
 
 ### Admin: View Expiring Memberships
@@ -182,9 +189,9 @@ The system automatically:
 
 ### Existing Users
 
-- Users with current Silver/Golden tiers without expiration dates will need admin to manually set them
-- Or they will be treated as lifetime memberships until manually updated
-- Free tier users are unaffected
+- Users with Free tier are unaffected
+- Users with current premium tiers can be manually updated to new plans via admin panel
+- All memberships are tracked with expiration dates
 
 ### Recommended Actions After Deployment
 
