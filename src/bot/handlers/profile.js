@@ -91,6 +91,7 @@ async function viewProfile(ctx) {
       userId: userData.userId,
       username: usernameDisplay,
       tier: userData.tier || "Free",
+      membershipInfo: "", // Add empty membershipInfo to avoid template errors
       location: locationDisplay,
       bio: bioDisplay,
     });

@@ -309,99 +309,100 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
       if (!process.env.EPAYCO_PUBLIC_KEY) {
         throw new PaymentGatewayError("Payment gateway not configured");
       }
-    }
 
-    const userEmail = ctx.from.username
-      ? `${ctx.from.username}@telegram.user`
-      : `user${userId}@telegram.bot`;
+      const userEmail = ctx.from.username
+        ? `${ctx.from.username}@telegram.user`
+        : `user${userId}@telegram.bot`;
 
-    try {
-      const paymentData = await epayco.createPaymentLink({
-        name: plan.name,
-        description:
-          plan.description ||
-          `${plan.name} subscription - ${plan.durationDays} days`,
-        amount: plan.priceInCOP,
-        currency: plan.currency || "COP",
-        userId,
-        userEmail,
-        userName: ctx.from.first_name || ctx.from.username || "User",
-        plan: plan.id,
-      });
-
-      if (!paymentData.success || !paymentData.paymentUrl) {
-        throw new PaymentGatewayError(
-          "Payment link creation failed",
-          paymentData
-        );
-      }
-
-      const message =
-        lang === "es"
-          ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💳 **Método de Pago: ePayco (Automático)**\n\nPaga con cualquier tarjeta de débito o crédito.\n\nTu suscripción se activará automáticamente tras el pago.\n\nHaz clic en el botón para continuar con el pago:`
-          : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💳 **Payment Method: ePayco (Automatic)**\n\nPay with any debit or credit card.\n\nYour subscription will be activated automatically after payment.\n\nClick the button to proceed with payment:`;
-
-      // Edit message to show ePayco payment
       try {
-        await ctx.editMessageText(message, {
-          parse_mode: "Markdown",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: lang === "es" ? "🚀 Ir a Pagar" : "🚀 Go to Payment",
-                  url: paymentData.paymentUrl,
-                },
-              ],
-              [
-                {
-                  text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
-                  callback_data: "show_subscription_plans",
-                },
-              ],
-            ],
-          },
-        });
-      } catch (editError) {
-        // If edit fails, delete old and send new message
-        try {
-          await ctx.deleteMessage();
-        } catch (deleteError) {
-          // Ignore delete errors
-        }
-        await ctx.reply(message, {
-          parse_mode: "Markdown",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: lang === "es" ? "🚀 Ir a Pagar" : "🚀 Go to Payment",
-                  url: paymentData.paymentUrl,
-                },
-              ],
-              [
-                {
-                  text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
-                  callback_data: "show_subscription_plans",
-                },
-              ],
-            ],
-          },
-        });
-      }
-    } catch (paymentError) {
-      if (retryCount < MAX_RETRIES) {
-        logger.warn("[Subscription] Retrying payment link creation", {
-          attempt: retryCount + 1,
+        const paymentData = await epayco.createPaymentLink({
+          name: plan.name,
+          description:
+            plan.description ||
+            `${plan.name} subscription - ${plan.durationDays} days`,
+          amount: plan.priceInCOP,
+          currency: plan.currency || "COP",
           userId,
-          planId: plan.id,
+          userEmail,
+          userName: ctx.from.first_name || ctx.from.username || "User",
+          plan: plan.id,
         });
-        return handleSubscription(ctx, planIdentifier, retryCount + 1);
+
+        if (!paymentData.success || !paymentData.paymentUrl) {
+          throw new PaymentGatewayError(
+            "Payment link creation failed",
+            paymentData
+          );
+        }
+
+        const message =
+          lang === "es"
+            ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💳 **Método de Pago: ePayco (Automático)**\n\nPaga con cualquier tarjeta de débito o crédito.\n\nTu suscripción se activará automáticamente tras el pago.\n\nHaz clic en el botón para continuar con el pago:`
+            : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💳 **Payment Method: ePayco (Automatic)**\n\nPay with any debit or credit card.\n\nYour subscription will be activated automatically after payment.\n\nClick the button to proceed with payment:`;
+
+        // Edit message to show ePayco payment
+        try {
+          await ctx.editMessageText(message, {
+            parse_mode: "Markdown",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: lang === "es" ? "🚀 Ir a Pagar" : "🚀 Go to Payment",
+                    url: paymentData.paymentUrl,
+                  },
+                ],
+                [
+                  {
+                    text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
+                    callback_data: "show_subscription_plans",
+                  },
+                ],
+              ],
+            },
+          });
+        } catch (editError) {
+          // If edit fails, delete old and send new message
+          try {
+            await ctx.deleteMessage();
+          } catch (deleteError) {
+            // Ignore delete errors
+          }
+          await ctx.reply(message, {
+            parse_mode: "Markdown",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: lang === "es" ? "🚀 Ir a Pagar" : "🚀 Go to Payment",
+                    url: paymentData.paymentUrl,
+                  },
+                ],
+                [
+                  {
+                    text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
+                    callback_data: "show_subscription_plans",
+                  },
+                ],
+              ],
+            },
+          });
+        }
+        return;
+      } catch (paymentError) {
+        if (retryCount < MAX_RETRIES) {
+          logger.warn("[Subscription] Retrying payment link creation", {
+            attempt: retryCount + 1,
+            userId,
+            planId: plan.id,
+          });
+          return handleSubscription(ctx, planIdentifier, paymentMethod, retryCount + 1);
+        }
+        throw new PaymentGatewayError(paymentError.message, {
+          attempts: retryCount + 1,
+          originalError: paymentError,
+        });
       }
-      throw new PaymentGatewayError(paymentError.message, {
-        attempts: retryCount + 1,
-        originalError: paymentError,
-      });
     }
   } catch (error) {
     logger.error("[Subscription] Error", {

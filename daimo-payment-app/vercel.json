@@ -1,15 +1,9 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/payment/(.*)",
-      "dest": "/?$1"
+      "source": "/payment/(.*)",
+      "destination": "/?$1"
     }
   ],
   "env": {
@@ -18,10 +12,5 @@
     "NEXT_PUBLIC_REFUND_ADDRESS": "0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0",
     "NEXT_PUBLIC_SETTLEMENT_CHAIN": "10",
     "NEXT_PUBLIC_SETTLEMENT_TOKEN": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85"
-  },
-  "functions": {
-    "src/app/api/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
   }
 }

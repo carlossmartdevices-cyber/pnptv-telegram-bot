@@ -582,7 +582,6 @@ bot.action("cancel_delete", (ctx) =>
   ctx.editMessageText("Operation cancelled")
 );
 
-// Find the problematic area around line 334 and fix closing brackets
 bot.action("show_map", async (ctx) => {
   try {
     await ctx.reply("Select your preferred distance:", {
@@ -595,12 +594,12 @@ bot.action("show_map", async (ctx) => {
           ],
           [{ text: "🔙 Back", callback_data: "back_to_main" }],
         ],
-      }, // Fix: Add missing closing brace
-    }); // Fix: Add missing closing parenthesis
+      },
+    });
   } catch (error) {
     console.error("Error showing map:", error);
     await ctx.reply("Error showing map options. Please try again.");
   }
-}); // Fix: Add missing closing parenthesis
+});
 
 module.exports = bot;

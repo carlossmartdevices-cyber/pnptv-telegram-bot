@@ -32,11 +32,50 @@ async function handleEmailSubmission(ctx) {
     const userId = ctx.from.id.toString();
     console.log("Processing email for user:", userId);
     
-    // Save email to user's document
-    await db.collection("users").doc(userId).update({
-      email: email,
-      emailVerified: false, // Could implement verification later
-      lastActive: new Date()
+    // Save email to user's document - create document if it doesn't exist
+    try {
+      const userRef = db.collection("users").doc(userId);
+      const userDoc = await userRef.get();
+      
+      const userData = {
+        email: email,
+        emailVerified: false,
+        lastActive: new Date(),
+        userId: userId,
+        username: ctx.from.username || "Anonymous",
+        firstName: ctx.from.first_name || null,
+        lastName: ctx.from.last_name || null,
+        language: lang
+      };
+      
+      if (!userDoc.exists) {
+        // Create new document
+        userData.createdAt = new Date();
+        userData.tier = "Free";
+        await userRef.set(userData);
+      } else {
+        // Update existing document
+        await userRef.update({
+          email: email,
+          emailVerified: false,
+          lastActive: new Date()
+        });
+      }
+      
+      console.log("Email saved successfully for user:", userId);
+    } catch (dbError) {
+      logger.error(`Failed to save email for user ${userId}:`, dbError);
+      // Continue anyway - don't block the flow
+    }
+
+    // Update session immediately to stop awaiting email
+    ctx.session.awaitingEmail = false;
+    ctx.session.email = email;
+    ctx.session.onboardingStep = "freeChannelInvite";
+
+    // Confirm email collection
+    await ctx.reply(t("emailConfirmed", lang), {
+      parse_mode: "Markdown"
     });
 
     // Generate one-time use invite link for free channel
@@ -48,23 +87,26 @@ async function handleEmailSubmission(ctx) {
         name: `Free - User ${userId}`,
       });
       inviteLink = invite.invite_link;
+      console.log("Generated invite link for user:", userId);
     } catch (error) {
       logger.error(`Failed to generate invite link for user ${userId}:`, error);
     }
 
-    // Confirm email collection and send channel invite
-    await ctx.reply(t("emailConfirmed", lang), {
-      parse_mode: "Markdown"
-    });
-
+    // Send channel invite if successful
     if (inviteLink) {
       await ctx.reply(
         `🎉 *Welcome to PNPtv Community!*\n\nHere's your exclusive invite to our free channel. This link can only be used once:\n\n${inviteLink}`,
         { parse_mode: "Markdown" }
       );
+    } else {
+      await ctx.reply(
+        `⚠️ We're having trouble generating your channel invite. You'll receive it shortly at support@pnptv.app`,
+        { parse_mode: "Markdown" }
+      );
     }
 
     // Move to privacy policy step
+    ctx.session.onboardingStep = "privacy";
     await ctx.reply(t("privacy", lang), {
       reply_markup: {
         inline_keyboard: [
@@ -76,12 +118,6 @@ async function handleEmailSubmission(ctx) {
       },
       parse_mode: "Markdown",
     });
-
-    // Update session - mark onboarding as complete after email submission
-    ctx.session.awaitingEmail = false;
-    ctx.session.onboardingStep = "privacy";
-    ctx.session.email = email;
-    ctx.session.onboardingComplete = true; // Mark as complete after email collection
     
     console.log("Session after email update:", ctx.session);
     console.log("=== EMAIL SUBMISSION COMPLETED ===");
