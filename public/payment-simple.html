@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNPtv - Secure Payment with Daimo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .payment-details {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 25px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .price-highlight {
+            font-size: 24px;
+            color: #667eea;
+        }
+
+        .features {
+            background: #f0f4ff;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 25px 0;
+            border: 1px solid #e0e7ff;
+        }
+
+        .features h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            color: #666;
+            padding: 6px 0;
+            padding-left: 24px;
+            position: relative;
+            font-size: 14px;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #e0e7ff;
+            color: #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #d0deff;
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 20px;
+            padding: 12px;
+            background: #f0f9ff;
+            border-radius: 8px;
+            color: #0284c7;
+            font-size: 13px;
+            border: 1px solid #bae6fd;
+        }
+
+        .security-badge svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            color: #166534;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .detail-row {
+                font-size: 14px;
+            }
+
+            .price-highlight {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">💎</div>
+            <h1>PNPtv Premium</h1>
+            <p class="subtitle">Secure Payment with Daimo</p>
+        </div>
+
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+
+        <div id="content">
+            <div class="payment-details">
+                <div class="detail-row">
+                    <span class="detail-label">Plan:</span>
+                    <span class="detail-value" id="planName">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Duration:</span>
+                    <span class="detail-value" id="planDuration">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Amount:</span>
+                    <span class="detail-value price-highlight" id="planPrice">$0.00</span>
+                </div>
+            </div>
+
+            <div class="features">
+                <h3>✨ What's Included</h3>
+                <ul class="feature-list" id="featuresList">
+                    <li>Unlimited HD streaming</li>
+                    <li>Priority customer support</li>
+                    <li>Instant activation</li>
+                </ul>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="initiatePayment()" id="payBtn">
+                    <span>💳</span> Pay with Daimo
+                </button>
+                <button class="btn btn-secondary" onclick="goBack()">Cancel</button>
+            </div>
+
+            <div class="security-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <span>Secured by Daimo • Blockchain verified</span>
+            </div>
+
+            <div class="info-text">
+                <strong>How it works:</strong><br>
+                You'll be redirected to Daimo Pay to complete your secure payment. Choose from USDC or any supported cryptocurrency.
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 16px; color: #666;">Processing your payment...</p>
+        </div>
+    </div>
+
+    <script>
+        // Parse URL parameters
+        const params = new URLSearchParams(window.location.search);
+        const planId = params.get('plan');
+        const userId = params.get('user');
+        const amount = params.get('amount');
+        const timestamp = params.get('ts');
+        const signature = params.get('sig');
+
+        // Plan information
+        const planInfo = {
+            'trial-week': {
+                name: 'Trial Week',
+                duration: '7 days',
+                features: ['Basic access', '720p streaming', 'Standard support']
+            },
+            'pnp-member': {
+                name: 'PNP Member',
+                duration: '30 days',
+                features: ['Full access', '1080p streaming', 'Priority support']
+            },
+            'crystal-member': {
+                name: 'PNP Crystal Member',
+                duration: '120 days',
+                features: ['Premium access', '4K streaming', 'Priority support', 'Early access']
+            },
+            'diamond-member': {
+                name: 'PNP Diamond Member',
+                duration: '365 days',
+                features: ['VIP access', '4K+ streaming', '24/7 support', 'Exclusive content']
+            }
+        };
+
+        // Initialize page
+        function init() {
+            if (!planId || !userId || !amount) {
+                showError('Invalid payment parameters. Please try again from the bot.');
+                document.getElementById('payBtn').disabled = true;
+                return;
+            }
+
+            const plan = planInfo[planId];
+            if (!plan) {
+                showError('Unknown payment plan. Please try again from the bot.');
+                document.getElementById('payBtn').disabled = true;
+                return;
+            }
+
+            document.getElementById('planName').textContent = plan.name;
+            document.getElementById('planDuration').textContent = plan.duration;
+            document.getElementById('planPrice').textContent = `$${parseFloat(amount).toFixed(2)} USDC`;
+
+            const featuresList = document.getElementById('featuresList');
+            featuresList.innerHTML = plan.features.map(f => `<li>${f}</li>`).join('');
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('success');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+        }
+
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = 'https://t.me/pnptv_premium_bot';
+            }
+        }
+
+        function initiatePayment() {
+            const btn = document.getElementById('payBtn');
+            btn.disabled = true;
+
+            // Show loading
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+
+            // Construct Daimo Pay URL
+            // This integrates with Daimo Pay API
+            const daimoPayUrl = `https://pay.daimo.com/?appId=pnptv&amount=${amount}&chain=base&token=usdc&recipient=0x&userId=${userId}&metadata=${encodeURIComponent(JSON.stringify({plan: planId, ts: timestamp, sig: signature}))}`;
+
+            // Redirect to Daimo Pay
+            setTimeout(() => {
+                window.location.href = daimoPayUrl;
+            }, 1000);
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
