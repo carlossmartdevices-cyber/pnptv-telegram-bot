@@ -2,40 +2,64 @@
 
 echo "🤖 Santino Group Bot Setup"
 echo "=========================="
-echo
+echo ""
+
+# Install dependencies
+echo "📦 Installing dependencies..."
+npm install
 
 # Copy environment file
 if [ ! -f .env ]; then
+    echo ""
     echo "📝 Creating .env file..."
     cp .env.example .env
-    echo "✅ Created .env file. Please edit it with your configuration."
+    echo "✅ Created .env file"
 else
-    echo "⚠️  .env file already exists."
+    echo ""
+    echo "⚠️  .env file already exists, skipping creation"
 fi
 
-echo
-echo "📋 Setup Checklist:"
-echo "==================="
-echo
-echo "1. ✅ Dependencies installed"
-echo "2. 📝 Edit .env file with your bot token and Firebase credentials"
-echo "3. 🤖 Create bot with @BotFather if you haven't already"
-echo "4. 👑 Add bot to your group as administrator with these permissions:"
-echo "   - Delete messages"
-echo "   - Restrict members"
-echo "   - (Optional) Pin messages"
-echo "5. 🆔 Get your group ID and add it to .env (optional)"
-echo "6. 🚀 Run 'npm start' to start the bot"
-echo
-echo "🔧 Commands:"
-echo "============"
-echo "npm start     - Start the bot"
-echo "npm run dev   - Start with auto-reload (development)"
-echo
-echo "📚 For detailed setup instructions, see README.md"
-echo
-
-# Check if Firebase credentials are available
-if [ -z "$FIREBASE_PROJECT_ID" ] && ! grep -q "FIREBASE_PROJECT_ID=" .env 2>/dev/null; then
-    echo "⚠️  Remember to copy Firebase credentials from your main PNPtv bot!"
-fi
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📋 SETUP CHECKLIST - Follow these steps:"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "✅ Step 1: Dependencies installed"
+echo ""
+echo "⚙️  Step 2: Edit .env file with your configuration:"
+echo "   📝 Edit command: nano .env"
+echo "   OR use any text editor to edit .env"
+echo ""
+echo "🤖 Step 3: Create bot with @BotFather (if not done):"
+echo "   • Open Telegram and search for @BotFather"
+echo "   • Send /newbot command"
+echo "   • Follow prompts to get your BOT_TOKEN"
+echo "   • Copy the token to .env file"
+echo ""
+echo "🔑 Step 4: Copy Firebase credentials from main bot:"
+echo "   • FIREBASE_PROJECT_ID"
+echo "   • FIREBASE_PRIVATE_KEY"
+echo "   • FIREBASE_CLIENT_EMAIL"
+echo ""
+echo "👑 Step 5: Add bot to your Telegram group as ADMIN:"
+echo "   Required permissions:"
+echo "   ✓ Delete messages"
+echo "   ✓ Restrict members"
+echo "   Optional:"
+echo "   • Pin messages"
+echo ""
+echo "🆔 Step 6: Get your GROUP_ID:"
+echo "   • Add bot to your group"
+echo "   • Forward any message from group to @userinfobot"
+echo "   • Copy the group ID to .env file"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "� READY TO START:"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "   npm run check-config  - Verify your .env configuration"
+echo "   npm start            - Start the bot (production)"
+echo "   npm run dev          - Start with auto-reload (development)"
+echo ""
+echo "📚 For detailed instructions: see QUICKSTART.md"
+echo ""
