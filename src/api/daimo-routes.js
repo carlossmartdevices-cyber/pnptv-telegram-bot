@@ -4,6 +4,10 @@ const crypto = require('crypto');
 const { db } = require('../config/firebase');
 const rateLimit = require('express-rate-limit');
 const logger = require('../utils/logger');
+const { activateMembership } = require('../utils/membershipManager');
+
+// Get bot instance (will be set when mounting routes)
+let bot = null;
 
 // Rate limiting
 const apiLimiter = rateLimit({
@@ -17,6 +21,14 @@ const webhookLimiter = rateLimit({
 });
 
 const router = express.Router();
+
+// Middleware to inject bot instance
+router.use((req, res, next) => {
+  if (!bot) {
+    bot = require('../bot/index');
+  }
+  next();
+});
 
 // Apply rate limiting to all routes
 router.use(apiLimiter);
@@ -126,36 +138,53 @@ router.post('/api/daimo/webhook', webhookLimiter, express.json(), async (req, re
         else if (planId === 'diamond-member') durationDays = 365;
       }
 
-      // Update user subscription in Firestore
-      await db.collection('users').doc(userId).set({
-        tier: planId,
-        subscriptionActive: true,
-        subscriptionEndsAt: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
-        lastPaymentId: payment.id,
-        lastPaymentAt: new Date(),
-        paymentMethod: 'daimo',
-        updatedAt: new Date()
-      }, { merge: true });
+      try {
+        // Use membership manager to activate subscription and generate invite link
+        const result = await activateMembership(
+          userId.toString(), 
+          planId, 
+          'daimo_webhook',
+          payment.id,
+          bot
+        );
 
-      // Store payment record
-      await db.collection('payments').doc(payment.id).set({
-        status: payment.status,
-        type,
-        userId,
-        planId,
-        amount: payment.amount,
-        currency: payment.currency,
-        raw: payment,
-        createdAt: new Date()
-      }, { merge: true });
+        // Store additional payment metadata
+        const now = new Date();
+        await db.collection('users').doc(userId.toString()).update({
+          tier: planId,
+          subscriptionActive: true,
+          subscriptionEndsAt: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
+          lastPaymentId: payment.id,
+          lastPaymentAt: now,
+          paymentMethod: 'daimo',
+          updatedAt: now
+        });
 
-      logger.info('[Daimo] ✅ Activated subscription:', {
-        userId,
-        planId,
-        durationDays,
-        paymentId: payment.id,
-        amount: payment.amount
-      });
+        // Store payment record
+        await db.collection('payments').doc(payment.id).set({
+          status: payment.status,
+          type,
+          userId,
+          planId,
+          amount: payment.amount,
+          currency: payment.currency,
+          raw: payment,
+          createdAt: now
+        }, { merge: true });
+
+        logger.info('[Daimo] ✅ Activated subscription:', {
+          userId,
+          planId,
+          durationDays,
+          paymentId: payment.id,
+          amount: payment.amount,
+          inviteLink: result.inviteLink ? 'generated' : 'none'
+        });
+      } catch (activationError) {
+        logger.error('[Daimo] Error activating membership:', activationError);
+        // Still acknowledge to prevent retry
+        return res.status(200).json({ status: 'ok', warning: 'Activation error' });
+      }
     } else {
       logger.warn('[Daimo] Unhandled event type:', { type, paymentId: payment?.id });
     }
