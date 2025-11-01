@@ -28,6 +28,7 @@ const REQUIRED_ENV_VARS = {
     'EPAYCO_P_CUST_ID',
     'EPAYCO_P_KEY',
     'SENTRY_DSN',
+    'MISTRAL_API_KEY',        // Mistral AI for chat functionality
   ],
 };
 

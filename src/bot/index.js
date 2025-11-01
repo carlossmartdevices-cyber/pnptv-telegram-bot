@@ -51,6 +51,11 @@ const {
 } = require("./handlers/profile");
 const subscribeHandler = require("./handlers/subscribe");
 const {
+  showDaimoPlans,
+  handleDaimoPlanSelection,
+  handleShowPlansCallback,
+} = require("./handlers/daimoSubscription");
+const {
   adminPanel,
   handleAdminCallback,
   sendBroadcast,
@@ -158,6 +163,29 @@ bot.on("message", async (ctx, next) => {
 bot.action(/^plan_select_(.+)$/, async (ctx) => {
   const planId = ctx.match[1];
   await subscriptionHelpers.handleSubscription(ctx, planId);
+});
+
+// Daimo payment plans
+bot.action("daimo_show_plans", async (ctx) => {
+  await handleShowPlansCallback(ctx);
+});
+
+bot.action(/^daimo_plan_(.+)$/, async (ctx) => {
+  await handleDaimoPlanSelection(ctx);
+});
+
+bot.action("daimo_help", async (ctx) => {
+  await ctx.answerCbQuery();
+  await ctx.reply(
+    "💎 *Daimo Payment Help*\n\n" +
+    "Daimo Pay allows you to subscribe with USDC stablecoin:\n\n" +
+    "✅ No credit card needed\n" +
+    "✅ Instant activation\n" +
+    "✅ Secure blockchain payment\n" +
+    "✅ Low fees\n\n" +
+    "Each plan renews automatically unless cancelled.",
+    { parse_mode: "Markdown" }
+  );
 });
 
 // Back to subscription plans handler

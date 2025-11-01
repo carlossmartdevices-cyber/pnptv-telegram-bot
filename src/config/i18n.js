@@ -10,6 +10,13 @@ const i18n = {
       editProfile: "What would you like to update?",
       updateBio: "Update Bio",
       updateLocation: "Update Location",
+      // AI Chat strings
+      aiChatWelcome: "🤖 Welcome to PNPtv Support!\n\nI'm here to help with:\n• Subscription and payment questions\n• Technical support\n• Account issues\n• General inquiries\n\nHow can I assist you today?",
+      aiChatEnded: "Chat session ended. Returning to main menu...",
+      aiChatRateLimit: "⏳ Please wait a moment before sending another message.",
+      aiChatThinking: "🤔 Thinking...",
+      aiChatError: "❌ Sorry, I encountered an error. Please try again.",
+      aiChatNoAPI: "❌ AI Chat is currently unavailable. Please try again later.",
     },
     es: {
       welcome: "¡Bienvenido a PNPtv!",
@@ -21,6 +28,13 @@ const i18n = {
       editProfile: "¿Qué te gustaría actualizar?",
       updateBio: "Actualizar Bio",
       updateLocation: "Actualizar Ubicación",
+      // AI Chat strings
+      aiChatWelcome: "🤖 ¡Bienvenido al Soporte de PNPtv!\n\nEstoy aquí para ayudarte con:\n• Preguntas sobre suscripción y pago\n• Soporte técnico\n• Problemas de cuenta\n• Consultas generales\n\n¿Cómo puedo ayudarte hoy?",
+      aiChatEnded: "Sesión de chat finalizada. Volviendo al menú principal...",
+      aiChatRateLimit: "⏳ Por favor, espera un momento antes de enviar otro mensaje.",
+      aiChatThinking: "🤔 Pensando...",
+      aiChatError: "❌ Lo siento, encontré un error. Por favor, inténtalo de nuevo.",
+      aiChatNoAPI: "❌ El chat de IA no está disponible en este momento. Por favor, intenta más tarde.",
     },
   },
   getText: function (language, key) {

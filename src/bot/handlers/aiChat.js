@@ -137,7 +137,7 @@ async function startAIChat(ctx) {
 
   // Check if Mistral AI is available
   if (!mistral) {
-    const message = i18n.t(language, "aiChatNoAPI");
+    const message = i18n.getText(language, "aiChatNoAPI");
     if (ctx.callbackQuery) {
       await ctx.answerCbQuery();
       await ctx.editMessageText(message, { parse_mode: "Markdown" });
@@ -156,7 +156,7 @@ async function startAIChat(ctx) {
   ctx.session.aiChatActive = true;
   ctx.session.aiChatHistory = [];
 
-  const welcomeMessage = i18n.t(language, "aiChatWelcome");
+  const welcomeMessage = i18n.getText(language, "aiChatWelcome");
 
   // Send welcome message with back button
   const keyboard = {
@@ -207,7 +207,7 @@ async function endAIChat(ctx) {
   ctx.session.aiChatActive = false;
   ctx.session.aiChatHistory = null;
 
-  const message = i18n.t(language, "aiChatEnded");
+  const message = i18n.getText(language, "aiChatEnded");
   await ctx.reply(message, { parse_mode: "Markdown" });
 
   // Return to main menu
@@ -231,13 +231,13 @@ async function handleChatMessage(ctx) {
   const now = Date.now();
   const lastMessageTime = messageTimestamps.get(userId) || 0;
   if (now - lastMessageTime < RATE_LIMIT_MS) {
-    await ctx.reply(i18n.t(language, "aiChatRateLimit"), { parse_mode: "Markdown" });
+    await ctx.reply(i18n.getText(language, "aiChatRateLimit"), { parse_mode: "Markdown" });
     return;
   }
   messageTimestamps.set(userId, now);
 
   // Show typing indicator
-  const thinkingMsg = await ctx.reply(i18n.t(language, "aiChatThinking"), {
+  const thinkingMsg = await ctx.reply(i18n.getText(language, "aiChatThinking"), {
     parse_mode: "Markdown",
   });
 
@@ -330,7 +330,7 @@ async function handleChatMessage(ctx) {
       // Ignore if deletion fails
     }
 
-    await ctx.reply(i18n.t(language, "aiChatError"), { parse_mode: "Markdown" });
+    await ctx.reply(i18n.getText(language, "aiChatError"), { parse_mode: "Markdown" });
   }
 }
 

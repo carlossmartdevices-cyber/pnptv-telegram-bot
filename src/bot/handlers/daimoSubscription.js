@@ -1,6 +1,7 @@
 // Daimo crypto payment subscription handler
 const { firestore } = require('../../config/firebase');
 const logger = require('../../utils/logger');
+const crypto = require('crypto');
 
 const PLANS = [
   { 
@@ -43,9 +44,15 @@ const PLANS = [
 
 /**
  * Show available Daimo payment plans
+ * Works with both raw bot object and Telegraf context
  */
-async function showDaimoPlans(bot, chatId) {
+async function showDaimoPlans(ctxOrBot, chatIdOrUndefined) {
   try {
+    // Detect if we're using Telegraf context or raw bot
+    const isCtx = ctxOrBot && ctxOrBot.reply && !chatIdOrUndefined;
+    const chatId = isCtx ? ctxOrBot.chat.id : chatIdOrUndefined;
+    const bot = isCtx ? ctxOrBot : ctxOrBot;
+
     // Format plans into a grid with 2 plans per row
     const keyboard = [];
     for (let i = 0; i < PLANS.length; i += 2) {
@@ -70,56 +77,71 @@ async function showDaimoPlans(bot, chatId) {
              plan.features.map(f => `✓ ${f}`).join('\n') + '\n';
     }).join('\n');
 
-    await bot.sendMessage(chatId, {
-      text: '💎 *PNPtv Premium Plans*\n\n' +
+    const messageText = '💎 *PNPtv Premium Plans*\n\n' +
             '💰 Pay with crypto (USDC) using Daimo:\n\n' +
             '✅ Instant activation\n' +
             '✅ Secure blockchain payment\n' +
             '✅ No credit card needed\n\n' +
             plansMessage + '\n' +
             '🔒 All plans include secure payment and instant access\n' +
-            '💫 Choose your plan below:',
-      parse_mode: 'Markdown',
-      reply_markup: { 
-        inline_keyboard: [
-          ...keyboard,
-          [{ text: '❓ Need help choosing?', callback_data: 'daimo_help' }]
-        ]
-      }
-    });
+            '💫 Choose your plan below:';
+
+    const reply_markup = { 
+      inline_keyboard: [
+        ...keyboard,
+        [{ text: '❓ Need help choosing?', callback_data: 'daimo_help' }]
+      ]
+    };
+
+    if (isCtx) {
+      await bot.reply(messageText, { parse_mode: 'Markdown', reply_markup });
+    } else {
+      await bot.telegram.sendMessage(chatId, messageText, { 
+        parse_mode: 'Markdown',
+        reply_markup 
+      });
+    }
   } catch (error) {
     logger.error('Error showing Daimo plans:', error);
-    await bot.sendMessage(chatId, 
-      '❌ Sorry, there was an error displaying the plans. Please try again later.');
+    const msg = isCtx 
+      ? await ctxOrBot.reply('❌ Sorry, there was an error displaying the plans. Please try again later.')
+      : await bot.telegram.sendMessage(chatIdOrUndefined, '❌ Sorry, there was an error displaying the plans. Please try again later.');
   }
 }
 
 /**
  * Handle plan selection and generate payment link
+ * Works with Telegraf context
  */
-async function handleDaimoPlanSelection(bot, callbackQuery) {
+async function handleDaimoPlanSelection(ctx) {
   try {
-    const chatId = callbackQuery.message.chat.id;
-    const userId = callbackQuery.from.id.toString();
-    const planId = callbackQuery.data.replace('daimo_plan_', '');
+    // Telegraf context has these properties
+    if (!ctx.callbackQuery) {
+      logger.error('No callback query in context');
+      return;
+    }
+
+    const userId = ctx.from.id.toString();
+    const planIdMatch = ctx.callbackQuery.data.match(/daimo_plan_(.+)/);
+    
+    if (!planIdMatch) {
+      await ctx.answerCbQuery('❌ Invalid plan selected', { show_alert: true });
+      return;
+    }
+
+    const planId = planIdMatch[1];
 
     // Validate plan
     const plan = PLANS.find(p => p.id === planId);
     if (!plan) {
-      await bot.answerCallbackQuery(callbackQuery.id, {
-        text: '❌ Invalid plan selected',
-        show_alert: true
-      });
+      await ctx.answerCbQuery('❌ Invalid plan selected', { show_alert: true });
       return;
     }
 
     // Check if user already has active subscription
     const hasActive = await hasDaimoSubscription(userId);
     if (hasActive) {
-      await bot.answerCallbackQuery(callbackQuery.id, {
-        text: '⚠️ You already have an active subscription',
-        show_alert: true
-      });
+      await ctx.answerCbQuery('⚠️ You already have an active subscription', { show_alert: true });
       return;
     }
 
@@ -138,11 +160,11 @@ async function handleDaimoPlanSelection(bot, callbackQuery) {
     const features = plan.features.map(f => `• ${f}`).join('\n');
 
     // Send detailed plan info with payment button
-    await bot.editMessageText(
+    await ctx.editMessageText(
       `💎 *${plan.name}*\n\n` +
       `💰 *Price:* $${plan.price} USDC\n` +
       `⏰ *Duration:* ${plan.periodLabel} (${plan.days} days)\n` +
-      `� *Description:* ${plan.description}\n\n` +
+      `📝 *Description:* ${plan.description}\n\n` +
       `✨ *Features:*\n${features}\n\n` +
       `🔒 *Secure Payment:*\n` +
       `• Instant activation\n` +
@@ -150,12 +172,10 @@ async function handleDaimoPlanSelection(bot, callbackQuery) {
       `• Secure blockchain transaction\n\n` +
       `Click the button below to complete your payment:`,
       {
-        chat_id: chatId,
-        message_id: callbackQuery.message.message_id,
         parse_mode: 'Markdown',
         reply_markup: {
           inline_keyboard: [
-            [{ text: `� Secure Payment - $${plan.price} USDC`, url: paymentLink }],
+            [{ text: `💳 Secure Payment - $${plan.price} USDC`, url: paymentLink }],
             [
               { text: '« Back to Plans', callback_data: 'daimo_show_plans' },
               { text: '❓ Help', callback_data: 'daimo_help' }
@@ -166,22 +186,19 @@ async function handleDaimoPlanSelection(bot, callbackQuery) {
     );
 
     // Log selection
-    logger.info('Plan selected:', {
+    logger.info('Daimo plan selected:', {
       userId,
       planId,
       price: plan.price,
       timestamp: new Date().toISOString()
     });
 
-  } catch (error) {
-    logger.error('Error handling plan selection:', error);
-    await bot.answerCallbackQuery(callbackQuery.id, {
-      text: '❌ Sorry, there was an error. Please try again.',
-      show_alert: true
-    });
-  }
+    await ctx.answerCbQuery();
 
-  await bot.answerCallbackQuery(callbackQuery.id);
+  } catch (error) {
+    logger.error('Error handling Daimo plan selection:', error);
+    await ctx.answerCbQuery('❌ Sorry, there was an error. Please try again.', { show_alert: true });
+  }
 }
 
 /**
@@ -236,11 +253,28 @@ async function getDaimoSubscriptionInfo(userId) {
 }
 
 /**
- * Handle callback query for showing plans
+ * Handle callback query for showing plans - Telegraf context
  */
-async function handleShowPlansCallback(bot, callbackQuery) {
-  await showDaimoPlans(bot, callbackQuery.message.chat.id);
-  await bot.answerCallbackQuery(callbackQuery.id);
+async function handleShowPlansCallback(ctx) {
+  try {
+    await ctx.answerCbQuery();
+    await showDaimoPlans(ctx);
+  } catch (error) {
+    logger.error('Error showing Daimo plans callback:', error);
+    await ctx.answerCbQuery('Error loading plans', { show_alert: true });
+  }
+}
+
+/**
+ * Generate payment signature for verification
+ */
+function generatePaymentSignature(userId, planId, timestamp) {
+  const secret = process.env.PAYMENT_SIGNATURE_SECRET || 'pnptv-daimo-payment-secret';
+  const data = `${userId}:${planId}:${timestamp}`;
+  return crypto
+    .createHmac('sha256', secret)
+    .update(data)
+    .digest('hex');
 }
 
 module.exports = {
@@ -249,5 +283,6 @@ module.exports = {
   hasDaimoSubscription,
   getDaimoSubscriptionInfo,
   handleShowPlansCallback,
+  generatePaymentSignature,
   PLANS
 };

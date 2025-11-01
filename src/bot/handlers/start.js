@@ -133,7 +133,13 @@ module.exports = async (ctx) => {
               ],
               [
                 {
-                  text: lang === "es" ? "👤 Mi Perfil" : "👤 My Profile",
+                  text: lang === "es" ? "� Pagar con Daimo" : "💰 Pay with Daimo",
+                  callback_data: "daimo_show_plans",
+                },
+              ],
+              [
+                {
+                  text: lang === "es" ? "�👤 Mi Perfil" : "👤 My Profile",
                   callback_data: "show_my_profile",
                 },
               ],
