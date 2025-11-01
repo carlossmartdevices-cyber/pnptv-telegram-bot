@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PNPtv Payment - Complete Your Subscription</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 480px;
+      width: 100%;
+      padding: 40px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .logo p {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .plan-details {
+      background: #f8f9fa;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .plan-details h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 16px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #e1e4e8;
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .detail-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .amount-total {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .amount-total .label {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .amount-total .value {
+      font-size: 36px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .payment-button {
+      margin-bottom: 32px;
+      min-height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .info-box {
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 24px 0;
+      font-size: 13px;
+      color: #1565c0;
+      line-height: 1.6;
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .footer {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #e1e4e8;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    .error {
+      background: #fee;
+      border: 1px solid #fcc;
+      border-radius: 8px;
+      padding: 16px;
+      color: #c33;
+      font-size: 14px;
+      margin: 16px 0;
+    }
+
+    .debug {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 12px;
+      margin: 16px 0;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h1>💎 PNPtv</h1>
+      <p>Premium Subscription</p>
+    </div>
+
+    <div class="plan-details">
+      <h2 id="plan-name">Loading...</h2>
+      
+      <div class="detail-row">
+        <span class="detail-label">Price:</span>
+        <span class="detail-value" id="plan-amount">Loading...</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Duration:</span>
+        <span class="detail-value" id="plan-duration">Loading...</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-label">Network:</span>
+        <span class="detail-value">Base (USDC)</span>
+      </div>
+    </div>
+
+    <div class="amount-total">
+      <div class="label">Total Amount</div>
+      <div class="value" id="amount-display">Loading...</div>
+    </div>
+
+    <div class="info-box">
+      <strong>💳 Payment Methods:</strong>
+      Pay with USDC from any wallet, exchange, or payment app. Your subscription activates automatically.
+    </div>
+
+    <div class="payment-button" id="payment-container">
+      <div class="loading">Loading payment button...</div>
+    </div>
+
+    <div id="debug-info" class="debug" style="display: none;"></div>
+    <div id="error-info" class="error" style="display: none;"></div>
+
+    <div class="footer">
+      <p>Powered by <strong>Daimo Pay</strong></p>
+      <p>Secure crypto payments on Base Network</p>
+    </div>
+  </div>
+
+  <script type="module">
+    // Configuration
+    const DAIMO_API_KEY = 'pay-televisionlatina-VxZH9SQoHYasAoQmdWKuUw';
+    const TREASURY_ADDRESS = '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0';
+
+    // Get URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const planId = params.get('plan') || 'pnp-member';
+    const userId = params.get('user') || 'unknown';
+    const amount = parseFloat(params.get('amount') || '0');
+
+    // Update UI
+    document.getElementById('plan-name').textContent = planId.toUpperCase().replace(/-/g, ' ');
+    document.getElementById('plan-amount').textContent = `$${amount.toFixed(2)} USDC`;
+    document.getElementById('plan-duration').textContent = '30 days'; // Default
+    document.getElementById('amount-display').textContent = `$${amount.toFixed(2)}`;
+
+    // Debug info
+    const debugInfo = {
+      planId,
+      userId,
+      amount,
+      amountUSDC: Math.round(amount * 1000000),
+      timestamp: new Date().toISOString()
+    };
+    
+    document.getElementById('debug-info').textContent = JSON.stringify(debugInfo, null, 2);
+    document.getElementById('debug-info').style.display = 'block';
+
+    console.log('PNPtv Payment Page Loaded:', debugInfo);
+
+    // Validation
+    if (amount < 0.01) {
+      document.getElementById('error-info').textContent = `Invalid amount: $${amount}. Minimum is $0.01`;
+      document.getElementById('error-info').style.display = 'block';
+      document.getElementById('payment-container').innerHTML = '<div class="error">Invalid payment amount</div>';
+    } else {
+      // Create simple payment button
+      document.getElementById('payment-container').innerHTML = `
+        <div style="text-align: center; width: 100%;">
+          <button 
+            onclick="initiateDaimoPayment()" 
+            style="
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              border: none;
+              padding: 16px 32px;
+              border-radius: 12px;
+              font-size: 16px;
+              font-weight: 600;
+              cursor: pointer;
+              width: 100%;
+              transition: transform 0.2s ease;
+            "
+            onmouseover="this.style.transform='scale(1.05)'"
+            onmouseout="this.style.transform='scale(1)'"
+          >
+            💰 Pay $${amount.toFixed(2)} with Daimo
+          </button>
+          <p style="margin-top: 12px; font-size: 12px; color: #666;">
+            Click to pay with crypto wallets, exchanges, or payment apps
+          </p>
+        </div>
+      `;
+    }
+
+    // Payment initiation function
+    window.initiateDaimoPayment = function() {
+      console.log('Initiating Daimo payment...');
+      
+      // Create Daimo payment URL
+      const daimoUrl = new URL('https://pay.daimo.com');
+      daimoUrl.searchParams.set('app', 'pnptv-bot');
+      daimoUrl.searchParams.set('to', TREASURY_ADDRESS);
+      daimoUrl.searchParams.set('amount', Math.round(amount * 1000000).toString()); // USDC units
+      daimoUrl.searchParams.set('token', '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'); // Base USDC
+      daimoUrl.searchParams.set('chain', '8453'); // Base chain
+      daimoUrl.searchParams.set('memo', `PNPtv ${planId} subscription for user ${userId}`);
+      
+      console.log('Opening Daimo payment URL:', daimoUrl.toString());
+      
+      // Try to open in the same window first, fallback to new window
+      try {
+        window.location.href = daimoUrl.toString();
+      } catch (error) {
+        console.error('Error opening payment URL:', error);
+        window.open(daimoUrl.toString(), '_blank');
+      }
+    };
+
+    // Try to load plan details
+    fetch(`/api/plans/${planId}`)
+      .then(response => response.ok ? response.json() : null)
+      .then(plan => {
+        if (plan) {
+          document.getElementById('plan-name').textContent = plan.displayName || plan.name || planId;
+          document.getElementById('plan-duration').textContent = `${plan.durationDays || plan.duration || 30} days`;
+          console.log('Plan details loaded:', plan);
+        }
+      })
+      .catch(error => {
+        console.warn('Could not load plan details:', error);
+      });
+  </script>
+</body>
+</html>
