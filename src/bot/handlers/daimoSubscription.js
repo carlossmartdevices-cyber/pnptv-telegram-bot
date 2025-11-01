@@ -1,5 +1,5 @@
 // Daimo crypto payment subscription handler
-const { firestore } = require('../../config/firebase');
+const { db } = require('../../config/firebase');
 const logger = require('../../utils/logger');
 const crypto = require('crypto');
 
@@ -206,7 +206,7 @@ async function handleDaimoPlanSelection(ctx) {
  */
 async function hasDaimoSubscription(userId) {
   try {
-    const doc = await firestore.collection('users').doc(userId.toString()).get();
+    const doc = await db.collection('users').doc(userId.toString()).get();
 
     if (!doc.exists) {
       return false;
@@ -228,7 +228,7 @@ async function hasDaimoSubscription(userId) {
  */
 async function getDaimoSubscriptionInfo(userId) {
   try {
-    const doc = await firestore.collection('users').doc(userId.toString()).get();
+    const doc = await db.collection('users').doc(userId.toString()).get();
 
     if (!doc.exists) {
       return null;
