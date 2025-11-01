@@ -33,7 +33,10 @@ const requiredEnvVars = ['BOT_TOKEN', 'FIREBASE_PROJECT_ID', 'FIREBASE_CLIENT_EM
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
-  logger.error(`Missing required environment variables: ${missingVars.join(', ')}`);
+  logger.error(`❌ Missing required environment variables: ${missingVars.join(', ')}`);
+  logger.error(`📝 Please edit your .env file and add these variables.`);
+  logger.error(`💡 Run 'npm run check-config' to validate your configuration.`);
+  logger.error(`📚 See QUICKSTART.md for setup instructions.`);
   process.exit(1);
 }
 
@@ -109,15 +112,66 @@ bot.command('refresh', handleAdminCommand);
 bot.command('info', async (ctx) => {
   try {
     await ctx.reply(
-      `🤖 **Santino Group Bot**\n\n` +
+      `🤖 *Santino Group Bot*\n\n` +
       `This bot manages group permissions based on PNPtv subscription tiers.\n\n` +
-      `**Free Users:** Text messages only\n` +
-      `**Premium Users:** All media types allowed\n\n` +
-      `Type /status to check your current permissions.`,
+      `*Free Users:* Text messages only\n` +
+      `*Premium Users:* All media types allowed\n\n` +
+      `📊 *Commands:*\n` +
+      `/status - Check your permissions\n` +
+      `/userprofile - View your profile\n` +
+      `/nearby - Find nearby members (premium)\n` +
+      `/subscription - Check subscription\n\n` +
+      `💎 Upgrade to premium for full access!`,
       { parse_mode: 'Markdown' }
     );
   } catch (error) {
     logger.error('Error in info command:', error);
+    await ctx.reply('❌ Error displaying bot info. Please try again.').catch(() => {});
+  }
+});
+
+// Help command
+bot.command('help', async (ctx) => {
+  try {
+    const isAdmin = ctx.from.id === ctx.chat.id || 
+                    ['administrator', 'creator'].includes(
+                      (await ctx.getChatMember(ctx.from.id).catch(() => ({status: 'member'}))).status
+                    );
+    
+    let helpText = `📚 *Santino Group Bot - Help*\n\n`;
+    
+    helpText += `*👤 User Commands:*\n`;
+    helpText += `/help - Show this help message\n`;
+    helpText += `/info - Bot information\n`;
+    helpText += `/status - Check your permission level\n`;
+    helpText += `/userprofile - View your profile\n`;
+    helpText += `/nearby - Find nearby members (premium)\n`;
+    helpText += `/subscription - Check subscription status\n`;
+    helpText += `/datainfo - Data service information\n\n`;
+    
+    if (isAdmin) {
+      helpText += `*👑 Admin Commands:*\n`;
+      helpText += `/refresh - Refresh user permissions\n`;
+      helpText += `/configwelcome - Configure welcome message\n`;
+      helpText += `/broadcast - Send broadcast message\n`;
+      helpText += `/schedulevideocall - Schedule video call\n`;
+      helpText += `/schedulelivestream - Schedule live stream\n`;
+      helpText += `/listscheduled - View scheduled events\n\n`;
+    }
+    
+    helpText += `*ℹ️ How It Works:*\n`;
+    helpText += `• Free users: Text only\n`;
+    helpText += `• Premium users: Full media access\n`;
+    helpText += `• Permissions auto-sync with main bot\n`;
+    helpText += `• Media from free users is auto-deleted\n\n`;
+    
+    helpText += `💎 *Upgrade to Premium:*\n`;
+    helpText += `Contact support for subscription options!`;
+    
+    await ctx.reply(helpText, { parse_mode: 'Markdown' });
+  } catch (error) {
+    logger.error('Error in help command:', error);
+    await ctx.reply('❌ Error displaying help. Try /info instead.').catch(() => {});
   }
 });
 

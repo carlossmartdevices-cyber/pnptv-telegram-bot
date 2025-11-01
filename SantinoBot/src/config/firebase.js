@@ -28,7 +28,16 @@ function initializeFirebase() {
         serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
       }
       else {
-        throw new Error('No Firebase credentials found. Please set FIREBASE_CREDENTIALS or individual Firebase environment variables.');
+        throw new Error(
+          '❌ No Firebase credentials found!\n\n' +
+          'Please set Firebase credentials in your .env file:\n' +
+          '  • FIREBASE_PROJECT_ID\n' +
+          '  • FIREBASE_CLIENT_EMAIL\n' +
+          '  • FIREBASE_PRIVATE_KEY\n\n' +
+          'Or provide FIREBASE_CREDENTIALS as JSON.\n\n' +
+          '📚 See QUICKSTART.md for setup instructions.\n' +
+          '💡 Run: npm run check-config'
+        );
       }
 
       admin.initializeApp({

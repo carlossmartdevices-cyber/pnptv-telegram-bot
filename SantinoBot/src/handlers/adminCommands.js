@@ -17,29 +17,28 @@ async function cmdConfigWelcome(ctx) {
   try {
     const isAdmin = await checkIsAdmin(ctx);
     if (!isAdmin) {
-      await ctx.reply('❌ Admin only command');
+      await ctx.reply('❌ This command is only available to group administrators.');
       return;
     }
     
+    const currentConfig = await communityConfig.getCommunityConfig();
+    
     await ctx.reply(
-      `📝 **Configure Welcome Message**\n\n` +
-      `Use these commands:\n\n` +
-      `\`/setwelcometitle [title]\`\n` +
-      `\`/setsantinomsg [message]\`\n` +
-      `\`/setcommunitydesc [description]\`\n` +
-      `\`/setcommunityrules [rules]\`\n\n` +
-      `Or use inline form:`,
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '⚙️ Edit Config', callback_data: 'edit_welcome_config' }]
-          ]
-        }
-      }
+      `📝 *Welcome Message Configuration*\n\n` +
+      `*Current Settings:*\n` +
+      `Title: ${currentConfig.welcomeTitle}\n\n` +
+      `*To update, send commands:*\n\n` +
+      `\`/setwelcometitle Your New Title\`\n` +
+      `\`/setsantinomsg Your message from Santino\`\n` +
+      `\`/setdescription Community description here\`\n` +
+      `\`/setrules Your community rules\`\n\n` +
+      `*Example:*\n` +
+      `\`/setwelcometitle 👋 Welcome to PNPtv Community!\``,
+      { parse_mode: 'Markdown' }
     );
   } catch (error) {
     logger.error('Error in configwelcome command:', error);
-    await ctx.reply('❌ Error');
+    await ctx.reply('❌ Error loading configuration. Please try again.').catch(() => {});
   }
 }
 
@@ -174,7 +173,7 @@ async function cmdBroadcast(ctx) {
   try {
     const isAdmin = await checkIsAdmin(ctx);
     if (!isAdmin) {
-      await ctx.reply('❌ Admin only command');
+      await ctx.reply('❌ This command is only available to group administrators.');
       return;
     }
     
@@ -182,20 +181,45 @@ async function cmdBroadcast(ctx) {
     
     if (args.length < 2) {
       await ctx.reply(
-        `📢 **Send Broadcast Message**\n\n` +
-        `Format:\n` +
-        `\`/broadcast\n` +
-        `Title: Broadcast Title\n` +
-        `Content: Your message here\n` +
-        `Type: text|photo|video|document\n` +
-        `Schedule: now|once|recurring\n` +
-        `Time: 2025-01-15 10:00 (if not now)\n` +
-        `Pattern: 0 9 * * * (cron, if recurring)\``,
+        `📢 *Send Broadcast Message*\n\n` +
+        `*Simple Format:*\n` +
+        `\`\`\`\n/broadcast\nYour message here\`\`\`\n\n` +
+        `*Advanced Format:*\n` +
+        `\`\`\`\n/broadcast\n` +
+        `Title: Announcement\n` +
+        `Content: Your message\n` +
+        `Type: text\n` +
+        `Schedule: now\`\`\`\n\n` +
+        `*Examples:*\n` +
+        `• \`/broadcast\\nHello everyone!\` - Send immediately\n` +
+        `• Schedule options: now | once | recurring\n` +
+        `• Types: text | photo | video`,
         { parse_mode: 'Markdown' }
       );
       return;
     }
     
+    // Simple mode: just message content
+    if (!args[1].startsWith('Title:')) {
+      const content = args.slice(1).join('\n');
+      const result = await broadcastService.createBroadcast({
+        groupId: ctx.chat.id,
+        title: 'Quick Broadcast',
+        content,
+        messageType: 'text',
+        schedule: null,
+        createdBy: ctx.from.id.toString()
+      });
+      
+      if (result.success) {
+        await ctx.reply(`✅ Broadcast sent successfully!`, { parse_mode: 'Markdown' });
+      } else {
+        await ctx.reply(`❌ Error: ${result.error}`);
+      }
+      return;
+    }
+    
+    // Advanced mode with full options
     const title = args[1]?.replace('Title: ', '')?.trim();
     const content = args[2]?.replace('Content: ', '')?.trim();
     const messageType = args[3]?.replace('Type: ', '')?.trim() || 'text';
@@ -221,18 +245,18 @@ async function cmdBroadcast(ctx) {
     
     if (result.success) {
       if (scheduleType === 'now') {
-        await ctx.reply(`✅ Broadcast ready to send!\n\nID: \`${result.broadcastId}\``, { parse_mode: 'Markdown' });
+        await ctx.reply(`✅ Broadcast sent!`, { parse_mode: 'Markdown' });
       } else if (scheduleType === 'once') {
-        await ctx.reply(`✅ Broadcast scheduled for ${timeStr}!\n\nID: \`${result.broadcastId}\``, { parse_mode: 'Markdown' });
+        await ctx.reply(`✅ Broadcast scheduled for ${timeStr}`, { parse_mode: 'Markdown' });
       } else {
-        await ctx.reply(`✅ Recurring broadcast created!\n\nPattern: \`${pattern}\`\nID: \`${result.broadcastId}\``, { parse_mode: 'Markdown' });
+        await ctx.reply(`✅ Recurring broadcast created with pattern: \`${pattern}\``, { parse_mode: 'Markdown' });
       }
     } else {
       await ctx.reply(`❌ Error: ${result.error}`);
     }
   } catch (error) {
     logger.error('Error in broadcast command:', error);
-    await ctx.reply('❌ Error creating broadcast');
+    await ctx.reply('❌ Error creating broadcast. Please check your format and try again.').catch(() => {});
   }
 }
 

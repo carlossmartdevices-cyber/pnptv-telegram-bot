@@ -8,7 +8,11 @@
     "dev": "nodemon src/bot.js",
     "test": "mocha test/**/*.test.js",
     "setup": "bash setup.sh",
-    "check-config": "node test-env.js"
+    "setup:interactive": "node scripts/interactive-setup.js",
+    "check-config": "node test-env.js",
+    "deploy": "bash scripts/quick-deploy.sh",
+    "deploy:railway": "bash scripts/deploy-railway.sh",
+    "deploy:vps": "bash scripts/deploy-vps.sh"
   },
   "keywords": [
     "telegram",

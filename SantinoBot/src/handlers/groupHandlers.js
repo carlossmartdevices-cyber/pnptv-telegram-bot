@@ -132,22 +132,31 @@ async function handleMediaMessage(ctx) {
 
     const { tier } = await getUserPermissions(userId);
     
+    // Check if user is allowed to send this message type
     if (!isMessageTypeAllowed(tier, messageType)) {
-      // Delete the unauthorized message
+      // Delete the unauthorized message immediately
       await ctx.deleteMessage();
       
-      // Send warning message
+      // Send friendly warning message
       const warningMsg = await ctx.reply(
-        `⚠️ @${ctx.from.username || ctx.from.first_name}, only premium members can send media.\n\n` +
-        `💎 Upgrade to premium to unlock photos, videos, and more!\n` +
-        `📱 Contact support for subscription options.`,
-        { reply_to_message_id: ctx.message.message_id }
-      );
+        `⚠️ Hey @${ctx.from.username || ctx.from.first_name}!\n\n` +
+        `Only premium members can send media (photos, videos, etc.).\n\n` +
+        `💎 *Want to upgrade?*\n` +
+        `Premium members get:\n` +
+        `• Send photos & videos\n` +
+        `• Access premium content\n` +
+        `• Find nearby members\n` +
+        `• And much more!\n\n` +
+        `📱 Contact support to upgrade your account.`,
+        { parse_mode: 'Markdown' }
+      ).catch(() => null);
 
-      // Auto-delete warning after 15 seconds
-      setTimeout(() => {
-        ctx.deleteMessage(warningMsg.message_id).catch(() => {});
-      }, 15000);
+      // Auto-delete warning after 20 seconds to keep chat clean
+      if (warningMsg) {
+        setTimeout(() => {
+          ctx.deleteMessage(warningMsg.message_id).catch(() => {});
+        }, 20000);
+      }
 
       logger.info(`Deleted ${messageType} from free user ${userId}`);
     }

@@ -1,34 +1,25 @@
-# 📚 SantinoBot Documentation Index
+# 📚 Documentation Index
 
-## Quick Navigation
+Complete guide to Santino Group Bot documentation.
 
-### 🚀 Start Here
-1. **[QUICK_START_NEW_FEATURES.md](./QUICK_START_NEW_FEATURES.md)** - 5-minute setup guide
-2. **[IMPLEMENTATION_COMPLETE.md](./IMPLEMENTATION_COMPLETE.md)** - What was added & what changed
+## 🚀 Getting Started (Start Here!)
 
-### 📖 Detailed Guides
-3. **[NEW_FEATURES_GUIDE.md](./NEW_FEATURES_GUIDE.md)** - Complete feature documentation
-4. **[FIRESTORE_SCHEMA.md](./FIRESTORE_SCHEMA.md)** - Database structure & queries
-5. **[VISUAL_REFERENCE.md](./VISUAL_REFERENCE.md)** - Diagrams & visual guides
+**New to the bot? Start with these:**
 
----
+1. **[GETTING_STARTED.md](GETTING_STARTED.md)** ⭐ **START HERE**
+   - 5-minute quick setup guide
+   - Step-by-step instructions
+   - Perfect for beginners
 
-## 📋 Documentation Files Overview
+2. **[README.md](README.md)**
+   - Project overview
+   - Feature list
+   - Quick start commands
 
-### 1. QUICK_START_NEW_FEATURES.md
-**Length**: ~200 lines  
-**Best For**: Getting started quickly  
-**Contains**:
-- ✅ 5-minute setup
-- ✅ Admin commands reference
-- ✅ Testing checklist
-- ✅ Troubleshooting
-
-**Start Here If**: You want to deploy today
-
----
-
-### 2. IMPLEMENTATION_COMPLETE.md
+3. **[QUICKSTART.md](QUICKSTART.md)**
+   - Detailed setup guide
+   - Bot creation steps
+   - Configuration examples
 **Length**: ~300 lines  
 **Best For**: Understanding what's changed  
 **Contains**:

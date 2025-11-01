@@ -36,26 +36,28 @@ async function createPaymentLink({
   const refundAddr = refundAddress || process.env.NEXT_PUBLIC_REFUND_ADDRESS || treasuryAddress;
 
   // Prepare payment data according to Daimo Pay API spec
+  // Reference: https://paydocs.daimo.com
   const paymentData = {
     display: {
       intent: 'Subscribe',
-      preferredChains: [8453], // Base mainnet
+      preferredChains: [8453, 10], // Base and Optimism
       preferredTokens: [
-        { chain: 10, address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85' } // Optimism USDC
+        { chain: 8453, address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' }, // Base USDC
+        { chain: 10, address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85' }    // Optimism USDC
       ],
-      paymentOptions: ['Coinbase', 'Venmo', 'CashApp', 'Binance'], // Available payment methods
+      paymentOptions: ['AllExchanges', 'AllPaymentApps'], // Show all available payment methods
       redirectUri: `${process.env.NEXT_PUBLIC_BOT_URL || 'https://pnptv.app'}/payment/success?user=${userId}&plan=${planId}`
     },
     destination: {
       destinationAddress: treasuryAddress,
-      chainId: 10, // Optimism
-      tokenAddress: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', // USDC on Optimism
+      chainId: 8453, // Base (primary chain)
+      tokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
       amountUnits: amount.toFixed(2)
     },
     refundAddress: refundAddr,
     metadata: {
-      userId,
-      planId,
+      userId: userId.toString(),
+      planId: planId.toString(),
       ...metadata
     }
   };
@@ -72,7 +74,7 @@ async function createPaymentLink({
       paymentData,
       {
         headers: {
-          'Api-Key': DAIMO_API_KEY,
+          'API-Key': DAIMO_API_KEY,
           'Content-Type': 'application/json'
         },
         timeout: 30000
@@ -118,7 +120,7 @@ async function getPaymentStatus(paymentId) {
       `${DAIMO_API_URL}/payment/${paymentId}`,
       {
         headers: {
-          'Api-Key': DAIMO_API_KEY
+          'API-Key': DAIMO_API_KEY
         },
         timeout: 10000
       }
@@ -150,7 +152,7 @@ async function cancelPayment(paymentId) {
       `${DAIMO_API_URL}/payment/${paymentId}`,
       {
         headers: {
-          'Api-Key': DAIMO_API_KEY
+          'API-Key': DAIMO_API_KEY
         },
         timeout: 10000
       }
