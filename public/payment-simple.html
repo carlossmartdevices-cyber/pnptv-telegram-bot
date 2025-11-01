@@ -418,8 +418,9 @@
             const appId = 'pay-televisionlatina-VxZH9SQoHYasAoQmdWKuUw';
             const recipientAddress = '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0'; // PNPtv USDC treasury
             
-            // Daimo Pay URL format: https://pay.daimo.com/appId/<appId>?recipient=<address>&amount=<amount>
-            const daimoPayUrl = `https://pay.daimo.com/appId/${appId}?recipient=${recipientAddress}&amount=${amount}&chain=base&token=usdc`;
+            // Daimo Pay URL format: Use the correct API endpoint
+            // The appId should be a base64-encoded parameter, not part of the path
+            const daimoPayUrl = `https://pay.daimo.com/?recipient=${recipientAddress}&amount=${amount}&appId=${appId}&chain=base&token=usdc`;
 
             console.log('Redirecting to Daimo Pay:', daimoPayUrl);
 
