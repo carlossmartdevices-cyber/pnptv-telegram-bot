@@ -146,7 +146,7 @@ async function handleDaimoPlanSelection(ctx) {
     }
 
     // Get configured payment page URL
-    const PAYMENT_PAGE_URL = process.env.PAYMENT_PAGE_URL || process.env.BOT_URL + '/payment';
+    const PAYMENT_PAGE_URL = process.env.PAYMENT_PAGE_URL || process.env.BOT_URL + '/pay';
     if (!PAYMENT_PAGE_URL) {
       throw new Error('Payment page URL not configured');
     }
