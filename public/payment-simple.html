@@ -418,14 +418,15 @@
             const appId = 'pay-televisionlatina-VxZH9SQoHYasAoQmdWKuUw';
             const recipientAddress = '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0'; // PNPtv USDC treasury
             
-            const daimoPayUrl = `https://pay.daimo.com/?appId=${appId}&amount=${amount}&chain=base&token=usdc&recipient=${recipientAddress}&userId=${userId}&plan=${planId}&timestamp=${timestamp}&signature=${signature}`;
+            // Daimo Pay URL format: https://pay.daimo.com/appId/<appId>?recipient=<address>&amount=<amount>
+            const daimoPayUrl = `https://pay.daimo.com/appId/${appId}?recipient=${recipientAddress}&amount=${amount}&chain=base&token=usdc`;
 
             console.log('Redirecting to Daimo Pay:', daimoPayUrl);
 
             // Redirect to Daimo Pay
             setTimeout(() => {
                 window.location.href = daimoPayUrl;
-            }, 1000);
+            }, 500);
         }
 
         // Initialize on page load
