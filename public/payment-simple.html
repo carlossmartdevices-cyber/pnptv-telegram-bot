@@ -412,9 +412,15 @@
             document.getElementById('content').style.display = 'none';
             document.getElementById('loading').style.display = 'block';
 
-            // Construct Daimo Pay URL
-            // This integrates with Daimo Pay API
-            const daimoPayUrl = `https://pay.daimo.com/?appId=pnptv&amount=${amount}&chain=base&token=usdc&recipient=0x&userId=${userId}&metadata=${encodeURIComponent(JSON.stringify({plan: planId, ts: timestamp, sig: signature}))}`;
+            // Construct Daimo Pay URL with proper configuration
+            // AppId: pay-televisionlatina-VxZH9SQoHYasAoQmdWKuUw (Daimo registered app ID)
+            // Recipient: PNPtv treasury address on Base network for USDC payments
+            const appId = 'pay-televisionlatina-VxZH9SQoHYasAoQmdWKuUw';
+            const recipientAddress = '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0'; // PNPtv USDC treasury
+            
+            const daimoPayUrl = `https://pay.daimo.com/?appId=${appId}&amount=${amount}&chain=base&token=usdc&recipient=${recipientAddress}&userId=${userId}&plan=${planId}&timestamp=${timestamp}&signature=${signature}`;
+
+            console.log('Redirecting to Daimo Pay:', daimoPayUrl);
 
             // Redirect to Daimo Pay
             setTimeout(() => {
