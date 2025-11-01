@@ -68,10 +68,68 @@ function verifyRequestSignature(body, signature, timestamp) {
 // ============================================
 
 const PLANS = [
-  { id: 'trial-week', name: 'Trial Week', price: '14.99', description: '7 days access', periodLabel: '1 week' },
-  { id: 'pnp-member', name: 'PNP Member', price: '24.99', description: '30 days access', periodLabel: '1 month' },
-  { id: 'crystal-member', name: 'PNP Crystal Member', price: '49.99', description: '120 days access', periodLabel: '4 months' },
-  { id: 'diamond-member', name: 'PNP Diamond Member', price: '99.99', description: '365 days access', periodLabel: '1 year' },
+  { 
+    id: 'trial-week', 
+    name: 'Trial Week',
+    displayName: 'Trial Week',
+    price: 14.99,
+    duration: 7,
+    description: '7 days access',
+    periodLabel: '1 week',
+    features: [
+      'Unlimited HD streaming',
+      'Access to premium content',
+      'Priority customer support'
+    ],
+    icon: '⭐'
+  },
+  { 
+    id: 'pnp-member', 
+    name: 'PNP Member',
+    displayName: 'PNP Member',
+    price: 24.99,
+    duration: 30,
+    description: '30 days access',
+    periodLabel: '1 month',
+    features: [
+      'Unlimited HD streaming',
+      'Priority customer support',
+      'Instant activation'
+    ],
+    icon: '💎'
+  },
+  { 
+    id: 'crystal-member', 
+    name: 'PNP Crystal Member',
+    displayName: 'PNP Crystal Member',
+    price: 49.99,
+    duration: 120,
+    description: '120 days access',
+    periodLabel: '4 months',
+    features: [
+      'Unlimited HD streaming',
+      'Priority customer support',
+      'Instant activation',
+      'Extended access - 4 months'
+    ],
+    icon: '💠'
+  },
+  { 
+    id: 'diamond-member', 
+    name: 'PNP Diamond Member',
+    displayName: 'PNP Diamond Member',
+    price: 99.99,
+    duration: 365,
+    description: '365 days access',
+    periodLabel: '1 year',
+    features: [
+      'Unlimited HD streaming',
+      'Priority customer support',
+      'Instant activation',
+      'Full year access - best value!'
+    ],
+    icon: '💎'
+  },
 ];
 
 router.get('/api/plans/:planId', (req, res) => {
