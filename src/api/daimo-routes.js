@@ -1,8 +1,8 @@
 // Daimo Pay API Routes
 const express = require('express');
-const { firestore } = require('../config/firebase');
-const { rateLimit } = require('express-rate-limit');
-const { verifyWebhookSignature } = require('@daimo/pay-common');
+const crypto = require('crypto');
+const { db } = require('../config/firebase');
+const rateLimit = require('express-rate-limit');
 const logger = require('../utils/logger');
 
 // Rate limiting
@@ -20,6 +20,36 @@ const router = express.Router();
 
 // Apply rate limiting to all routes
 router.use(apiLimiter);
+
+// ============================================
+// Helper Functions
+// ============================================
+
+/**
+ * Verify Daimo webhook request signature using HMAC-SHA256
+ */
+function verifyRequestSignature(body, signature, timestamp) {
+  const secret = process.env.DAIMO_WEBHOOK_TOKEN;
+  if (!secret) {
+    logger.warn('[Daimo] Webhook token not configured');
+    return false;
+  }
+
+  // Reconstruct the signed message: timestamp + body
+  const message = `${timestamp}.${JSON.stringify(body)}`;
+  
+  // Create HMAC-SHA256 signature
+  const hash = crypto
+    .createHmac('sha256', secret)
+    .update(message)
+    .digest('hex');
+
+  // Compare signatures (constant-time comparison to prevent timing attacks)
+  return crypto.timingSafeEqual(
+    Buffer.from(hash),
+    Buffer.from(signature)
+  );
+}
 
 // ============================================
 // Plans API - Returns subscription plan details
@@ -44,30 +74,45 @@ router.get('/api/plans/:planId', (req, res) => {
 // Daimo Webhook - Receives payment notifications
 // ============================================
 
-router.post('/api/daimo/webhook', express.json(), async (req, res) => {
+router.post('/api/daimo/webhook', webhookLimiter, express.json(), async (req, res) => {
   try {
-    // Verify authorization
+    // Verify authorization via Authorization header
     const auth = req.get('Authorization') || '';
     const expectedToken = process.env.DAIMO_WEBHOOK_TOKEN;
     const expected = `Basic ${expectedToken}`;
 
     if (!expectedToken || auth !== expected) {
-      console.error('[Daimo] Webhook unauthorized:', auth);
-      return res.status(401).send('Unauthorized');
+      logger.warn('[Daimo] Webhook unauthorized - invalid auth header');
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Verify request signature if validation enabled
+    if (process.env.DAIMO_WEBHOOK_VALIDATION === 'true') {
+      const signature = req.get('X-Daimo-Signature') || '';
+      const timestamp = req.get('X-Daimo-Timestamp') || '';
+      
+      if (!verifyRequestSignature(req.body, signature, timestamp)) {
+        logger.warn('[Daimo] Webhook signature verification failed');
+        return res.status(401).json({ error: 'Invalid signature' });
+      }
     }
 
     const event = req.body;
     const { type, payment } = event || {};
 
-    console.log('[Daimo] Webhook event:', type, payment?.id);
+    logger.info('[Daimo] Webhook event received:', {
+      type,
+      paymentId: payment?.id,
+      userId: payment?.metadata?.userId
+    });
 
     if (type === 'payment_completed') {
       const userId = payment?.metadata?.userId;
       const planId = payment?.metadata?.planId;
 
       if (!userId || !planId) {
-        console.warn('[Daimo] Missing metadata:', { userId, planId });
-        return res.status(200).send('OK');
+        logger.warn('[Daimo] Missing payment metadata:', { userId, planId });
+        return res.status(200).json({ status: 'ok', warning: 'Missing metadata' });
       }
 
       // Find plan to get duration
@@ -82,7 +127,7 @@ router.post('/api/daimo/webhook', express.json(), async (req, res) => {
       }
 
       // Update user subscription in Firestore
-      await firestore.collection('users').doc(userId).set({
+      await db.collection('users').doc(userId).set({
         tier: planId,
         subscriptionActive: true,
         subscriptionEndsAt: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
@@ -93,7 +138,7 @@ router.post('/api/daimo/webhook', express.json(), async (req, res) => {
       }, { merge: true });
 
       // Store payment record
-      await firestore.collection('payments').doc(payment.id).set({
+      await db.collection('payments').doc(payment.id).set({
         status: payment.status,
         type,
         userId,
@@ -104,14 +149,27 @@ router.post('/api/daimo/webhook', express.json(), async (req, res) => {
         createdAt: new Date()
       }, { merge: true });
 
-      console.log(`[Daimo] ✅ Activated subscription for user ${userId}, plan ${planId}, ${durationDays} days`);
+      logger.info('[Daimo] ✅ Activated subscription:', {
+        userId,
+        planId,
+        durationDays,
+        paymentId: payment.id,
+        amount: payment.amount
+      });
+    } else {
+      logger.warn('[Daimo] Unhandled event type:', { type, paymentId: payment?.id });
     }
 
-    res.status(200).send('OK');
+    // Always return 200 OK to acknowledge receipt and prevent retries
+    return res.status(200).json({ status: 'ok' });
   } catch (err) {
-    console.error('[Daimo] Webhook error:', err);
-    // ACK anyway to avoid retry storms
-    res.status(200).send('OK');
+    logger.error('[Daimo] Webhook processing error:', {
+      error: err.message,
+      stack: err.stack,
+      paymentId: req.body?.payment?.id
+    });
+    // ACK anyway to prevent retry storms
+    return res.status(200).json({ status: 'ok', error: 'Processing error' });
   }
 });
 
