@@ -1,0 +1,36 @@
+{
+  "name": "santino-group-bot",
+  "version": "1.0.0",
+  "description": "Anonymous Telegram Group Management Bot for PNPtv Community",
+  "main": "src/bot.js",
+  "scripts": {
+    "start": "node src/bot.js",
+    "dev": "nodemon src/bot.js",
+    "test": "mocha test/**/*.test.js",
+    "setup": "./setup.sh"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "group",
+    "management",
+    "permissions"
+  ],
+  "author": "PNPtv",
+  "license": "MIT",
+  "dependencies": {
+    "telegraf": "^4.15.6",
+    "firebase-admin": "^11.11.0",
+    "dotenv": "^16.3.1",
+    "winston": "^3.11.0",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "mocha": "^10.2.0",
+    "chai": "^4.3.10"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

@@ -6,7 +6,7 @@
 // Load admin IDs from environment variable or use default
 const ADMIN_IDS = process.env.ADMIN_IDS
   ? process.env.ADMIN_IDS.split(',').map(id => parseInt(id.trim()))
-  : [6636269];
+  : [8365312597]; // Updated default to correct admin ID
 
 /**
  * Check if a user is an admin

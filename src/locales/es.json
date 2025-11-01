@@ -1,4 +1,7 @@
 {
+  "emailPrompt": "📧 **Únete a Nuestra Comunidad**\n\nIngresa tu email para ser parte de la Comunidad PNPtv! en Telegram y obtén acceso a:\n\n✨ Canal gratuito\n🌍 Función de miembros cercanos (3 visibles)\n🔍 3 búsquedas semanales\n\nTu email:",
+  "emailInvalid": "❌ Por favor ingresa un email válido",
+  "emailConfirmed": "✅ ¡Email confirmado! ¡Bienvenido a la Comunidad PNPtv!",
   "welcome": "💫 **¡Bienvenidos a PNPtv!**\n\n¡Bienvenidos a PNPtv!",
   "languagePrompt": "🌎 Elige tu idioma | Choose your language",
   "languageEnglish": "English 🇺🇸",
@@ -21,8 +24,8 @@
   "mapInfo": "📍 **Mapa PNP**\n\nDescubre quién está cerca de ti.\n\nActiva tu ubicación y explora conexiones reales a tu alrededor.",
   "liveInfo": "📡 **Shows en Vivo**\n\nTransmite, mira e interactúa en tiempo real.\n\n🔥 ¡Muy pronto!",
   "helpInfo": "🤖 **PNPtv! Soporte**\n\n👋 ¡Hola! ¡Estoy aquí para ayudarte a aprovechar al máximo PNPtv!\n\n💎 **OFERTA EXCLUSIVA:** ¿Quieres acceso completo a nuestro contenido premium, shows en vivo y conectar con miembros cerca de ti? Conoce nuestros **planes de membresía PRIME** — ¡la experiencia PNP definitiva te espera!\n\n**Ayuda Rápida:**\n👤 /profile - Tu perfil\n🗺️ /map - Explorar cercanos\n📡 /live - Ver en vivo\n💎 /subscribe - Mejorar plan\n⚙️ /admin - Panel admin\n\n📧 **Soporte:** support@pnptv.app\n📜 **Términos:** https://pnptv.app/terms-es\n\n✨ **Consejo Pro:** ¡Los miembros Premium tienen visualización sin anuncios, swipes ilimitados, insignias VIP y soporte prioritario! ¡Mejora ahora y únete a la experiencia PRIME! 🔥",
-  "silverFeatures": "🥈 **Plan Silver — $15/mes**\n\n✨ Incluye:\n• Experiencia sin anuncios\n• 20 swipes diarios\n• Insignia de verificación\n• Soporte estándar",
-  "goldenFeatures": "🥇 **Plan Golden — $25/mes + 5 USDT de bono**\n\n💫 Todo lo de Silver, además de:\n• Acceso a canales VIP\n• Insignias doradas exclusivas\n• Soporte prioritario\n• 5 USDT mensuales en cripto\n• Swipes ilimitados\n• Acceso anticipado a eventos",
+  "silverFeatures": "💎 **Semana de Prueba — $14.99**\n\n✨ Incluye:\n• 7 días de acceso completo\n• Todas las características\n• Perfecto para probar PNPtv\n\n🌟 **Miembro PNP — $24.99/mes**\n\n✨ Incluye:\n• Acceso de 30 días\n• Experiencia de miembro completo\n• Acceso a todas las características",
+  "goldenFeatures": "💎 **Miembro Cristal PNP — $49.99/4 meses**\n\n💫 La Mejor Opción:\n• Acceso de 120 días (4 meses)\n• Todas las características premium\n• Ahorro en comparación con mensual\n\n💍 **Miembro Diamante PNP — $99.99/año**\n\n👑 Acceso Máximo:\n• Acceso completo de 365 días (1 año)\n• Máximo ahorro\n• Estado de miembro VIP",
   "editBio": "📝 Editar Bio",
   "editLocation": "📍 Editar Ubicación",
   "upgradeTier": "💎 Mejorar Membresía",

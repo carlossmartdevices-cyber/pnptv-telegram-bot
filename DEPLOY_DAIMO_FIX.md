@@ -197,7 +197,7 @@ pm2 restart pnptv-bot
    ```
 
 3. **Check webhook endpoint:**
-   - Ensure Daimo webhook is configured: `https://pnptv.app/daimo/webhook`
+   - Ensure Daimo webhook is configured: `https://pnptv-payment-9lx3oqtgp-pnptvbots-projects.vercel.app/api/webhook`
    - Test webhook receives notifications
 
 4. **Verify subscription activation:**

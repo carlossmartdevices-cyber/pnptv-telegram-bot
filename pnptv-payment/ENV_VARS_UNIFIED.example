@@ -1,0 +1,113 @@
+# ======================================================
+# PNPtv Payment - UNIFIED Environment Variables (EXAMPLE)
+# ======================================================
+# IMPORTANT:
+# - This is an example/template file. DO NOT commit real secrets.
+# - For Vercel, add the values via the Vercel dashboard or `vercel env add`.
+# - Values below are placeholders. Replace the placeholders locally or set them in Vercel.
+# - The project supports either individual Firebase vars *or* a single FIREBASE_CREDENTIALS JSON string.
+
+#########################
+# Environment
+#########################
+NODE_ENV=production
+
+#########################
+# Telegram (Bot) - required if the Telegram bot features are used
+#########################
+TELEGRAM_BOT_TOKEN=your-telegram-bot-token-here
+TELEGRAM_TOKEN=your-telegram-bot-token-here
+TELEGRAM_BOT_USERNAME=PNPtvBot
+NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=PNPtvBot
+CHANNEL_ID=-100xxxxxxxxxxx
+ADMIN_IDS=8365312597
+
+#########################
+# Firebase (required for subscriptions / server operations)
+#########################
+# Option A: Individual variables (recommended for Vercel)
+FIREBASE_PROJECT_ID=your-firebase-project-id
+FIREBASE_CLIENT_EMAIL=your-firebase-client-email@yourproject.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...replace-with-your-private-key...\n-----END PRIVATE KEY-----\n"
+FIREBASE_DATABASE_URL=https://your-firebase-project.firebaseio.com
+FIREBASE_STORAGE_BUCKET=your-firebase-project.appspot.com
+
+# Option B (alternative): Single JSON credentials string
+# FIREBASE_CREDENTIALS={"type":"service_account",...}
+
+#########################
+# Daimo Pay (required for payments)
+#########################
+DAIMO_APP_ID=pay-xxxxxxxxxxxxxxxxxxxxxxxx
+DAIMO_WEBHOOK_TOKEN=your-daimo-webhook-token   # this can be used as WEBHOOK_SECRET
+DAIMO_API_URL=https://api.daimo.com/v1
+DAIMO_API_VERSION=v1
+DAIMO_API_TIMEOUT=30000
+DAIMO_MIN_AMOUNT=0.01
+DAIMO_MAX_AMOUNT=10000
+DAIMO_WEBHOOK_VALIDATION=true
+DAIMO_WEBHOOK_URL=https://your-site.example.com/api/webhook
+DAIMO_RETURN_URL=https://your-site.example.com/payment/success
+
+#########################
+# Frontend / Public config (safe to expose)
+#########################
+# Wallet addresses (you said you want to use the same wallet below)
+NEXT_PUBLIC_RECIPIENT_ADDRESS=0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0
+NEXT_PUBLIC_TREASURY_ADDRESS=0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0
+NEXT_PUBLIC_REFUND_ADDRESS=0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0
+
+NEXT_PUBLIC_DAIMO_APP_ID=pay-xxxxxxxxxxxxxxxxxxxxxxxx
+NEXT_PUBLIC_DAIMO_ENV=production
+# Settlement currency: USDC (Coinbase) - the app will accept USDC settlements
+NEXT_PUBLIC_DAIMO_CURRENCY=USDC
+
+# Settlement network / token (from your existing config)
+NEXT_PUBLIC_SETTLEMENT_CHAIN=10
+NEXT_PUBLIC_SETTLEMENT_TOKEN=0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85
+
+#########################
+# Webhook & Signature
+#########################
+# WEBHOOK_SECRET should match the secret/token configured in Daimo Pay webhooks
+WEBHOOK_SECRET=your-webhook-secret-here
+
+#########################
+# Sentry / Monitoring (optional but recommended)
+#########################
+# Use NEXT_PUBLIC_SENTRY_DSN for client-side and SENTRY_DSN for server-side if preferred
+NEXT_PUBLIC_SENTRY_DSN=your-sentry-dsn-or-empty
+SENTRY_DSN=your-sentry-dsn-or-empty
+SENTRY_ENABLE_IN_DEV=false
+
+#########################
+# Epayco (optional third-party payments)
+#########################
+EPAYCO_PUBLIC_KEY=your-epayco-public-key
+EPAYCO_PRIVATE_KEY=your-epayco-private-key
+EPAYCO_TEST=false
+
+#########################
+# URLs (update to your production host)
+#########################
+NEXT_PUBLIC_WEBAPP_URL=https://pnptv.app
+BOT_URL=https://pnptv.app
+PAYMENT_PAGE_URL=https://pnptv.app/pay
+
+#########################
+# Security / JWT / Misc
+#########################
+JWT_SECRET=replace-with-a-secure-jwt-secret
+
+#########################
+# Optional: Redis / Cache
+#########################
+# REDIS_ENABLED=true
+# REDIS_URL=redis://default:password@your-redis-host:6379
+
+#########################
+# Notes
+#########################
+# 1) Do NOT commit real secrets to git. Use this file only as a template/example.
+# 2) For Vercel: add production secrets using the Vercel dashboard or `vercel env add`.
+# 3) If you want me to remove legacy env files from the repo, confirm and I'll delete them. I won't delete any file that contains secrets without explicit confirmation.

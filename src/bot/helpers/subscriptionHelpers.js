@@ -56,26 +56,27 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
 
     const userId = ctx.from.id.toString();
     const features = formatPlanFeatures(plan, lang);
-    const priceDisplay = `${plan.priceInCOP.toLocaleString()} ${
-      plan.currency || "COP"
-    }`;
+    const priceDisplay = plan.priceInCOP 
+      ? `${plan.priceInCOP.toLocaleString()} ${plan.currency || "COP"}`
+      : plan.price || "Contact for pricing";
     const planNameDisplay = plan.displayName || plan.name;
 
     // If no payment method specified, show plan details with payment options
     if (!paymentMethod) {
       // Plan details message
+      const copPrice = plan.priceInCOP ? `(${plan.priceInCOP.toLocaleString()} COP)` : '';
       const planDetails =
         lang === "es"
           ? `${plan.icon || "💎"} **${planNameDisplay}**\n\n` +
             `**Descripción:**\n${plan.description || "Plan de suscripción premium"}\n\n` +
             `**Características:**\n${features}\n\n` +
-            `💰 **Precio:** $${plan.price} USD (${plan.priceInCOP.toLocaleString()} COP)\n` +
+            `💰 **Precio:** $${plan.price} USD ${copPrice}\n` +
             `⏱️ **Duración:** ${plan.durationDays || plan.duration} días\n\n` +
             `**Selecciona tu método de pago:**`
           : `${plan.icon || "💎"} **${planNameDisplay}**\n\n` +
             `**Description:**\n${plan.description || "Premium subscription plan"}\n\n` +
             `**Features:**\n${features}\n\n` +
-            `💰 **Price:** $${plan.price} USD (${plan.priceInCOP.toLocaleString()} COP)\n` +
+            `💰 **Price:** $${plan.price} USD ${copPrice}\n` +
             `⏱️ **Duration:** ${plan.durationDays || plan.duration} days\n\n` +
             `**Select your payment method:**`;
 

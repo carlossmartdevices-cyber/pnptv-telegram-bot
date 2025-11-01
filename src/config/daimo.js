@@ -6,7 +6,60 @@
  * IMPORTANT: Daimo Pay uses a React SDK (@daimo/pay) on the frontend.
  * This config only handles webhook validation and configuration checks.
  * Payment flow is handled entirely by DaimoPayButton component in payment-app.
+ *
+ * Environment Variables Required:
+ * - DAIMO_APP_ID: Your Daimo application ID
+ * - DAIMO_WEBHOOK_TOKEN: Webhook authentication token
+ * - BOT_URL: Public HTTPS URL for webhooks
+ * - NEXT_PUBLIC_WEBAPP_URL: Public HTTPS URL for React payment page
+ *
+ * Security Features:
+ * - Origin verification for payment requests
+ * - Webhook authentication
+ * - HTTPS enforcement
+ * - Parameter validation
+ * - Rate limiting (configure in api/routes)
  */
+
+// Payment configuration
+const PAYMENT_CONFIG = {
+  minAmount: 0.01,           // Minimum payment amount in USD
+  maxAmount: 10000,          // Maximum payment amount in USD
+  currency: 'USDC',          // Default currency
+  retryAttempts: 3,         // Number of retry attempts for failed requests
+  timeoutMs: 30000          // Request timeout in milliseconds
+};
+
+// Supported networks configuration
+const SUPPORTED_NETWORKS = {
+  OPTIMISM: {
+    chainId: 10,
+    name: 'Optimism',
+    token: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', // USDC on Optimism
+    explorer: 'https://optimistic.etherscan.io'
+  }
+};
+
+// Allowed payment origins for security
+const ALLOWED_PAYMENT_ORIGINS = [
+  'pay.daimo.com',
+  'checkout.daimo.com',
+  'api.daimo.com'
+];
+
+/**
+ * Verify payment origin is from Daimo
+ * @param {string} origin - Request origin header
+ * @returns {boolean} True if origin is valid
+ */
+function verifyPaymentOrigin(origin) {
+  if (!origin) return false;
+  try {
+    return ALLOWED_PAYMENT_ORIGINS.includes(new URL(origin).hostname);
+  } catch (error) {
+    return false;
+  }
+}
 
 require("./env");
 const logger = require("../utils/logger");
@@ -62,9 +115,25 @@ function validatePaymentParams(params) {
     throw new Error(errorMessage);
   }
 
-  // Validate amount is a positive number
-  if (typeof params.amount !== "number" || params.amount <= 0) {
-    throw new Error(`Invalid amount: ${params.amount}. Must be a positive number.`);
+  // Validate amount
+  if (typeof params.amount !== "number") {
+    throw new Error(`Invalid amount type: ${typeof params.amount}. Must be a number.`);
+  }
+  if (params.amount < PAYMENT_CONFIG.minAmount) {
+    throw new Error(`Amount ${params.amount} is below minimum of ${PAYMENT_CONFIG.minAmount}`);
+  }
+  if (params.amount > PAYMENT_CONFIG.maxAmount) {
+    throw new Error(`Amount ${params.amount} exceeds maximum of ${PAYMENT_CONFIG.maxAmount}`);
+  }
+
+  // Validate userId format (can customize based on your user ID format)
+  if (!/^[a-zA-Z0-9_-]+$/.test(params.userId)) {
+    throw new Error(`Invalid userId format: ${params.userId}`);
+  }
+
+  // Validate plan format (can customize based on your plan ID format)
+  if (!/^[a-zA-Z0-9_-]+$/.test(params.plan)) {
+    throw new Error(`Invalid plan format: ${params.plan}`);
   }
 
   logger.info("Payment parameters validated successfully");
@@ -182,4 +251,8 @@ module.exports = {
   validateCredentials,
   validatePaymentParams,
   getConfig,
+  verifyPaymentOrigin,
+  SUPPORTED_NETWORKS,
+  ALLOWED_PAYMENT_ORIGINS,
+  PAYMENT_CONFIG
 };

@@ -2,6 +2,7 @@ const { db } = require("../../config/firebase");
 const { t } = require("../../utils/i18n");
 const logger = require("../../utils/logger");
 const { getMenu } = require("../../config/menus");
+const { isAdmin } = require("../../config/admin");
 const {
   AGE_VERIFICATION_INTERVAL_HOURS,
 } = require("../helpers/onboardingHelpers");
@@ -27,6 +28,39 @@ module.exports = async (ctx) => {
     const userId = ctx.from.id.toString();
     const userRef = db.collection("users").doc(userId);
     const doc = await userRef.get();
+
+    // Admin exception: Always force fresh onboarding for testing purposes
+    // TEMPORARILY DISABLED - Uncomment to re-enable admin fresh onboarding
+    /*
+    if (isAdmin(ctx.from.id)) {
+      logger.info(`Admin ${userId} starting fresh onboarding (admin exception)`);
+      
+      // Clear session completely
+      ctx.session = {
+        onboardingComplete: false,
+        onboardingStep: null,
+        language: null,
+        ageVerified: false,
+        termsAccepted: false,
+        privacyAccepted: false,
+        email: null
+      };
+
+      // Start fresh onboarding regardless of existing user data
+      await ctx.reply("🔧 *Admin Mode Activated*\n\nYou will experience the complete onboarding flow to test the user experience.\n\nSelect your language:", {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: "🇺🇸 English", callback_data: "lang_en" },
+              { text: "🇪🇸 Español", callback_data: "lang_es" },
+            ],
+          ],
+        },
+        parse_mode: "Markdown",
+      });
+      return;
+    }
+    */
 
     if (doc.exists) {
       const userData = doc.data() || {};
@@ -91,12 +125,6 @@ module.exports = async (ctx) => {
         await ctx.reply(t("mainMenuIntro", lang), {
           reply_markup: {
             inline_keyboard: [
-              [
-                {
-                  text: lang === "es" ? "🪩 ¡Únete a nuestro Canal Gratis!" : "🪩 Join our Free Channel!",
-                  url: "https://t.me/pnptvfree",
-                },
-              ],
               [
                 {
                   text: lang === "es" ? "💎 Suscríbete al Canal PRIME" : "💎 Subscribe to PRIME Channel",

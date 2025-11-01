@@ -28,7 +28,7 @@ function calculateExpirationDate(durationDays = 0) {
 /**
  * Activate membership for a user
  * @param {string} userId - User ID
- * @param {string} tier - Tier to activate (Silver or Golden)
+ * @param {string} tier - Tier to activate (e.g. 'trial-week', 'pnp-member', 'crystal-member', 'diamond-member')
  * @param {string} activatedBy - Who activated it (admin, payment, system)
  * @param {number} durationDays - Optional custom duration in days (default: 30)
  * @param {Object} bot - Telegram bot instance for generating invite links

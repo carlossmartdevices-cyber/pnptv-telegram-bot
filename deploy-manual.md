@@ -88,6 +88,11 @@ Then redeploy (Railway will auto-redeploy when you change variables).
 2. Add webhook: `https://your-app.up.railway.app/daimo/webhook`
 3. Copy webhook token
 4. Add to Railway Variables: `DAIMO_WEBHOOK_TOKEN=your_token`
+5. Add webhook: `https://pnptv.app/daimo/webhook`
+6. Copy webhook token
+7. Add to Railway Variables: `DAIMO_WEBHOOK_TOKEN=your_token`
+8. Add webhook: `https://pnptv-payment-9lx3oqtgp-pnptvbots-projects.vercel.app/api/webhook`
+4. Add to Railway Variables: `DAIMO_WEBHOOK_TOKEN=your_token`
 
 ### ePayco (if using)
 1. Go to ePayco dashboard

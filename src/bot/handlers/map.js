@@ -258,8 +258,14 @@ async function searchNearbyUsers(ctx, radiusKm = 25) {
 
     const displayUsers = (users, emoji) => {
       users.slice(0, 5).forEach((user) => {
-        const tierIcon =
-          user.tier === "Golden" ? "🥇" : user.tier === "Silver" ? "🥈" : "⚪";
+        const tierIcon = (() => {
+          const t = (user.tier || '').toString().toLowerCase();
+          if (t === 'diamond-member') return '🥇';
+          if (t === 'crystal-member') return '🥈';
+          if (t === 'pnp-member') return '💎';
+          if (t === 'trial-week') return '🟢';
+          return '⚪';
+        })();
         const bioText = user.bio ? user.bio.slice(0, 30) + "..." : "";
 
         message += `${emoji} @${user.username} ${tierIcon}\n`;

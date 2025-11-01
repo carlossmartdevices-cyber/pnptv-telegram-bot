@@ -591,6 +591,15 @@ app.post("/epayco/confirmation", async (req, res) => {
 });
 
 // Daimo Pay webhook endpoint (official webhook from Daimo dashboard)
+// DEPRECATED: legacy Daimo webhook handler.
+// This file implements the older express-based webhook endpoint at `/daimo/webhook`.
+// The canonical production webhook has moved to the Vercel Next.js app at:
+// https://pnptv-payment-9lx3oqtgp-pnptvbots-projects.vercel.app/api/webhook
+//
+// Keep this handler only for compatibility with older deployments. New integrations
+// should use the Vercel App Router handler `pnptv-payment/src/app/api/webhook/route.ts`.
+// Consider removing this file from main after confirming all webhooks have been migrated.
+
 app.post("/daimo/webhook", async (req, res) => {
   try {
     logger.info("Received Daimo Pay webhook", {
@@ -607,6 +616,13 @@ app.post("/daimo/webhook", async (req, res) => {
         received: authHeader ? 'present' : 'missing',
       });
       return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Verify payment origin
+    const origin = req.get('origin');
+    if (!daimo.verifyPaymentOrigin(origin)) {
+      logger.warn('Invalid payment origin', { origin });
+      return res.status(403).json({ error: 'Invalid origin' });
     }
 
     const event = req.body;
@@ -656,12 +672,24 @@ app.post("/daimo/webhook", async (req, res) => {
           const result = await activateMembership(userId, plan.tier, 'daimo_webhook', durationDays, bot);
 
           // Store additional payment metadata
+          const now = new Date();
           await userRef.update({
             membershipPlanId: plan.id,
             membershipPlanName: plan.displayName || plan.name,
             paymentMethod: 'daimo',
             paymentReference: reference,
-            updatedAt: new Date(),
+            paymentAmount: parseFloat(amount),
+            paymentCurrency: 'USDC',
+            paymentNetwork: 'optimism',
+            paymentDate: now,
+            lastPaymentStatus: 'completed',
+            paymentMetadata: {
+              chainId: daimo.SUPPORTED_NETWORKS.OPTIMISM.chainId,
+              tokenAddress: daimo.SUPPORTED_NETWORKS.OPTIMISM.token,
+              processingTime: Date.now() - event.timestamp,
+              webhookReceived: now.toISOString()
+            },
+            updatedAt: now
           });
 
           logger.info('Subscription activated via Daimo webhook', {

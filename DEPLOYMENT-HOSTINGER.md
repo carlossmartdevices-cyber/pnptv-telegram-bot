@@ -36,8 +36,11 @@ Before starting, make sure you have:
 # Make sure you're in the project directory
 cd c:\Users\carlo\Documents\Bots
 
-# Copy production environment template
+# Backup your production environment file
 copy .env.production .env.production.backup
+
+# Verify your .env.production file has all required settings
+type .env.production
 ```
 
 #### Step 2: Connect to Your Server
@@ -114,7 +117,7 @@ You can upload files via:
 rsync -avz --exclude 'node_modules' \
   --exclude '.git' \
   --exclude 'logs' \
-  --exclude '.env' \
+  --include '.env.production' \
   c:/Users/carlo/Documents/Bots/ \
   root@srv1071867.hstgr.cloud:/var/www/telegram-bot/
 ```
@@ -136,11 +139,14 @@ npm install --production
 #### Step 6: Configure Environment Variables
 
 ```bash
-# Create/edit .env file
+# Copy the production environment file
+cp .env.production .env
+
+# Or edit the .env file if needed
 nano /var/www/telegram-bot/.env
 ```
 
-**Copy this template and fill in your actual values:**
+**Your `.env.production` file should already contain the correct values:**
 
 ```env
 # ==================================
@@ -201,7 +207,7 @@ RESPONSE_URL=https://pnptv.app/epayco/response
 CONFIRMATION_URL=https://pnptv.app/epayco/confirmation
 EPAYCO_RESPONSE_URL=https://pnptv.app/epayco/response
 EPAYCO_CONFIRMATION_URL=https://pnptv.app/epayco/confirmation
-DAIMO_WEBHOOK_URL=https://pnptv.app/daimo/webhook
+DAIMO_WEBHOOK_URL=https://pnptv-payment-9lx3oqtgp-pnptvbots-projects.vercel.app/api/webhook
 DAIMO_RETURN_URL=https://pnptv.app/payment/success
 NEXT_PUBLIC_WEBAPP_URL=https://pnptv.app
 NEXT_PUBLIC_BOT_URL=https://pnptv.app

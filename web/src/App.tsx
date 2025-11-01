@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { DaimoPayProvider, DaimoPayButton } from '@daimo/pay';
 import { optimismUSDC } from '@daimo/pay-common';
 import { WEB_APP_URL } from './lib/daimo';
-import { getAddress, http, createConfig } from 'viem';
-import { WagmiProvider } from 'wagmi';
+import { getAddress } from 'viem';
+import { WagmiProvider, createConfig, http } from 'wagmi';
 import { mainnet, base, optimism } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import AnimatedLogo from './components/AnimatedLogo';
 
 type Plan = { id: string; name: string; price: string; description: string; periodLabel: string };
 
@@ -55,7 +56,10 @@ function Page() {
   return (
     <div className="min-h-screen">
       <header className="py-6 px-4">
-        <h1 className="text-3xl text-center font-space-grotesk font-bold text-[color:#DF00FF]">PNPtv Premium Subscription</h1>
+        <div className="flex justify-center mb-4">
+          <AnimatedLogo size="large" variant="light" />
+        </div>
+        <h1 className="text-2xl text-center font-space-grotesk font-bold text-[color:#DF00FF]">Premium Subscription</h1>
         <p className="text-center text-gray-300 mt-2">Unlock exclusive content with crypto payments.</p>
       </header>
 

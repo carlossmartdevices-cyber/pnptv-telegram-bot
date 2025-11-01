@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PNPTV Animated Logo</title>
+  <link rel="stylesheet" href="assets/css/pnptv-logo.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      background: linear-gradient(135deg, #28282B 0%, #3A3A3E 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    
+    .demo-container {
+      text-align: center;
+      max-width: 800px;
+    }
+    
+    .demo-title {
+      color: #FFFFFF;
+      font-size: 2rem;
+      margin-bottom: 2rem;
+      font-weight: 700;
+    }
+    
+    .demo-subtitle {
+      color: #C6C6CD;
+      font-size: 1.1rem;
+      margin-bottom: 3rem;
+      line-height: 1.6;
+    }
+    
+    .logo-showcase {
+      display: flex;
+      flex-direction: column;
+      gap: 3rem;
+      align-items: center;
+    }
+    
+    .logo-variant {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .variant-label {
+      color: #DF00FF;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .controls {
+      margin-top: 2rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .btn {
+      background: linear-gradient(135deg, #6A40A7, #DF00FF);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+    
+    .btn:active {
+      transform: translateY(0);
+    }
+    
+    @media (max-width: 768px) {
+      .demo-title {
+        font-size: 1.5rem;
+      }
+      
+      .logo-showcase {
+        gap: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <h1 class="demo-title">PNPTV! Animated Logo</h1>
+    <p class="demo-subtitle">
+      Sophisticated animated SVG logo with smooth transitions and effects.<br>
+      Ready to integrate into any web application.
+    </p>
+    
+    <div class="logo-showcase">
+      <!-- Large Light Version -->
+      <div class="logo-variant">
+        <div class="variant-label">Large • Light • Animated</div>
+        <div class="pnptv-logo pnptv-logo--large pnptv-logo--light pnptv-logo--animated" id="logo-large">
+          <svg viewBox="0 0 800 400" class="pnptv-logo__svg" xmlns="http://www.w3.org/2000/svg">
+            <!-- Letter P (First) -->
+            <g class="pnptv-logo__letter pnptv-logo__letter--1">
+              <path d="M 40 80 L 40 320 M 40 80 L 140 80 Q 190 80 190 130 Q 190 180 140 180 L 40 180" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+            </g>
+
+            <!-- Letter N -->
+            <g class="pnptv-logo__letter pnptv-logo__letter--2">
+              <path d="M 230 80 L 230 320 M 230 80 L 330 320 M 330 80 L 330 320" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+            </g>
+
+            <!-- Letter P (Second) -->
+            <g class="pnptv-logo__letter pnptv-logo__letter--3">
+              <path d="M 370 80 L 370 320 M 370 80 L 470 80 Q 520 80 520 130 Q 520 180 470 180 L 370 180" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+            </g>
+
+            <!-- Letter T with animated striping -->
+            <g class="pnptv-logo__letter pnptv-logo__letter--4">
+              <path d="M 560 80 L 720 80 M 640 80 L 640 320" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+              <!-- Animated stripes for the T -->
+              <g class="pnptv-logo__stripes">
+                <rect x="620" y="120" width="40" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--1" />
+                <rect x="625" y="140" width="30" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--2" />
+                <rect x="630" y="160" width="20" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--3" />
+                <rect x="625" y="180" width="30" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--4" />
+                <rect x="620" y="200" width="40" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--5" />
+                <rect x="625" y="220" width="30" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--6" />
+                <rect x="630" y="240" width="20" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--7" />
+                <rect x="625" y="260" width="30" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--8" />
+              </g>
+            </g>
+
+            <!-- Letter V with gradient effect -->
+            <g class="pnptv-logo__letter pnptv-logo__letter--5">
+              <path d="M 760 80 L 820 320 M 880 80 L 820 320" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path pnptv-logo__path--v" />
+            </g>
+
+            <!-- Exclamation mark -->
+            <g class="pnptv-logo__exclamation">
+              <circle cx="920" cy="290" r="12" fill="currentColor" class="pnptv-logo__dot" />
+              <path d="M 920 80 L 920 240" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" class="pnptv-logo__exclamation-line" />
+            </g>
+
+            <!-- Gradient definitions -->
+            <defs>
+              <linearGradient id="pnptv-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#6A40A7" class="pnptv-logo__gradient-start" />
+                <stop offset="100%" stop-color="#DF00FF" class="pnptv-logo__gradient-end" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Medium Dark Version -->
+      <div class="logo-variant">
+        <div class="variant-label">Medium • Brand Colors</div>
+        <div style="background: white; padding: 2rem; border-radius: 12px;">
+          <div class="pnptv-logo pnptv-logo--medium pnptv-logo--brand pnptv-logo--animated" id="logo-medium">
+            <svg viewBox="0 0 800 400" class="pnptv-logo__svg" xmlns="http://www.w3.org/2000/svg">
+              <!-- Same SVG structure as above -->
+              <g class="pnptv-logo__letter pnptv-logo__letter--1">
+                <path d="M 40 80 L 40 320 M 40 80 L 140 80 Q 190 80 190 130 Q 190 180 140 180 L 40 180" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+              </g>
+              <g class="pnptv-logo__letter pnptv-logo__letter--2">
+                <path d="M 230 80 L 230 320 M 230 80 L 330 320 M 330 80 L 330 320" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+              </g>
+              <g class="pnptv-logo__letter pnptv-logo__letter--3">
+                <path d="M 370 80 L 370 320 M 370 80 L 470 80 Q 520 80 520 130 Q 520 180 470 180 L 370 180" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+              </g>
+              <g class="pnptv-logo__letter pnptv-logo__letter--4">
+                <path d="M 560 80 L 720 80 M 640 80 L 640 320" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+                <g class="pnptv-logo__stripes">
+                  <rect x="620" y="120" width="40" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--1" />
+                  <rect x="625" y="140" width="30" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--2" />
+                  <rect x="630" y="160" width="20" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--3" />
+                  <rect x="625" y="180" width="30" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--4" />
+                  <rect x="620" y="200" width="40" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--5" />
+                  <rect x="625" y="220" width="30" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--6" />
+                  <rect x="630" y="240" width="20" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--7" />
+                  <rect x="625" y="260" width="30" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--8" />
+                </g>
+              </g>
+              <g class="pnptv-logo__letter pnptv-logo__letter--5">
+                <path d="M 760 80 L 820 320 M 880 80 L 820 320" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path pnptv-logo__path--v" />
+              </g>
+              <g class="pnptv-logo__exclamation">
+                <circle cx="920" cy="290" r="12" fill="currentColor" class="pnptv-logo__dot" />
+                <path d="M 920 80 L 920 240" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" class="pnptv-logo__exclamation-line" />
+              </g>
+              <defs>
+                <linearGradient id="pnptv-gradient-2" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#6A40A7" class="pnptv-logo__gradient-start" />
+                  <stop offset="100%" stop-color="#DF00FF" class="pnptv-logo__gradient-end" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" onclick="restartAnimation()">Restart Animation</button>
+      <button class="btn" onclick="toggleAnimation()">Toggle Animation</button>
+      <button class="btn" onclick="copyHTML()">Copy HTML</button>
+    </div>
+  </div>
+
+  <script>
+    let animationEnabled = true;
+    
+    function restartAnimation() {
+      const logos = document.querySelectorAll('.pnptv-logo--animated');
+      logos.forEach(logo => {
+        logo.classList.remove('pnptv-logo--animated');
+        // Force reflow
+        logo.offsetHeight;
+        logo.classList.add('pnptv-logo--animated');
+      });
+    }
+    
+    function toggleAnimation() {
+      const logos = document.querySelectorAll('.pnptv-logo');
+      animationEnabled = !animationEnabled;
+      
+      logos.forEach(logo => {
+        if (animationEnabled) {
+          logo.classList.add('pnptv-logo--animated');
+        } else {
+          logo.classList.remove('pnptv-logo--animated');
+        }
+      });
+      
+      event.target.textContent = animationEnabled ? 'Disable Animation' : 'Enable Animation';
+    }
+    
+    function copyHTML() {
+      const htmlTemplate = `<!-- PNPTV Animated Logo -->
+<link rel="stylesheet" href="assets/css/pnptv-logo.css">
+
+<div class="pnptv-logo pnptv-logo--medium pnptv-logo--light pnptv-logo--animated">
+  <svg viewBox="0 0 800 400" class="pnptv-logo__svg" xmlns="http://www.w3.org/2000/svg">
+    <!-- Letter P (First) -->
+    <g class="pnptv-logo__letter pnptv-logo__letter--1">
+      <path d="M 40 80 L 40 320 M 40 80 L 140 80 Q 190 80 190 130 Q 190 180 140 180 L 40 180" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+    </g>
+    <!-- Letter N -->
+    <g class="pnptv-logo__letter pnptv-logo__letter--2">
+      <path d="M 230 80 L 230 320 M 230 80 L 330 320 M 330 80 L 330 320" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+    </g>
+    <!-- Letter P (Second) -->
+    <g class="pnptv-logo__letter pnptv-logo__letter--3">
+      <path d="M 370 80 L 370 320 M 370 80 L 470 80 Q 520 80 520 130 Q 520 180 470 180 L 370 180" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+    </g>
+    <!-- Letter T with animated striping -->
+    <g class="pnptv-logo__letter pnptv-logo__letter--4">
+      <path d="M 560 80 L 720 80 M 640 80 L 640 320" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+      <g class="pnptv-logo__stripes">
+        <rect x="620" y="120" width="40" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--1" />
+        <rect x="625" y="140" width="30" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--2" />
+        <rect x="630" y="160" width="20" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--3" />
+        <rect x="625" y="180" width="30" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--4" />
+        <rect x="620" y="200" width="40" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--5" />
+        <rect x="625" y="220" width="30" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--6" />
+        <rect x="630" y="240" width="20" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--7" />
+        <rect x="625" y="260" width="30" height="4" class="pnptv-logo__stripe pnptv-logo__stripe--8" />
+      </g>
+    </g>
+    <!-- Letter V with gradient effect -->
+    <g class="pnptv-logo__letter pnptv-logo__letter--5">
+      <path d="M 760 80 L 820 320 M 880 80 L 820 320" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path pnptv-logo__path--v" />
+    </g>
+    <!-- Exclamation mark -->
+    <g class="pnptv-logo__exclamation">
+      <circle cx="920" cy="290" r="12" fill="currentColor" class="pnptv-logo__dot" />
+      <path d="M 920 80 L 920 240" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" class="pnptv-logo__exclamation-line" />
+    </g>
+    <!-- Gradient definitions -->
+    <defs>
+      <linearGradient id="pnptv-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#6A40A7" class="pnptv-logo__gradient-start" />
+        <stop offset="100%" stop-color="#DF00FF" class="pnptv-logo__gradient-end" />
+      </linearGradient>
+    </defs>
+  </svg>
+</div>`;
+      
+      navigator.clipboard.writeText(htmlTemplate).then(() => {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+        
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = 'linear-gradient(135deg, #6A40A7, #DF00FF)';
+        }, 2000);
+      }).catch(() => {
+        alert('HTML template copied to clipboard!');
+      });
+    }
+  </script>
+</body>
+</html>

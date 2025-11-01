@@ -234,6 +234,9 @@ async function activateMembership(userId, tier, activatedBy, durationDays, botIn
 
 ### ✅ Simplified daimo.js
 - Removed incorrect API calls (Daimo uses SDK, not REST API)
+- Added network configuration for Optimism
+- Added payment origin verification
+- Enhanced security with allowed origins list
 - Kept only: link generation, webhook auth, config
 - Updated validation to check `DAIMO_APP_ID` and `DAIMO_WEBHOOK_TOKEN`
 
@@ -245,9 +248,18 @@ async function activateMembership(userId, tier, activatedBy, durationDays, botIn
 
 ### ✅ Enhanced Webhook Handler
 - Uses `verifyWebhookAuth()` from config
+- Verifies payment origin from allowed Daimo domains
+- Enhanced payment metadata storage with network details
 - Retrieves userId/planId from payment_intents
 - Calls `activateMembership()` with bot instance
 - Sends invite link in all confirmation messages
+
+### ✅ Security Improvements
+- Added payment origin verification
+- Enhanced webhook authentication
+- Comprehensive error handling
+- Network validation checks
+- Payment metadata verification
 
 ## Testing Checklist
 

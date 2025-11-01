@@ -2460,8 +2460,10 @@ async function viewPlanDetails(ctx, planName) {
       return;
     }
 
-    const icon = planName.toLowerCase() === "silver" ? "🥈" : "🥇";
-    const tierName = planName.charAt(0).toUpperCase() + planName.slice(1);
+    const icon = (plan && plan.id)
+      ? (plan.id === 'diamond-member' ? '🥇' : plan.id === 'crystal-member' ? '🥈' : plan.id === 'pnp-member' ? '💎' : '💎')
+      : '💎';
+    const tierName = plan.displayName || (planName.charAt(0).toUpperCase() + planName.slice(1));
 
     let message = lang === "es"
       ? `${icon} **Plan ${tierName}**\n\n`
@@ -2484,9 +2486,10 @@ async function viewPlanDetails(ctx, planName) {
       message += `${index + 1}. ${feature}\n`;
     });
 
-    // Get subscriber count
-    const subscribersCount = await db.collection("users").where("tier", "==", tierName).get();
-    message += `\n👥 **${lang === "es" ? "Suscriptores activos" : "Active subscribers"}:** ${subscribersCount.size}\n`;
+  // Get subscriber count (match stored tier value)
+  const tierField = plan.tier || plan.id || planName.toLowerCase();
+  const subscribersCount = await db.collection("users").where("tier", "==", tierField).get();
+  message += `\n👥 **${lang === "es" ? "Suscriptores activos" : "Active subscribers"}:** ${subscribersCount.size}\n`;
 
     await ctx.reply(message, {
       parse_mode: "Markdown",
@@ -2735,8 +2738,10 @@ async function executePlanEdit(ctx, planName, field, newValue) {
       // Update plan in Firestore
       await planService.updatePlan(plan.id, updateData);
 
-      const icon = planName.toLowerCase() === "silver" ? "🥈" : "🥇";
-      const tierName = planName.charAt(0).toUpperCase() + planName.slice(1);
+      const icon = (plan && plan.id)
+        ? (plan.id === 'diamond-member' ? '🥇' : plan.id === 'crystal-member' ? '🥈' : plan.id === 'pnp-member' ? '💎' : '💎')
+        : '💎';
+      const tierName = plan.displayName || (planName.charAt(0).toUpperCase() + planName.slice(1));
 
       const fieldNames = {
         price: lang === "es" ? "Precio USD" : "USD Price",

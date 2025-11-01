@@ -1,4 +1,7 @@
 {
+  "emailPrompt": "📧 **Join Our Community**\n\nEnter your email to become part of PNPtv! Telegram Community and get access to:\n\n✨ Free channel access\n🌍 Nearby members feature (top 3 visible)\n🔍 3 searches weekly\n\nYour email:",
+  "emailInvalid": "❌ Please enter a valid email address",
+  "emailConfirmed": "✅ Email confirmed! Welcome to PNPtv Community!",
   "welcome": "💫 **Welcome to PNPtv!**\n\nBienvenidos a PNPtv!",
   "languagePrompt": "🌎 Choose your language | Escoja su idioma",
   "languageEnglish": "English 🇺🇸",
@@ -21,8 +24,8 @@
   "mapInfo": "📍 **PNP Map**\n\nDiscover who’s nearby.\n\nActivate your location and explore real connections around you.",
   "liveInfo": "📡 **Live Shows**\n\nStream, watch, and interact in real time.\n\n🔥 Launching soon!",
   "helpInfo": "🤖 **PNPtv! Support**\n\n👋 Hey there! I'm here to help you get the most out of PNPtv!\n\n💎 **EXCLUSIVE OFFER:** Want full access to our premium content, live shows, and connect with members near you? Check out our **PRIME membership plans** — the ultimate PNP experience awaits!\n\n**Quick Help:**\n👤 /profile - Your profile\n🗺️ /map - Explore nearby\n📡 /live - Join live shows\n💎 /subscribe - Upgrade your plan\n⚙️ /admin - Admin tools\n\n📧 **Support:** support@pnptv.app\n📜 **Terms:** https://pnptv.app/terms-en\n\n✨ **Pro Tip:** Premium members get ad-free viewing, unlimited swipes, VIP badges, and priority support! Upgrade now and join the PRIME experience! 🔥",
-  "silverFeatures": "🥈 **Silver Plan — $15/month**\n\n✨ Unlock:\n• Ad-free experience\n• 20 daily swipes\n• Verification badge\n• Standard support",
-  "goldenFeatures": "🥇 **Golden Plan — $25/month + 5 USDT bonus**\n\n💫 Everything in Silver, plus:\n• VIP channel access\n• Exclusive golden badges\n• Priority support\n• 5 USDT monthly crypto reward\n• Unlimited swipes\n• Early access to events",
+  "silverFeatures": "💎 **Trial Week — $14.99**\n\n✨ Unlock:\n• 7 days full access\n• All features included\n• Perfect to try PNPtv\n\n🌟 **PNP Member — $24.99/month**\n\n✨ Unlock:\n• 30 days access\n• Full member experience\n• Access to all features",
+  "goldenFeatures": "💎 **PNP Crystal Member — $49.99/4 months**\n\n💫 Best Value:\n• 120 days access (4 months)\n• All premium features\n• Save compared to monthly\n\n💍 **PNP Diamond Member — $99.99/year**\n\n👑 Ultimate Access:\n• 365 days full access (1 year)\n• Maximum savings\n• VIP member status",
   "editBio": "📝 Update Bio",
   "editLocation": "📍 Update Location",
   "upgradeTier": "💎 Upgrade Membership",

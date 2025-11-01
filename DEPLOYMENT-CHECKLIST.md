@@ -121,7 +121,7 @@ curl https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo
 ### 16. Configure Daimo Webhooks
 - [ ] Go to https://pay.daimo.com/dashboard
 - [ ] Navigate to Settings → Webhooks
-- [ ] Set Webhook URL: `https://pnptv.app/daimo/webhook`
+- [ ] Set Webhook URL: `https://pnptv-payment-9lx3oqtgp-pnptvbots-projects.vercel.app/api/webhook`
 - [ ] Save settings
 
 ### 17. Test Bot

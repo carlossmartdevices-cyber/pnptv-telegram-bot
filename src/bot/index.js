@@ -120,12 +120,39 @@ bot.command("aichat", startAIChat);
 bot.command("endchat", endAIChat);
 
 // ===== ONBOARDING FLOW =====
-bot.action(/language_(.+)/, onboardingHelpers.handleLanguageSelection);
+// Handle both language callback formats: lang_xx and language_xx
+bot.action(/lang_(.+)/, (ctx) => {
+  console.log("=== LANG CALLBACK RECEIVED ===");
+  console.log("Callback data:", ctx.callbackQuery.data);
+  console.log("User ID:", ctx.from.id);
+  return onboardingHelpers.handleLanguageSelection(ctx);
+});
+
+bot.action(/language_(.+)/, (ctx) => {
+  console.log("=== LANGUAGE CALLBACK RECEIVED ===");
+  console.log("Callback data:", ctx.callbackQuery.data);
+  console.log("User ID:", ctx.from.id);
+  return onboardingHelpers.handleLanguageSelection(ctx);
+});
 bot.action("confirm_age", onboardingHelpers.handleAgeConfirmation);
 bot.action("accept_terms", onboardingHelpers.handleTermsAcceptance);
 bot.action("decline_terms", onboardingHelpers.handleTermsDecline);
 bot.action("accept_privacy", onboardingHelpers.handlePrivacyAcceptance);
 bot.action("decline_privacy", onboardingHelpers.handlePrivacyDecline);
+
+// Handle email collection during onboarding
+bot.on("message", async (ctx, next) => {
+  try {
+    if (ctx.session?.awaitingEmail) {
+      await onboardingHelpers.handleEmailSubmission(ctx);
+      return; // Don't call next() after handling email
+    }
+    return next(); // Only call next() if not handling email
+  } catch (error) {
+    logger.error("Error in message handler:", error);
+    return next(); // Call next() on error
+  }
+});
 
 // ===== SUBSCRIPTION HANDLERS =====
 bot.action(/^plan_select_(.+)$/, async (ctx) => {
@@ -261,12 +288,6 @@ bot.action("back_to_main", async (ctx) => {
           inline_keyboard: [
             [
               {
-                text: lang === "es" ? "🪩 ¡Únete a nuestro Canal Gratis!" : "🪩 Join our Free Channel!",
-                url: "https://t.me/pnptvfree",
-              },
-            ],
-            [
-              {
                 text: lang === "es" ? "💎 Suscríbete al Canal PRIME" : "💎 Subscribe to PRIME Channel",
                 callback_data: "show_subscription_plans",
               },
@@ -303,12 +324,6 @@ bot.action("back_to_main", async (ctx) => {
       await ctx.reply(t("mainMenuIntro", lang), {
         reply_markup: {
           inline_keyboard: [
-            [
-              {
-                text: lang === "es" ? "🪩 ¡Únete a nuestro Canal Gratis!" : "🪩 Join our Free Channel!",
-                url: "https://t.me/pnptvfree",
-              },
-            ],
             [
               {
                 text: lang === "es" ? "💎 Suscríbete al Canal PRIME" : "💎 Subscribe to PRIME Channel",

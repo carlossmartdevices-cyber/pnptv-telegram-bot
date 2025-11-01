@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNPtv - Complete Payment</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { DaimoPayButton, DaimoPayProvider } from 'https://esm.sh/@daimo/pay@latest';
+        import { optimismUSDC } from 'https://esm.sh/@daimo/pay-common@latest';
+        import { getAddress } from 'https://esm.sh/viem@latest';
+
+        // Get URL parameters
+        const params = new URLSearchParams(window.location.search);
+        const planId = params.get('plan');
+        const userId = params.get('user');
+        const amount = params.get('amount');
+
+        // Initialize payment UI
+        async function initPayment() {
+            try {
+                // Fetch plan details
+                const response = await fetch(`/api/plans/${planId}`);
+                if (!response.ok) throw new Error('Failed to load plan details');
+                const plan = await response.json();
+
+                // Update UI with plan details
+                document.getElementById('plan-name').textContent = plan.displayName || plan.name;
+                document.getElementById('plan-amount').textContent = `$${amount} USDC`;
+                document.getElementById('plan-duration').textContent = `${plan.duration} days`;
+                
+                const featuresList = document.getElementById('features-list');
+                plan.features?.forEach(feature => {
+                    const li = document.createElement('li');
+                    li.textContent = `✓ ${feature}`;
+                    li.className = 'mb-2';
+                    featuresList.appendChild(li);
+                });
+
+                // Initialize Daimo Pay button
+                const paymentButton = document.createElement('daimo-pay-button');
+                paymentButton.setAttribute('app-id', window.DAIMO_APP_ID);
+                paymentButton.setAttribute('intent', 'Subscribe');
+                paymentButton.setAttribute('to-address', window.TREASURY_ADDRESS);
+                paymentButton.setAttribute('to-chain', optimismUSDC.chainId);
+                paymentButton.setAttribute('to-token', optimismUSDC.token);
+                paymentButton.setAttribute('to-units', amount);
+                paymentButton.setAttribute('refund-address', window.REFUND_ADDRESS);
+
+                document.getElementById('payment-button').appendChild(paymentButton);
+
+                // Handle payment events
+                paymentButton.addEventListener('payment-started', async (event) => {
+                    console.log('Payment started:', event.detail);
+                    try {
+                        await fetch('/api/payments/started', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                userId,
+                                planId,
+                                amount,
+                                reference: event.detail.reference
+                            })
+                        });
+                    } catch (error) {
+                        console.error('Error logging payment start:', error);
+                    }
+                });
+
+                paymentButton.addEventListener('payment-completed', async (event) => {
+                    console.log('Payment completed:', event.detail);
+                    try {
+                        await fetch('/api/payments/completed', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                userId,
+                                planId,
+                                amount,
+                                reference: event.detail.reference
+                            })
+                        });
+                        // Show success message
+                        document.getElementById('payment-container').style.display = 'none';
+                        document.getElementById('success-container').style.display = 'block';
+                    } catch (error) {
+                        console.error('Error confirming payment:', error);
+                    }
+                });
+
+                // Remove loading state
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('payment-container').style.display = 'block';
+            } catch (error) {
+                console.error('Error initializing payment:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error-container').style.display = 'block';
+                document.getElementById('error-message').textContent = error.message;
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', initPayment);
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+            color: #1a202c;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 28rem;
+            width: 100%;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 0;
+        }
+
+        .logo p {
+            color: #4a5568;
+            margin-top: 0.5rem;
+        }
+
+        .plan-details {
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .plan-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .features {
+            margin-top: 1.5rem;
+        }
+
+        .features h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .payment-methods {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .payment-methods ul {
+            list-style: none;
+            padding: 0;
+            margin: 0.5rem 0 0;
+        }
+
+        .payment-methods li {
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+
+        .footer {
+            text-align: center;
+            color: #718096;
+            font-size: 0.875rem;
+            margin-top: 2rem;
+        }
+
+        .button {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+
+        .button:hover {
+            background: #5a67d8;
+        }
+
+        .loading, .error {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <h2>Loading payment details...</h2>
+            <p>Please wait...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-container" class="error" style="display: none;">
+            <h2>Error</h2>
+            <p id="error-message"></p>
+            <button class="button" onclick="window.location.reload()">Try Again</button>
+        </div>
+
+        <!-- Payment Container -->
+        <div id="payment-container" style="display: none;">
+            <div class="logo">
+                <h1>💎 PNPtv</h1>
+                <p>Subscription Payment</p>
+            </div>
+
+            <div class="plan-details">
+                <h2 id="plan-name" class="text-xl font-semibold mb-4"></h2>
+                
+                <div class="plan-info">
+                    <label>Price:</label>
+                    <span id="plan-amount"></span>
+                </div>
+
+                <div class="plan-info">
+                    <label>Duration:</label>
+                    <span id="plan-duration"></span>
+                </div>
+
+                <div class="features">
+                    <h3>Features:</h3>
+                    <ul id="features-list"></ul>
+                </div>
+            </div>
+
+            <div class="payment-methods">
+                <p><strong>💳 Payment Options:</strong></p>
+                <ul>
+                    <li>• Web3 Wallets (MetaMask, Coinbase Wallet)</li>
+                    <li>• Exchanges (Coinbase, Binance)</li>
+                    <li>• Payment Apps (Venmo, Cash App)</li>
+                </ul>
+            </div>
+
+            <div id="payment-button"></div>
+
+            <div class="footer">
+                <p>Secure payment powered by Daimo Pay</p>
+                <p>Settlement on Optimism Network (USDC)</p>
+            </div>
+        </div>
+
+        <!-- Success State -->
+        <div id="success-container" style="display: none;">
+            <div class="text-center">
+                <div class="success-icon">✅</div>
+                <h2 class="text-2xl font-bold mb-4">Payment Successful!</h2>
+                <p class="mb-4">Your subscription has been activated.</p>
+                <p class="mb-8">You can close this window and return to Telegram.</p>
+                <button class="button" onclick="window.close()">Return to Telegram</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration (hardcoded for production)
+        window.DAIMO_APP_ID = 'pnptv-bot';
+        window.TREASURY_ADDRESS = '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0';
+        window.REFUND_ADDRESS = '0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0';
+    </script>
+</body>
+</html>

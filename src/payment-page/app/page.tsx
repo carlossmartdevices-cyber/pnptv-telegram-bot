@@ -181,10 +181,10 @@ function PaymentPageContent() {
             intent="Subscribe"
             refundAddress={getAddress(refundAddress)}
             toAddress={getAddress(treasuryAddress)}
-            toChain={baseUSDC.chainId}
-            toToken={getAddress(baseUSDC.token)}
+            toChain={optimismUSDC.chainId}
+            toToken={getAddress(optimismUSDC.token)}
             toUnits={amount || '0'}
-            paymentOptions={['AllExchanges', 'Coinbase', 'Binance']}
+            paymentOptions={['AllExchanges', 'Coinbase', 'Binance', 'Venmo', 'CashApp']}
             defaultOpen={false}
             closeOnSuccess={true}
             onPaymentStarted={(payment) => {

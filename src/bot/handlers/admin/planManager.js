@@ -5,8 +5,8 @@ const planService = require('../../../services/planService');
 
 const PLAN_CREATION_STEPS = [
   {
-    key: 'name',
-    prompt: 'Enter the internal plan name (e.g. PNPtv Silver):',
+  key: 'name',
+  prompt: 'Enter the internal plan name (e.g. PNPtv PNP Member):',
     transform: (value) => value.trim(),
     validate: (value) => value.length >= 3,
     errorMessage: 'Name must be at least 3 characters.'

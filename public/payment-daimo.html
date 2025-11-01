@@ -5,6 +5,133 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Complete Your Payment - PNPtv</title>
   <style>
+    /* PNPTV Animated Logo Styles */
+    .pnptv-logo {
+      display: inline-block;
+      position: relative;
+      overflow: visible;
+    }
+
+    .pnptv-logo__svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    .pnptv-logo--medium {
+      width: 200px;
+      height: 100px;
+    }
+
+    .pnptv-logo__letter {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .pnptv-logo__path {
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      filter: drop-shadow(0 0 8px rgba(223, 0, 255, 0.3));
+    }
+
+    .pnptv-logo--animated .pnptv-logo__letter {
+      animation: letterFadeIn 1s ease-out forwards;
+    }
+
+    .pnptv-logo--animated .pnptv-logo__path {
+      animation: pathDraw 2s ease-out forwards;
+    }
+
+    .pnptv-logo--animated .pnptv-logo__letter--1 { animation-delay: 0.2s; }
+    .pnptv-logo--animated .pnptv-logo__letter--1 .pnptv-logo__path { animation-delay: 0.3s; }
+    .pnptv-logo--animated .pnptv-logo__letter--2 { animation-delay: 0.4s; }
+    .pnptv-logo--animated .pnptv-logo__letter--2 .pnptv-logo__path { animation-delay: 0.5s; }
+    .pnptv-logo--animated .pnptv-logo__letter--3 { animation-delay: 0.6s; }
+    .pnptv-logo--animated .pnptv-logo__letter--3 .pnptv-logo__path { animation-delay: 0.7s; }
+    .pnptv-logo--animated .pnptv-logo__letter--4 { animation-delay: 0.8s; }
+    .pnptv-logo--animated .pnptv-logo__letter--4 .pnptv-logo__path { animation-delay: 0.9s; }
+    .pnptv-logo--animated .pnptv-logo__letter--5 { animation-delay: 1.0s; }
+    .pnptv-logo--animated .pnptv-logo__letter--5 .pnptv-logo__path { animation-delay: 1.1s; }
+
+    .pnptv-logo__exclamation {
+      opacity: 0;
+      transform: scale(0);
+    }
+
+    .pnptv-logo--animated .pnptv-logo__exclamation {
+      animation: exclamationPop 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 1.5s forwards;
+    }
+
+    .pnptv-logo--animated .pnptv-logo__dot {
+      animation: dotPulse 2s ease-in-out 2s infinite;
+    }
+
+    .pnptv-logo__stripe {
+      opacity: 0;
+      transform: scaleX(0);
+      transform-origin: center;
+    }
+
+    .pnptv-logo--animated .pnptv-logo__stripe {
+      animation: stripeExpand 0.6s ease-out forwards;
+    }
+
+    .pnptv-logo--animated .pnptv-logo__stripe--1 { animation-delay: 1.2s; }
+    .pnptv-logo--animated .pnptv-logo__stripe--2 { animation-delay: 1.25s; }
+    .pnptv-logo--animated .pnptv-logo__stripe--3 { animation-delay: 1.3s; }
+    .pnptv-logo--animated .pnptv-logo__stripe--4 { animation-delay: 1.35s; }
+    .pnptv-logo--animated .pnptv-logo__stripe--5 { animation-delay: 1.4s; }
+    .pnptv-logo--animated .pnptv-logo__stripe--6 { animation-delay: 1.45s; }
+    .pnptv-logo--animated .pnptv-logo__stripe--7 { animation-delay: 1.5s; }
+    .pnptv-logo--animated .pnptv-logo__stripe--8 { animation-delay: 1.55s; }
+
+    .pnptv-logo:hover .pnptv-logo__path {
+      filter: drop-shadow(0 0 12px rgba(223, 0, 255, 0.5));
+      stroke-width: 26;
+      transition: all 0.3s ease;
+    }
+
+    @keyframes letterFadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pathDraw {
+      from { stroke-dashoffset: 1000; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes exclamationPop {
+      from { opacity: 0; transform: scale(0); }
+      60% { transform: scale(1.2); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes dotPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.7; }
+    }
+
+    @keyframes stripeExpand {
+      from { opacity: 0; transform: scaleX(0); }
+      to { opacity: 1; transform: scaleX(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pnptv-logo--animated .pnptv-logo__letter,
+      .pnptv-logo--animated .pnptv-logo__path,
+      .pnptv-logo--animated .pnptv-logo__exclamation,
+      .pnptv-logo--animated .pnptv-logo__stripe,
+      .pnptv-logo--animated .pnptv-logo__dot {
+        animation: none;
+      }
+      
+      .pnptv-logo__letter { opacity: 1; transform: translateY(0); }
+      .pnptv-logo__path { stroke-dasharray: none; stroke-dashoffset: 0; }
+      .pnptv-logo__exclamation { opacity: 1; transform: scale(1); }
+      .pnptv-logo__stripe { opacity: 1; transform: scaleX(1); }
+    }
     * {
       margin: 0;
       padding: 0;
@@ -206,9 +333,55 @@
 </head>
 <body>
   <div class="container">
-    <div class="logo">
-      <h1>🎬 PNPtv Premium</h1>
-      <p>Complete your subscription payment</p>
+        <div class="logo">
+      <!-- PNPTV Animated Logo -->
+      <div class="pnptv-logo pnptv-logo--medium pnptv-logo--dark pnptv-logo--animated" style="margin: 0 auto;">
+        <svg viewBox="0 0 800 400" class="pnptv-logo__svg" xmlns="http://www.w3.org/2000/svg">
+          <!-- Letter P (First) -->
+          <g class="pnptv-logo__letter pnptv-logo__letter--1">
+            <path d="M 40 80 L 40 320 M 40 80 L 140 80 Q 190 80 190 130 Q 190 180 140 180 L 40 180" fill="none" stroke="#6A40A7" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+          </g>
+          <!-- Letter N -->
+          <g class="pnptv-logo__letter pnptv-logo__letter--2">
+            <path d="M 230 80 L 230 320 M 230 80 L 330 320 M 330 80 L 330 320" fill="none" stroke="#6A40A7" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+          </g>
+          <!-- Letter P (Second) -->
+          <g class="pnptv-logo__letter pnptv-logo__letter--3">
+            <path d="M 370 80 L 370 320 M 370 80 L 470 80 Q 520 80 520 130 Q 520 180 470 180 L 370 180" fill="none" stroke="#6A40A7" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+          </g>
+          <!-- Letter T with animated striping -->
+          <g class="pnptv-logo__letter pnptv-logo__letter--4">
+            <path d="M 560 80 L 720 80 M 640 80 L 640 320" fill="none" stroke="#6A40A7" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path" />
+            <g class="pnptv-logo__stripes">
+              <rect x="620" y="120" width="40" height="4" fill="#DF00FF" class="pnptv-logo__stripe pnptv-logo__stripe--1" />
+              <rect x="625" y="140" width="30" height="4" fill="#DF00FF" class="pnptv-logo__stripe pnptv-logo__stripe--2" />
+              <rect x="630" y="160" width="20" height="4" fill="#DF00FF" class="pnptv-logo__stripe pnptv-logo__stripe--3" />
+              <rect x="625" y="180" width="30" height="4" fill="#DF00FF" class="pnptv-logo__stripe pnptv-logo__stripe--4" />
+              <rect x="620" y="200" width="40" height="4" fill="#DF00FF" class="pnptv-logo__stripe pnptv-logo__stripe--5" />
+              <rect x="625" y="220" width="30" height="4" fill="#DF00FF" class="pnptv-logo__stripe pnptv-logo__stripe--6" />
+              <rect x="630" y="240" width="20" height="4" fill="#DF00FF" class="pnptv-logo__stripe pnptv-logo__stripe--7" />
+              <rect x="625" y="260" width="30" height="4" fill="#DF00FF" class="pnptv-logo__stripe pnptv-logo__stripe--8" />
+            </g>
+          </g>
+          <!-- Letter V with gradient effect -->
+          <g class="pnptv-logo__letter pnptv-logo__letter--5">
+            <path d="M 760 80 L 820 320 M 880 80 L 820 320" fill="none" stroke="url(#pnptv-gradient)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" class="pnptv-logo__path pnptv-logo__path--v" />
+          </g>
+          <!-- Exclamation mark -->
+          <g class="pnptv-logo__exclamation">
+            <circle cx="920" cy="290" r="12" fill="#DF00FF" class="pnptv-logo__dot" />
+            <path d="M 920 80 L 920 240" fill="none" stroke="#DF00FF" stroke-width="24" stroke-linecap="round" class="pnptv-logo__exclamation-line" />
+          </g>
+          <!-- Gradient definitions -->
+          <defs>
+            <linearGradient id="pnptv-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#6A40A7" />
+              <stop offset="100%" stop-color="#DF00FF" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <p style="margin-top: 16px;">Premium Subscription</p>
     </div>
 
     <div class="plan-details">

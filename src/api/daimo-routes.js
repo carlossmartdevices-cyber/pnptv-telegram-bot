@@ -1,20 +1,35 @@
 // Daimo Pay API Routes
-// Add these routes to your main Express app
-
 const express = require('express');
 const { firestore } = require('../config/firebase');
+const { rateLimit } = require('express-rate-limit');
+const { verifyWebhookSignature } = require('@daimo/pay-common');
+const logger = require('../utils/logger');
+
+// Rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
+
+const webhookLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
 
 const router = express.Router();
+
+// Apply rate limiting to all routes
+router.use(apiLimiter);
 
 // ============================================
 // Plans API - Returns subscription plan details
 // ============================================
 
 const PLANS = [
-  { id: 'trial-pass', name: 'Trial Week', price: '15', description: '7 days access', periodLabel: 'week' },
-  { id: 'pnp-member', name: 'Prime Member', price: '25', description: '30 days access', periodLabel: 'month' },
-  { id: 'crystal-member', name: 'Crystal Member', price: '50', description: '120 days access', periodLabel: '4 months' },
-  { id: 'diamond-member', name: 'Diamond Member', price: '100', description: '365 days access', periodLabel: '1 year' },
+  { id: 'trial-week', name: 'Trial Week', price: '14.99', description: '7 days access', periodLabel: '1 week' },
+  { id: 'pnp-member', name: 'PNP Member', price: '24.99', description: '30 days access', periodLabel: '1 month' },
+  { id: 'crystal-member', name: 'PNP Crystal Member', price: '49.99', description: '120 days access', periodLabel: '4 months' },
+  { id: 'diamond-member', name: 'PNP Diamond Member', price: '99.99', description: '365 days access', periodLabel: '1 year' },
 ];
 
 router.get('/api/plans/:planId', (req, res) => {
@@ -60,7 +75,7 @@ router.post('/api/daimo/webhook', express.json(), async (req, res) => {
       let durationDays = 30; // default
 
       if (plan) {
-        if (planId === 'trial-pass') durationDays = 7;
+        if (planId === 'trial-week') durationDays = 7;
         else if (planId === 'pnp-member') durationDays = 30;
         else if (planId === 'crystal-member') durationDays = 120;
         else if (planId === 'diamond-member') durationDays = 365;

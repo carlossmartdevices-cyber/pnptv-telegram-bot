@@ -53,8 +53,10 @@ You are the official customer support assistant for PNPtv, providing:
 
 **Membership Plans:**
 - Free: Basic access to PNPtv community
-- Silver ($15/month): Ad-free experience, 20 daily swipes, verification badge, standard support
-- Golden ($25/month + 5 USDT bonus): Everything in Silver + VIP channel access, exclusive badges, priority support, unlimited swipes, early event access
+- Trial Week ($14.99, 1 week): Short trial to explore premium features
+- PNP Member ($24.99/month): Monthly membership with full access and priority support
+- PNP Crystal Member ($49.99, 4 months): Multi-month package with extra perks
+- PNP Diamond Member ($99.99/year): Annual VIP membership with exclusive benefits
 
 **Payment Methods:**
 - ePayco (credit/debit cards)
