@@ -5,6 +5,7 @@ const { db } = require('../config/firebase');
 const rateLimit = require('express-rate-limit');
 const logger = require('../utils/logger');
 const { activateMembership } = require('../utils/membershipManager');
+const daimoPaymentService = require('../services/daimoPaymentService');
 
 // Get bot instance (will be set when mounting routes)
 let bot = null;
@@ -138,6 +139,87 @@ router.get('/api/plans/:planId', (req, res) => {
     return res.status(404).json({ error: 'Plan not found' });
   }
   res.json(plan);
+});
+
+// ============================================
+// Create Payment Link - Server-side payment creation
+// ============================================
+
+router.post('/api/daimo/create-payment', express.json(), async (req, res) => {
+  try {
+    const { userId, planId, amount } = req.body;
+
+    // Validate required fields
+    if (!userId || !planId || !amount) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        required: ['userId', 'planId', 'amount']
+      });
+    }
+
+    // Validate amount
+    const amountNum = parseFloat(amount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      return res.status(400).json({ error: 'Invalid amount' });
+    }
+
+    // Find plan details
+    const plan = PLANS.find(p => p.id === planId);
+    if (!plan) {
+      return res.status(404).json({ error: 'Plan not found' });
+    }
+
+    logger.info('[Daimo] Creating payment link:', { userId, planId, amount: amountNum });
+
+    // Create payment link via Daimo API
+    const paymentLink = await daimoPaymentService.createPaymentLink({
+      userId,
+      planId,
+      amount: amountNum,
+      destinationAddress: process.env.NEXT_PUBLIC_TREASURY_ADDRESS,
+      refundAddress: process.env.NEXT_PUBLIC_REFUND_ADDRESS,
+      metadata: {
+        planName: plan.name,
+        duration: plan.duration.toString(), // Convert to string
+        timestamp: new Date().toISOString()
+      }
+    });
+
+    // Store payment initiation in database
+    await db.collection('payments').doc(paymentLink.paymentId).set({
+      userId,
+      planId,
+      amount: amountNum,
+      status: 'pending',
+      paymentUrl: paymentLink.paymentUrl,
+      createdAt: new Date(),
+      expiresAt: paymentLink.expiresAt ? new Date(paymentLink.expiresAt) : null
+    });
+
+    logger.info('[Daimo] Payment link created successfully:', {
+      paymentId: paymentLink.paymentId,
+      userId,
+      planId
+    });
+
+    res.json({
+      success: true,
+      paymentId: paymentLink.paymentId,
+      paymentUrl: paymentLink.paymentUrl,
+      qrCode: paymentLink.qrCode,
+      expiresAt: paymentLink.expiresAt
+    });
+  } catch (error) {
+    logger.error('[Daimo] Error creating payment link:', {
+      error: error.message,
+      stack: error.stack
+    });
+
+    res.status(500).json({
+      error: 'Failed to create payment link',
+      message: error.message
+    });
+  }
 });
 
 // ============================================

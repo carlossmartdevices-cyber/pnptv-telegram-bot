@@ -84,6 +84,10 @@ app.get("/ready", async (req, res) => {
 const apiRoutes = require('./api/routes');
 app.use('/api', apiRoutes);
 
+// Daimo Pay API routes (server-side payment creation & webhooks)
+const daimoRoutes = require('../api/daimo-routes');
+app.use(daimoRoutes);
+
 // Serve static assets for payment page
 app.use("/assets", express.static(path.join(__dirname, "../../public/payment/assets")));
 
