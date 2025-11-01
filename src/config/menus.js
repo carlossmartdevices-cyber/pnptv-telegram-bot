@@ -55,7 +55,10 @@ const menus = {
       ],
       [
         { text: "📢 Broadcast", callback_data: "admin_broadcast" },
-        { text: "💰 Plan Management", callback_data: "admin_plans" },
+        { text: "� Scheduled", callback_data: "admin_scheduled_broadcasts" },
+      ],
+      [
+        { text: "�💰 Plan Management", callback_data: "admin_plans" },
       ],
       [{ text: "📋 Menu Config", callback_data: "admin_menus" }],
     ],

@@ -11,6 +11,9 @@ const logger = require('./src/utils/logger');
 // Import the bot instance
 const bot = require('./src/bot/index');
 
+// Import scheduler
+const { initializeScheduler } = require('./src/services/scheduler');
+
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', error);
@@ -39,6 +42,9 @@ process.once('SIGTERM', () => {
 async function startBot() {
   try {
     logger.info('🚀 Starting PNPtv Bot...');
+    
+    // Initialize scheduled tasks (scheduler runs independently)
+    initializeScheduler(bot);
     
     // Launch bot in polling mode
     await bot.launch();

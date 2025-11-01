@@ -471,6 +471,12 @@ bot.on("text", async (ctx) => {
         const { handleBroadcastButtons } = require("./handlers/admin");
         await handleBroadcastButtons(ctx, ctx.message.text);
       }
+    } else if (ctx.session.waitingFor === "broadcast_schedule_date") {
+      // Admin schedule broadcast - date input
+      if (isAdmin(ctx.from.id)) {
+        const { handleScheduleBroadcastDate } = require("./handlers/admin");
+        await handleScheduleBroadcastDate(ctx, ctx.message.text);
+      }
     } else if (ctx.session.waitingFor === "admin_search") {
       // Admin user search
       if (isAdmin(ctx.from.id)) {

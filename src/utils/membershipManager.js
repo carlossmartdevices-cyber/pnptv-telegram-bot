@@ -26,6 +26,101 @@ function calculateExpirationDate(durationDays = 0) {
 }
 
 /**
+ * Generate standardized membership confirmation message
+ * @param {Object} params - Message parameters
+ * @param {string} params.userName - User's name
+ * @param {string} params.planName - Plan display name
+ * @param {number} params.durationDays - Duration in days
+ * @param {Date|null} params.expiresAt - Expiration date
+ * @param {string} params.paymentAmount - Payment amount (optional)
+ * @param {string} params.paymentCurrency - Payment currency (optional)
+ * @param {string} params.paymentMethod - Payment method (optional)
+ * @param {string} params.reference - Payment reference (optional)
+ * @param {string} params.inviteLink - Unique channel invite link (optional)
+ * @param {string} params.language - User language (en/es)
+ * @returns {string} Formatted confirmation message
+ */
+function generateConfirmationMessage({
+  userName,
+  planName,
+  durationDays,
+  expiresAt,
+  paymentAmount = null,
+  paymentCurrency = null,
+  paymentMethod = null,
+  reference = null,
+  inviteLink = null,
+  language = 'en'
+}) {
+  const isSpanish = language === 'es';
+  
+  // Header
+  let message = isSpanish 
+    ? `✅ *¡Pago Confirmado!*\n\n¡Hola ${userName}! Tu suscripción *${planName}* ha sido activada exitosamente.\n\n`
+    : `✅ *Payment Confirmed!*\n\nHello ${userName}! Your *${planName}* subscription has been successfully activated.\n\n`;
+
+  // Details section
+  message += isSpanish ? `📋 *Detalles:*\n` : `📋 *Details:*\n`;
+  message += isSpanish ? `• Plan: ${planName}\n` : `• Plan: ${planName}\n`;
+  message += isSpanish ? `• Duración: ${durationDays} días\n` : `• Duration: ${durationDays} days\n`;
+  
+  // Activation date
+  const activationDate = new Date().toLocaleDateString(isSpanish ? 'es-CO' : 'en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  message += isSpanish ? `• Activado: ${activationDate}\n` : `• Activated: ${activationDate}\n`;
+
+  // Expiration date
+  if (expiresAt) {
+    const expirationDate = expiresAt.toLocaleDateString(isSpanish ? 'es-CO' : 'en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    message += isSpanish ? `• Expira: ${expirationDate}\n` : `• Expires: ${expirationDate}\n`;
+    message += isSpanish ? `• Próximo Pago: ${expirationDate}\n` : `• Next Payment: ${expirationDate}\n`;
+  } else {
+    message += isSpanish ? `• Expira: Nunca (Vitalicio)\n` : `• Expires: Never (Lifetime)\n`;
+    message += isSpanish ? `• Próximo Pago: Nunca (Vitalicio)\n` : `• Next Payment: Never (Lifetime)\n`;
+  }
+
+  // Payment information (if provided)
+  if (paymentAmount && paymentCurrency) {
+    const formattedAmount = parseFloat(paymentAmount).toLocaleString(isSpanish ? 'es-CO' : 'en-US');
+    message += isSpanish ? `• Monto Pagado: $${formattedAmount} ${paymentCurrency}\n` : `• Amount Paid: $${formattedAmount} ${paymentCurrency}\n`;
+  }
+
+  if (paymentMethod) {
+    const methodDisplay = paymentMethod === 'daimo' 
+      ? (isSpanish ? 'Daimo Pay (Crypto)' : 'Daimo Pay (Crypto)')
+      : paymentMethod === 'epayco' 
+      ? (isSpanish ? 'ePayco (Tarjeta)' : 'ePayco (Card)')
+      : paymentMethod;
+    message += isSpanish ? `• Método de Pago: ${methodDisplay}\n` : `• Payment Method: ${methodDisplay}\n`;
+  }
+
+  if (reference) {
+    message += isSpanish ? `• Referencia: ${reference}\n` : `• Reference: ${reference}\n`;
+  }
+
+  // Thank you message
+  message += isSpanish 
+    ? `\n🎉 ¡Gracias por tu suscripción!\n\n¡Disfruta de tus beneficios premium! 💎`
+    : `\n🎉 Thank you for your subscription!\n\nEnjoy your premium features! 💎`;
+
+  // Unique channel invite link
+  if (inviteLink) {
+    message += isSpanish 
+      ? `\n\n🔗 *Únete al Canal Premium:*\n${inviteLink}\n\n⚠️ Este es tu link único de acceso. No lo compartas con nadie.`
+      : `\n\n🔗 *Join the Premium Channel:*\n${inviteLink}\n\n⚠️ This is your unique access link. Do not share it with anyone.`;
+  }
+
+  return message;
+}
+
+/**
  * Activate membership for a user
  * @param {string} userId - User ID
  * @param {string} tier - Tier to activate (e.g. 'trial-week', 'pnp-member', 'crystal-member', 'diamond-member')
@@ -255,6 +350,7 @@ async function getExpiringMemberships(daysThreshold = 7) {
 
 module.exports = {
   calculateExpirationDate,
+  generateConfirmationMessage,
   activateMembership,
   checkAndExpireMemberships,
   getMembershipInfo,

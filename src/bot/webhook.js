@@ -506,39 +506,28 @@ app.post("/epayco/confirmation", async (req, res) => {
           inviteLink: result.inviteLink ? "generated" : "none",
         });
 
-        // Send confirmation message to user via Telegram
+        // Send confirmation message to user via Telegram using standardized format
         try {
           const userData = userDoc.data();
           const userName = userData.username || userData.firstName || "Usuario";
+          const userLanguage = userData.language || 'es'; // Default to Spanish for ePayco
 
-          // Calculate next payment date (same as expiration date)
-          const nextPaymentDate = result.expiresAt ? result.expiresAt.toLocaleDateString('es-CO', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }) : 'Nunca (Vitalicio)';
+          const { generateConfirmationMessage } = require('../utils/membershipManager');
+          
+          const confirmationMessage = generateConfirmationMessage({
+            userName,
+            planName: plan.displayName || plan.name,
+            durationDays,
+            expiresAt: result.expiresAt,
+            paymentAmount: webhookData.x_amount,
+            paymentCurrency: webhookData.x_currency_code,
+            paymentMethod: 'epayco',
+            reference: webhookData.x_ref_payco,
+            inviteLink: result.inviteLink,
+            language: userLanguage
+          });
 
-          let message = `✅ *¡Pago Confirmado!*\n\n` +
-            `¡Hola ${userName}! Tu suscripción *${plan.displayName || plan.name}* ha sido activada exitosamente.\n\n` +
-            `📋 *Detalles:*\n` +
-            `• Plan: ${plan.displayName || plan.name}\n` +
-            `• Duración: ${durationDays} días\n` +
-            `• Activado: ${now.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}\n` +
-            `• Expira: ${nextPaymentDate}\n` +
-            `• Próximo Pago: ${nextPaymentDate}\n` +
-            `• Monto Pagado: $${parseFloat(webhookData.x_amount).toLocaleString('es-CO')} ${webhookData.x_currency_code}\n` +
-            `• Método de Pago: ePayco\n` +
-            `• Referencia: ${webhookData.x_ref_payco}\n\n` +
-            `🎉 ¡Gracias por tu suscripción!\n\n` +
-            `¡Disfruta de tus beneficios premium! 💎`;
-
-          // Add invite link if available
-          if (result.inviteLink) {
-            message += `\n\n🔗 *Únete al Canal Premium:*\n${result.inviteLink}\n\n` +
-              `⚠️ Este es tu link único de acceso. No lo compartas con nadie.`;
-          }
-
-          await bot.telegram.sendMessage(userId, message, { parse_mode: "Markdown" });
+          await bot.telegram.sendMessage(userId, confirmationMessage, { parse_mode: "Markdown" });
         } catch (msgError) {
           logger.warn("Failed to send ePayco confirmation message to user:", {
             userId,
@@ -700,39 +689,28 @@ app.post("/daimo/webhook", async (req, res) => {
             inviteLink: result.inviteLink ? 'generated' : 'none',
           });
 
-          // Notify user in Telegram with complete welcome message
+          // Notify user in Telegram with standardized confirmation message
           try {
             const userData = userDoc.data();
             const userName = userData.username || userData.firstName || "User";
+            const userLanguage = userData.language || 'en'; // Default to English for Daimo
 
-            // Calculate next payment date (same as expiration date)
-            const nextPaymentDate = result.expiresAt ? result.expiresAt.toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }) : 'Never (Lifetime)';
+            const { generateConfirmationMessage } = require('../utils/membershipManager');
+            
+            const confirmationMessage = generateConfirmationMessage({
+              userName,
+              planName: plan.displayName || plan.name,
+              durationDays,
+              expiresAt: result.expiresAt,
+              paymentAmount: amount,
+              paymentCurrency: 'USDC',
+              paymentMethod: 'daimo',
+              reference,
+              inviteLink: result.inviteLink,
+              language: userLanguage
+            });
 
-            let message = `✅ *Payment Confirmed!*\n\n` +
-              `Hello ${userName}! Your *${plan.displayName || plan.name}* subscription has been successfully activated.\n\n` +
-              `📋 *Details:*\n` +
-              `• Plan: ${plan.displayName || plan.name}\n` +
-              `• Duration: ${durationDays} days\n` +
-              `• Activated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n` +
-              `• Expires: ${nextPaymentDate}\n` +
-              `• Next Payment: ${nextPaymentDate}\n` +
-              `• Amount Paid: $${amount || 0} USDC\n` +
-              `• Payment Method: Daimo Pay (Crypto)\n` +
-              `• Reference: ${reference}\n\n` +
-              `🎉 Thank you for your subscription!\n\n` +
-              `Enjoy your premium features! 💎`;
-
-            // Add invite link if available
-            if (result.inviteLink) {
-              message += `\n\n🔗 *Join the Premium Channel:*\n${result.inviteLink}\n\n` +
-                `⚠️ This is your unique access link. Do not share it with anyone.`;
-            }
-
-            await bot.telegram.sendMessage(userId, message, { parse_mode: "Markdown" });
+            await bot.telegram.sendMessage(userId, confirmationMessage, { parse_mode: "Markdown" });
           } catch (notifyError) {
             logger.warn('Failed to notify user', { userId, error: notifyError.message });
           }

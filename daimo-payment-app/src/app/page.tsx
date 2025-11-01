@@ -172,6 +172,73 @@ export default function PaymentPage() {
     );
   }
 
+  // Show plan selection if no plan specified
+  if (!planId && !isLoading && plans.length > 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-4xl w-full">
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <AnimatedLogo size="medium" variant="brand" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Choose Your Plan</h1>
+            <p className="text-gray-600">Select a subscription plan to continue</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {plans.map((plan) => (
+              <div key={plan.id} className="border rounded-xl p-6 hover:shadow-lg transition-shadow">
+                <div className="text-center mb-4">
+                  <div className="text-3xl mb-2">{plan.icon}</div>
+                  <h3 className="text-xl font-bold">{plan.displayName}</h3>
+                  <p className="text-gray-600 text-sm">{plan.description}</p>
+                </div>
+
+                <div className="text-center mb-4">
+                  <div className="text-2xl font-bold text-indigo-600">${plan.price}</div>
+                  <div className="text-sm text-gray-500">{plan.durationDays} days</div>
+                </div>
+
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-2">Features:</h4>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-center">
+                        <span className="text-green-500 mr-2">✓</span>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <button
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    params.set('plan', plan.id);
+                    params.set('amount', plan.price.toString());
+                    if (userId) params.set('user', userId);
+                    window.location.search = params.toString();
+                  }}
+                  className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  Select Plan
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {!userId && (
+            <div className="mt-8 text-center">
+              <p className="text-red-600 text-sm">
+                ⚠️ Missing user ID. Please return to the Telegram bot to generate a proper payment link.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
@@ -206,14 +273,36 @@ export default function PaymentPage() {
           <div className="space-y-6">
             <div className="border-b pb-6">
               <div className="flex justify-between mb-2">
+                <span className="text-gray-600">Plan:</span>
+                <span className="font-semibold">{selectedPlan?.displayName || planId}</span>
+              </div>
+              <div className="flex justify-between mb-2">
                 <span className="text-gray-600">Amount:</span>
-                <span className="font-semibold">${amount} USDC</span>
+                <span className="font-semibold">${amountUSD.toFixed(2)} USDC</span>
+              </div>
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-600">Duration:</span>
+                <span className="font-semibold">{selectedPlan?.durationDays || '30'} days</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Network:</span>
                 <span className="font-semibold">Base</span>
               </div>
             </div>
+
+            {selectedPlan && selectedPlan.features.length > 0 && (
+              <div className="border-b pb-6">
+                <h3 className="font-semibold mb-2">Plan Features:</h3>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  {selectedPlan.features.map((feature, index) => (
+                    <li key={index} className="flex items-center">
+                      <span className="text-green-500 mr-2">✓</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="bg-gray-50 p-4 rounded-lg mb-6">
               <h3 className="font-semibold mb-2">Payment Options:</h3>

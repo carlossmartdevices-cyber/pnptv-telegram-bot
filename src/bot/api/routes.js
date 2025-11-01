@@ -124,6 +124,131 @@ router.post('/payments/completed', async (req, res) => {
 });
 
 /**
+ * POST /api/payment/completed
+ * Called by daimo-payment-app when payment is confirmed
+ * This endpoint actually activates the subscription
+ */
+router.post('/payment/completed', async (req, res) => {
+  try {
+    const { amount, planId, userId, reference, paymentMethod = 'daimo' } = req.body;
+
+    logger.info('Payment completion notification received from payment app:', {
+      userId,
+      planId,
+      amount,
+      reference,
+      paymentMethod
+    });
+
+    if (!userId || !planId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters: userId, planId'
+      });
+    }
+
+    // Get plan details
+    const plan = await planService.getPlanById(planId);
+    if (!plan) {
+      logger.error('Plan not found for payment completion:', { planId, userId });
+      return res.status(404).json({
+        success: false,
+        error: 'Plan not found'
+      });
+    }
+
+    // Check if user exists
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      logger.error('User not found for payment completion:', { userId, planId });
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Use membership manager to activate subscription
+    const { activateMembership } = require('../../utils/membershipManager');
+    const durationDays = plan.duration || plan.durationDays || 30;
+    
+    // Get bot instance
+    const bot = require('../index');
+    
+    const result = await activateMembership(userId, plan.tier, `${paymentMethod}_app`, durationDays, bot);
+
+    // Store payment metadata
+    const now = new Date();
+    await userRef.update({
+      membershipPlanId: plan.id,
+      membershipPlanName: plan.displayName || plan.name,
+      paymentMethod: paymentMethod,
+      paymentReference: reference,
+      paymentAmount: parseFloat(amount || '0'),
+      paymentCurrency: paymentMethod === 'daimo' ? 'USDC' : 'COP',
+      paymentDate: now,
+      lastPaymentStatus: 'completed',
+      updatedAt: now,
+    });
+
+    logger.info('Subscription activated from payment app:', {
+      userId,
+      planId,
+      tier: plan.tier,
+      expiresAt: result.expiresAt?.toISOString(),
+      inviteLink: result.inviteLink ? 'generated' : 'none',
+    });
+
+    // Send confirmation message to user using standardized format
+    try {
+      const userData = userDoc.data();
+      const userName = userData.username || userData.firstName || 'User';
+      const userLanguage = userData.language || 'en';
+
+      const { generateConfirmationMessage } = require('../../utils/membershipManager');
+      
+      const confirmationMessage = generateConfirmationMessage({
+        userName,
+        planName: plan.displayName || plan.name,
+        durationDays,
+        expiresAt: result.expiresAt,
+        paymentAmount: amount,
+        paymentCurrency: paymentMethod === 'daimo' ? 'USDC' : 'COP',
+        paymentMethod,
+        reference,
+        inviteLink: result.inviteLink,
+        language: userLanguage
+      });
+
+      await bot.telegram.sendMessage(userId, confirmationMessage, { parse_mode: "Markdown" });
+      logger.info('Confirmation message sent to user from payment app');
+    } catch (msgError) {
+      logger.warn('Failed to send confirmation message from payment app:', msgError.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Payment processed successfully',
+      subscription: {
+        planId: plan.id,
+        tier: plan.tier,
+        expiresAt: result.expiresAt?.toISOString(),
+        inviteLink: result.inviteLink ? 'provided' : 'none'
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error processing payment completion from payment app:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      details: error.message
+    });
+  }
+});
+
+/**
  * POST /api/daimo/payment-completed
  * Called from payment page when Daimo payment completes
  */

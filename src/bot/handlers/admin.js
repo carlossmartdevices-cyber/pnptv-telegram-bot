@@ -5,6 +5,15 @@ const { getMenu } = require("../../config/menus");
 const { showPlanDashboard } = require('./admin/planManager');
 const { activateMembership, getExpiringMemberships } = require("../../utils/membershipManager");
 const { runManualExpirationCheck } = require("../../services/scheduler");
+const {
+  canScheduleBroadcast,
+  getScheduledBroadcastCount,
+  getScheduledBroadcasts,
+  createScheduledBroadcast,
+  cancelScheduledBroadcast,
+  updateScheduledBroadcast,
+  MAX_SCHEDULED_BROADCASTS,
+} = require("../../services/scheduledBroadcastService");
 
 /**
  * Admin panel main handler
@@ -1808,34 +1817,46 @@ async function executeQuickActivation(ctx, userId, tier, durationDays) {
       return;
     }
 
-    // Activate membership
-    const result = await activateMembership(userId, tier, "admin", durationDays);
+    // Get bot instance for invite link generation
+    const bot = require('../index');
+    
+    // Activate membership with bot instance for invite link generation
+    const result = await activateMembership(userId, tier, "admin", durationDays, bot);
 
     const userData = userDoc.data();
     const userLang = userData.language || "en";
 
-    // Notify user
+    // Get plan name for display
+    let planName = tier;
     try {
-      let message = userLang === "es"
-        ? `🎉 ¡Felicitaciones!\n\nTu membresía ha sido activada:\n**${tier}**\n\n`
-        : `🎉 Congratulations!\n\nYour membership has been activated:\n**${tier}**\n\n`;
-
-      if (result.expiresAt) {
-        const expiresDate = result.expiresAt.toLocaleDateString();
-        message += userLang === "es"
-          ? `⏰ Vence el: ${expiresDate} (${durationDays} días)\n\n`
-          : `⏰ Expires on: ${expiresDate} (${durationDays} days)\n\n`;
-      } else {
-        message += userLang === "es"
-          ? `💎 Membresía **VITALICIA** - ¡Nunca expira!\n\n`
-          : `💎 **LIFETIME** Membership - Never expires!\n\n`;
+      const planService = require('../../services/planService');
+      const plan = await planService.getPlanByTier?.(tier) || await planService.getPlanById?.(tier);
+      if (plan) {
+        planName = plan.displayName || plan.name || tier;
       }
+    } catch (planError) {
+      // Use tier as fallback if plan service fails
+      logger.warn('Could not get plan details for confirmation message:', planError.message);
+    }
 
-      message += userLang === "es"
-        ? "¡Disfruta todas las características premium!"
-        : "Enjoy all premium features!";
+    // Generate standardized confirmation message
+    const { generateConfirmationMessage } = require('../../utils/membershipManager');
+    const userName = userData.username || userData.firstName || 'User';
+    
+    const confirmationMessage = generateConfirmationMessage({
+      userName,
+      planName,
+      durationDays,
+      expiresAt: result.expiresAt,
+      paymentMethod: userLang === 'es' ? 'Activación Manual' : 'Manual Activation',
+      reference: `admin_${Date.now()}`,
+      inviteLink: result.inviteLink,
+      language: userLang
+    });
 
-      await ctx.telegram.sendMessage(userId, message, {
+    // Notify user with standardized message
+    try {
+      await ctx.telegram.sendMessage(userId, confirmationMessage, {
         parse_mode: "Markdown",
       });
     } catch (e) {
@@ -3403,7 +3424,21 @@ async function handleAdminCallback(ctx) {
       await broadcastMessage(ctx);
     } else if (action.startsWith("bcast_")) {
       // Handle all broadcast wizard actions
-      await handleBroadcastWizard(ctx, action);
+      if (action === "bcast_save_scheduled") {
+        await saveScheduledBroadcast(ctx);
+      } else if (action.startsWith("bcast_confirm_")) {
+        await handleBroadcastWizard(ctx, action);
+      } else if (ctx.session.broadcastWizard && ctx.session.broadcastWizard.scheduledForLater) {
+        // For scheduled broadcasts, show scheduled confirmation instead of executing
+        if (action === "bcast_confirm_send" || action === "bcast_buttons_skip") {
+          await showScheduledBroadcastConfirmation(ctx);
+        } else {
+          await handleBroadcastWizard(ctx, action);
+        }
+      } else {
+        // Regular broadcast
+        await handleBroadcastWizard(ctx, action);
+      }
     } else if (action === "admin_users") {
       await listUsers(ctx);
     } else if (action === "admin_list_all") {
@@ -3520,10 +3555,447 @@ async function handleAdminCallback(ctx) {
       await testMenu(ctx, menuName);
     } else if (action === "admin_menu_reload") {
       await reloadMenus(ctx);
+    } else if (action === "admin_scheduled_broadcasts") {
+      await showScheduledBroadcasts(ctx);
+    } else if (action.startsWith("admin_schedule_broadcast_")) {
+      await startScheduleBroadcast(ctx);
+    } else if (action.startsWith("admin_cancel_broadcast_")) {
+      const broadcastId = action.replace("admin_cancel_broadcast_", "");
+      await executeCancelBroadcast(ctx, broadcastId);
     }
   } catch (error) {
     logger.error("Error handling admin callback:", error);
     await ctx.reply(t("error", lang));
+  }
+}
+
+/**
+ * Show all scheduled broadcasts
+ */
+async function showScheduledBroadcasts(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+
+    const loadingMsg = await ctx.reply(
+      lang === "es" ? "📅 Cargando transmisiones programadas..." : "📅 Loading scheduled broadcasts..."
+    );
+
+    const broadcasts = await getScheduledBroadcasts();
+    const count = broadcasts.length;
+
+    try {
+      await ctx.deleteMessage(loadingMsg.message_id);
+    } catch (e) {
+      // Ignore
+    }
+
+    if (broadcasts.length === 0) {
+      await ctx.reply(
+        lang === "es"
+          ? `📅 **Transmisiones Programadas**\n\nNo hay transmisiones programadas.\n\n✨ Puedes programar hasta ${MAX_SCHEDULED_BROADCASTS} transmisiones.`
+          : `📅 **Scheduled Broadcasts**\n\nNo scheduled broadcasts.\n\n✨ You can schedule up to ${MAX_SCHEDULED_BROADCASTS} broadcasts.`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: lang === "es" ? "📢 Nueva transmisión programada" : "📢 Schedule Broadcast",
+                  callback_data: "admin_schedule_broadcast_new"
+                }
+              ],
+              [
+                {
+                  text: lang === "es" ? "« Volver" : "« Back",
+                  callback_data: "admin_back"
+                }
+              ]
+            ]
+          }
+        }
+      );
+      return;
+    }
+
+    let message = lang === "es"
+      ? `📅 **Transmisiones Programadas** (${count}/${MAX_SCHEDULED_BROADCASTS})\n\n`
+      : `📅 **Scheduled Broadcasts** (${count}/${MAX_SCHEDULED_BROADCASTS})\n\n`;
+
+    broadcasts.forEach((broadcast, index) => {
+      const scheduled = new Date(broadcast.scheduledTime);
+      const now = new Date();
+      const timeDiff = scheduled - now;
+      const hoursRemaining = Math.round(timeDiff / (1000 * 60 * 60));
+      const minutesRemaining = Math.round((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+      const langLabel = {
+        all: "🌐",
+        en: "🇺🇸",
+        es: "🇪🇸"
+      }[broadcast.targetLanguage] || "🌍";
+
+      const statusLabel = {
+        all: "👥",
+        subscribers: "💎",
+        free: "🆓",
+        churned: "⏰"
+      }[broadcast.targetStatus] || "•";
+
+      const timeStr = scheduled.toLocaleString();
+      const timeLeftStr = hoursRemaining > 0
+        ? `${hoursRemaining}h ${minutesRemaining}m`
+        : `${minutesRemaining}m`;
+
+      message += `${index + 1}. ${langLabel} ${statusLabel} \`${broadcast.id.substring(0, 8)}\`\n`;
+      message += `   ${lang === "es" ? "Programada:" : "Scheduled:"} ${timeStr}\n`;
+      message += `   ${lang === "es" ? "En:" : "In:"} ${timeLeftStr}\n`;
+      message += `   ${broadcast.text.substring(0, 40)}${broadcast.text.length > 40 ? "..." : ""}\n\n`;
+    });
+
+    const keyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: lang === "es" ? "📢 Nueva transmisión programada" : "📢 Schedule Broadcast",
+            callback_data: "admin_schedule_broadcast_new"
+          }
+        ],
+        [
+          {
+            text: lang === "es" ? "🔄 Actualizar" : "🔄 Refresh",
+            callback_data: "admin_scheduled_broadcasts"
+          },
+          {
+            text: lang === "es" ? "« Volver" : "« Back",
+            callback_data: "admin_back"
+          }
+        ]
+      ]
+    };
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: keyboard
+    });
+
+    logger.info(`Admin ${ctx.from.id} viewed scheduled broadcasts`);
+  } catch (error) {
+    logger.error("Error showing scheduled broadcasts:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Start scheduled broadcast creation
+ */
+async function startScheduleBroadcast(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+
+    const canSchedule = await canScheduleBroadcast();
+    if (!canSchedule) {
+      await ctx.reply(
+        lang === "es"
+          ? `❌ No se puede programar más transmisiones. Límite de ${MAX_SCHEDULED_BROADCASTS} alcanzado.`
+          : `❌ Cannot schedule more broadcasts. Limit of ${MAX_SCHEDULED_BROADCASTS} reached.`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: lang === "es" ? "« Volver" : "« Back",
+                  callback_data: "admin_scheduled_broadcasts"
+                }
+              ]
+            ]
+          }
+        }
+      );
+      return;
+    }
+
+    // Initialize broadcast wizard for scheduling
+    ctx.session.broadcastWizard = {
+      step: 1,
+      targetLanguage: null,
+      targetStatus: null,
+      media: null,
+      text: null,
+      buttons: null,
+      scheduledForLater: true,
+      scheduledTime: null
+    };
+
+    ctx.session.waitingFor = "broadcast_schedule_date";
+
+    const message = lang === "es"
+      ? "📅 **Programar Transmisión**\n\n🗓️ Envía la fecha y hora de la transmisión\n\nFormato: DD/MM/YYYY HH:MM\nEjemplo: 25/12/2024 14:30\n\n💡 La hora está en tu zona horaria local."
+      : "📅 **Schedule Broadcast**\n\n🗓️ Send the date and time for the broadcast\n\nFormat: DD/MM/YYYY HH:MM\nExample: 12/25/2024 14:30\n\n💡 Time is in your local timezone.";
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
+              callback_data: "admin_scheduled_broadcasts"
+            }
+          ]
+        ]
+      }
+    });
+  } catch (error) {
+    logger.error("Error starting schedule broadcast:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle scheduled broadcast date input
+ */
+async function handleScheduleBroadcastDate(ctx, dateStr) {
+  try {
+    const lang = ctx.session.language || "en";
+
+    // Parse date format: DD/MM/YYYY HH:MM
+    const parts = dateStr.trim().split(/[\s/:-]+/);
+
+    if (parts.length !== 5) {
+      await ctx.reply(
+        lang === "es"
+          ? "❌ Formato inválido. Usa: DD/MM/YYYY HH:MM"
+          : "❌ Invalid format. Use: DD/MM/YYYY HH:MM"
+      );
+      return;
+    }
+
+    const [day, month, year, hour, minute] = parts.map(Number);
+
+    // Validate date
+    const scheduledTime = new Date(year, month - 1, day, hour, minute);
+
+    if (isNaN(scheduledTime.getTime())) {
+      await ctx.reply(
+        lang === "es"
+          ? "❌ Fecha inválida. Intenta nuevamente."
+          : "❌ Invalid date. Try again."
+      );
+      return;
+    }
+
+    if (scheduledTime <= new Date()) {
+      await ctx.reply(
+        lang === "es"
+          ? "❌ La fecha debe estar en el futuro."
+          : "❌ Date must be in the future."
+      );
+      return;
+    }
+
+    // Store scheduled time
+    ctx.session.broadcastWizard.scheduledTime = scheduledTime;
+    ctx.session.broadcastWizard.step = 1;
+    ctx.session.waitingFor = null;
+
+    const formattedTime = scheduledTime.toLocaleString();
+    await ctx.reply(
+      lang === "es"
+        ? `✅ Transmisión programada para: ${formattedTime}\n\nAhora configura el contenido de la transmisión.`
+        : `✅ Broadcast scheduled for: ${formattedTime}\n\nNow configure the broadcast content.`
+    );
+
+    // Start regular broadcast wizard
+    await broadcastMessage(ctx);
+  } catch (error) {
+    logger.error("Error handling schedule broadcast date:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Override broadcast confirmation to add schedule option
+ */
+async function showScheduledBroadcastConfirmation(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    const wizard = ctx.session.broadcastWizard;
+
+    // Count target users
+    const usersSnapshot = await db.collection("users").get();
+    const allUsers = usersSnapshot.docs;
+    const filteredUsers = filterUsersByWizard(allUsers, wizard);
+
+    const langLabel = {
+      all: lang === "es" ? "Todos los idiomas" : "All languages",
+      en: lang === "es" ? "Solo inglés" : "English only",
+      es: lang === "es" ? "Solo español" : "Spanish only"
+    }[wizard.targetLanguage];
+
+    const statusLabel = {
+      all: lang === "es" ? "Todos los estados" : "All status",
+      subscribers: lang === "es" ? "Suscriptores activos" : "Active subscribers",
+      free: lang === "es" ? "Nivel gratuito" : "Free tier",
+      churned: lang === "es" ? "Suscripciones expiradas" : "Expired subscriptions"
+    }[wizard.targetStatus];
+
+    const mediaLabel = wizard.media
+      ? (wizard.media.type === "photo" ? "📷 Foto" : wizard.media.type === "video" ? "🎥 Video" : "📄 Documento")
+      : (lang === "es" ? "Sin multimedia" : "No media");
+
+    const buttonsLabel = wizard.buttons && wizard.buttons.length > 0
+      ? `${wizard.buttons.length} ${lang === "es" ? "botón(es)" : "button(s)"}`
+      : (lang === "es" ? "Sin botones" : "No buttons");
+
+    const scheduledTime = wizard.scheduledTime.toLocaleString();
+
+    const message = lang === "es"
+      ? `📅 **Confirmación de Transmisión Programada**\n\n**Configuración:**\n🌐 Idioma: ${langLabel}\n👥 Estado: ${statusLabel}\n📎 Multimedia: ${mediaLabel}\n🔘 Botones: ${buttonsLabel}\n\n**Vista previa del mensaje:**\n━━━━━━━━━━━━━━\n${wizard.text}\n━━━━━━━━━━━━━━\n\n**📅 Programación:**\n🕐 Hora: ${scheduledTime}\n👥 Usuarios objetivo: ${filteredUsers.length}\n\n¿Listo para guardar la transmisión?`
+      : `📅 **Scheduled Broadcast Confirmation**\n\n**Configuration:**\n🌐 Language: ${langLabel}\n👥 Status: ${statusLabel}\n📎 Media: ${mediaLabel}\n🔘 Buttons: ${buttonsLabel}\n\n**Message preview:**\n━━━━━━━━━━━━━━\n${wizard.text}\n━━━━━━━━━━━━━━\n\n**📅 Schedule:**\n🕐 Time: ${scheduledTime}\n👥 Target users: ${filteredUsers.length}\n\nReady to save the broadcast?`;
+
+    const keyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: lang === "es" ? "✅ Guardar transmisión" : "✅ Save broadcast",
+            callback_data: "bcast_save_scheduled"
+          }
+        ],
+        [
+          {
+            text: lang === "es" ? "✏️ Editar" : "✏️ Edit",
+            callback_data: "bcast_edit"
+          },
+          {
+            text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
+            callback_data: "admin_scheduled_broadcasts"
+          }
+        ]
+      ]
+    };
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: keyboard
+    });
+  } catch (error) {
+    logger.error("Error showing scheduled broadcast confirmation:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Save scheduled broadcast
+ */
+async function saveScheduledBroadcast(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    const wizard = ctx.session.broadcastWizard;
+
+    const savingMsg = await ctx.reply(
+      lang === "es" ? "💾 Guardando transmisión programada..." : "💾 Saving scheduled broadcast..."
+    );
+
+    const broadcastId = await createScheduledBroadcast({
+      targetLanguage: wizard.targetLanguage,
+      targetStatus: wizard.targetStatus,
+      text: wizard.text,
+      media: wizard.media,
+      buttons: wizard.buttons,
+      scheduledTime: wizard.scheduledTime,
+      adminId: ctx.from.id,
+    });
+
+    try {
+      await ctx.deleteMessage(savingMsg.message_id);
+    } catch (e) {
+      // Ignore
+    }
+
+    if (broadcastId) {
+      await ctx.reply(
+        lang === "es"
+          ? `✅ ¡Transmisión programada exitosamente!\n\n🆔 ID: \`${broadcastId.substring(0, 12)}\`\n🕐 Hora: ${wizard.scheduledTime.toLocaleString()}\n\nLa transmisión se enviará automáticamente a la hora programada.`
+          : `✅ Broadcast scheduled successfully!\n\n🆔 ID: \`${broadcastId.substring(0, 12)}\`\n🕐 Time: ${wizard.scheduledTime.toLocaleString()}\n\nThe broadcast will be sent automatically at the scheduled time.`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: lang === "es" ? "📅 Ver transmisiones programadas" : "📅 View Scheduled",
+                  callback_data: "admin_scheduled_broadcasts"
+                }
+              ],
+              [
+                {
+                  text: lang === "es" ? "« Volver" : "« Back",
+                  callback_data: "admin_back"
+                }
+              ]
+            ]
+          }
+        }
+      );
+
+      logger.info(`Admin ${ctx.from.id} scheduled broadcast: ${broadcastId}`);
+    } else {
+      await ctx.reply(
+        lang === "es"
+          ? "❌ Error al guardar la transmisión. Intenta nuevamente."
+          : "❌ Error saving broadcast. Try again."
+      );
+    }
+
+    // Clear wizard
+    ctx.session.broadcastWizard = null;
+    ctx.session.waitingFor = null;
+  } catch (error) {
+    logger.error("Error saving scheduled broadcast:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Cancel scheduled broadcast
+ */
+async function executeCancelBroadcast(ctx, broadcastId) {
+  try {
+    const lang = ctx.session.language || "en";
+
+    const success = await cancelScheduledBroadcast(broadcastId);
+
+    if (success) {
+      await ctx.reply(
+        lang === "es"
+          ? "✅ Transmisión programada cancelada."
+          : "✅ Scheduled broadcast cancelled.",
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: lang === "es" ? "📅 Ver transmisiones" : "📅 View Broadcasts",
+                  callback_data: "admin_scheduled_broadcasts"
+                }
+              ]
+            ]
+          }
+        }
+      );
+
+      logger.info(`Admin ${ctx.from.id} cancelled scheduled broadcast: ${broadcastId}`);
+    } else {
+      await ctx.reply(
+        lang === "es"
+          ? "❌ Error al cancelar la transmisión."
+          : "❌ Error cancelling broadcast."
+      );
+    }
+
+    await ctx.answerCbQuery();
+  } catch (error) {
+    logger.error("Error cancelling broadcast:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
   }
 }
 
@@ -3569,4 +4041,10 @@ module.exports = {
   analyzeMenuStructure,
   testMenu,
   reloadMenus,
+  showScheduledBroadcasts,
+  startScheduleBroadcast,
+  handleScheduleBroadcastDate,
+  showScheduledBroadcastConfirmation,
+  saveScheduledBroadcast,
+  executeCancelBroadcast,
 };

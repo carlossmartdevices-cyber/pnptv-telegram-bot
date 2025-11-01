@@ -162,21 +162,26 @@ async function createPaymentRequest({ amount, userId, plan }) {
     const referenceId = `${plan}_${userId}_${Date.now()}`;
 
     // Build payment page URL with query parameters
-    // In development, if BOT_URL is http://, we need to use a placeholder or disable
-    let paymentPageUrl = process.env.BOT_URL || 'https://example.com';
+    // Use dedicated payment app URL if available, otherwise fall back to bot URL
+    let paymentPageUrl = process.env.DAIMO_PAYMENT_APP_URL || process.env.NEXT_PUBLIC_WEBAPP_URL || process.env.BOT_URL || 'https://example.com';
 
     // Ensure HTTPS for Telegram compatibility (Telegram requires HTTPS for inline buttons)
     if (paymentPageUrl.startsWith('http://localhost') || paymentPageUrl.startsWith('http://127.0.0.1')) {
       // For local development, Daimo payments won't work in Telegram due to HTTPS requirement
       // Use production URL or throw error
-      if (process.env.NEXT_PUBLIC_WEBAPP_URL && process.env.NEXT_PUBLIC_WEBAPP_URL.startsWith('https://')) {
+      if (process.env.DAIMO_PAYMENT_APP_URL && process.env.DAIMO_PAYMENT_APP_URL.startsWith('https://')) {
+        paymentPageUrl = process.env.DAIMO_PAYMENT_APP_URL;
+      } else if (process.env.NEXT_PUBLIC_WEBAPP_URL && process.env.NEXT_PUBLIC_WEBAPP_URL.startsWith('https://')) {
         paymentPageUrl = process.env.NEXT_PUBLIC_WEBAPP_URL;
       } else {
-        throw new Error('Daimo payments require HTTPS. Please use production URL or ngrok for local testing.');
+        throw new Error('Daimo payments require HTTPS. Please set DAIMO_PAYMENT_APP_URL or use ngrok for local testing.');
       }
     }
 
-    paymentPageUrl = `${paymentPageUrl}/pay`;
+    // Don't add /pay suffix if the URL already includes it
+    if (!paymentPageUrl.endsWith('/pay') && !paymentPageUrl.includes('/pay?')) {
+      paymentPageUrl = `${paymentPageUrl}/pay`;
+    }
 
     const paymentUrl = new URL(paymentPageUrl);
     paymentUrl.searchParams.set('plan', plan);

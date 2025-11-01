@@ -8,14 +8,15 @@ export async function POST(request: NextRequest) {
     // Log payment completion
     console.log('Payment completed:', { amount, planId, userId, reference });
 
-    // Notify your bot backend about successful payment
-    const botUrl = process.env.NEXT_PUBLIC_API_URL || 'https://pnptv.app/api';
+    // Notify the main bot backend about successful payment
+    const botUrl = process.env.BOT_WEBHOOK_URL || process.env.BOT_URL || 'https://pnptv.app';
     
     try {
-      const response = await fetch(`${botUrl}/payment/completed`, {
+      const response = await fetch(`${botUrl}/api/payment/completed`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'User-Agent': 'Daimo-Payment-App/1.0'
         },
         body: JSON.stringify({
           amount,
@@ -24,26 +25,23 @@ export async function POST(request: NextRequest) {
           reference,
           timestamp: new Date().toISOString(),
           status: 'completed',
+          paymentMethod: 'daimo'
         }),
       });
 
       if (!response.ok) {
         console.error('Failed to notify bot backend:', response.status);
-        return NextResponse.json(
-          { success: false, error: 'Failed to notify backend' },
-          { status: 500 }
-        );
+        // Don't fail the request if backend notification fails
+        console.warn('Backend notification failed, but payment was successful');
+      } else {
+        const result = await response.json();
+        console.log('Bot backend notified successfully:', result);
       }
-
-      const result = await response.json();
-      console.log('Bot backend notified:', result);
 
     } catch (error) {
       console.error('Error notifying bot backend:', error);
-      return NextResponse.json(
-        { success: false, error: 'Backend notification failed' },
-        { status: 500 }
-      );
+      // Don't fail the request if backend notification fails
+      console.warn('Backend notification error, but payment was successful');
     }
 
     return NextResponse.json({ 

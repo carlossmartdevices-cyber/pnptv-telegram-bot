@@ -1,5 +1,6 @@
 const cron = require("node-cron");
 const { checkAndExpireMemberships } = require("../utils/membershipManager");
+const { initializeScheduledBroadcastExecutor } = require("./scheduledBroadcastService");
 const logger = require("../utils/logger");
 
 /**
@@ -7,6 +8,9 @@ const logger = require("../utils/logger");
  */
 function initializeScheduler(bot) {
   logger.info("Initializing scheduled tasks...");
+
+  // Initialize scheduled broadcast executor
+  initializeScheduledBroadcastExecutor(bot);
 
   // Run membership expiration check daily at 2:00 AM
   cron.schedule("0 2 * * *", async () => {
