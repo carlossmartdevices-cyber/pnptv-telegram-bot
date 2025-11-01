@@ -4,10 +4,9 @@
  */
 
 // Load admin IDs from environment variable or use default
-// ADMIN MODE DISABLED - No admin access allowed
 const ADMIN_IDS = process.env.ADMIN_IDS
   ? process.env.ADMIN_IDS.split(',').map(id => parseInt(id.trim()))
-  : []; // Empty array - admin mode disabled
+  : [8365312597]; // Updated default to correct admin ID
 
 /**
  * Check if a user is an admin
@@ -15,8 +14,8 @@ const ADMIN_IDS = process.env.ADMIN_IDS
  * @returns {boolean} True if user is admin
  */
 function isAdmin(userId) {
-  // Admin mode is disabled - always return false
-  return false;
+  const id = typeof userId === 'string' ? parseInt(userId) : userId;
+  return ADMIN_IDS.includes(id);
 }
 
 /**
