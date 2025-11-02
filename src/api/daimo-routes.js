@@ -147,7 +147,7 @@ router.get('/api/plans/:planId', (req, res) => {
 
 router.post('/api/daimo/create-payment', express.json(), async (req, res) => {
   try {
-    const { userId, planId, amount } = req.body;
+    const { userId, planId, amount, paymentMethod } = req.body;
 
     // Validate required fields
     if (!userId || !planId || !amount) {
@@ -169,18 +169,25 @@ router.post('/api/daimo/create-payment', express.json(), async (req, res) => {
       return res.status(404).json({ error: 'Plan not found' });
     }
 
-    logger.info('[Daimo] Creating payment link:', { userId, planId, amount: amountNum });
+    logger.info('[Daimo] Creating payment link:', { 
+      userId, 
+      planId, 
+      amount: amountNum,
+      paymentMethod: paymentMethod || 'all'
+    });
 
     // Create payment link via Daimo API
     const paymentLink = await daimoPaymentService.createPaymentLink({
       userId,
       planId,
       amount: amountNum,
+      paymentMethod: paymentMethod || null,
       destinationAddress: process.env.NEXT_PUBLIC_TREASURY_ADDRESS,
       refundAddress: process.env.NEXT_PUBLIC_REFUND_ADDRESS,
       metadata: {
         planName: plan.name,
         duration: plan.duration.toString(), // Convert to string
+        paymentMethod: paymentMethod || 'any',
         timestamp: new Date().toISOString()
       }
     });
@@ -300,7 +307,7 @@ router.post('/api/daimo/webhook', webhookLimiter, express.json(), async (req, re
           updatedAt: now
         });
 
-        // Store payment record
+        // Store payment record in global collection (for admin/reporting)
         await db.collection('payments').doc(payment.id).set({
           status: payment.status,
           type,
@@ -312,6 +319,29 @@ router.post('/api/daimo/webhook', webhookLimiter, express.json(), async (req, re
           createdAt: now
         }, { merge: true });
 
+        // Store transaction in user's subcollection (users/{userId}/transactions/{transactionId})
+        await db.collection('users').doc(userId.toString())
+          .collection('transactions').doc(payment.id).set({
+            type: 'payment',
+            paymentMethod: 'daimo',
+            planId,
+            planName: plan?.name || planId,
+            amount: payment.amount,
+            currency: payment.currency || 'USD',
+            status: payment.status,
+            durationDays,
+            paymentId: payment.id,
+            transactionHash: payment.transactionHash || null,
+            walletAddress: payment.walletAddress || null,
+            completedAt: now,
+            expiresAt: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
+            metadata: {
+              eventType: type,
+              rawPayment: payment
+            },
+            createdAt: now
+          });
+
         logger.info('[Daimo] ✅ Activated subscription:', {
           userId,
           planId,
@@ -320,6 +350,37 @@ router.post('/api/daimo/webhook', webhookLimiter, express.json(), async (req, re
           amount: payment.amount,
           inviteLink: result.inviteLink ? 'generated' : 'none'
         });
+
+        // Send confirmation message to user
+        try {
+          const userRef = await db.collection('users').doc(userId.toString()).get();
+          const userData = userRef.data();
+          const userName = userData?.firstName || userData?.username || 'User';
+          const userLang = userData?.language || 'en';
+
+          const confirmationMessage = require('../utils/membershipManager').generateConfirmationMessage({
+            userName,
+            planName: plan?.displayName || plan?.name || planId,
+            durationDays,
+            expiresAt: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
+            paymentAmount: payment.amount,
+            paymentCurrency: payment.currency || 'USD',
+            paymentMethod: 'daimo',
+            reference: payment.id,
+            inviteLink: result.inviteLink,
+            language: userLang
+          });
+
+          await bot.telegram.sendMessage(userId, confirmationMessage, {
+            parse_mode: 'Markdown',
+            disable_web_page_preview: false
+          });
+
+          logger.info('[Daimo] Sent confirmation message to user', { userId });
+        } catch (notificationError) {
+          logger.warn('[Daimo] Failed to send confirmation message:', notificationError.message);
+          // Continue anyway - payment was successful
+        }
       } catch (activationError) {
         logger.error('[Daimo] Error activating membership:', activationError);
         // Still acknowledge to prevent retry

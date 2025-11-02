@@ -39,19 +39,93 @@ module.exports = async (ctx) => {
       return;
     }
 
-    // Channel content description
-    const channelDescription =
-      lang === "es"
-        ? "🎥 Canal con contenido exclusivo.\n\nÚnete a PNPtv! PRIME y al parche más chimba de todos: latinos fumando, slammeando y gozando sin filtros en Telegram.\n\n🔥 Lo que te espera:\n\n-Videos completos y sin censura de Santino y su combo.\n\n-Acceso al grupo privado solo para miembros activos.\n\n-Encuentra panas cerca de ti con la opción de geolocalización.\n\n\n💫 Peguémonos el viaje juntos."
-        : "🎥 Exclusive Channel Content\n\nBecome a member of PNPtv PRIME and enjoy the best amateur content — Latino men smoking and slamming on Telegram.\n\n🔥 What you'll get:\n\n-Dozens of full-length adult videos featuring Santino and his boys.\n\n-Access to our exclusive Telegram members group.\n\n-Connect with other members in your area using our geolocation tool.\n\n\nLet's get spun together! 💎";
+    // Build comprehensive plan list message with all details inline
+    let planListMessage = "";
+    
+    if (lang === "es") {
+      planListMessage = `💎 **Planes Premium PNPtv**\n\n` +
+        `💰 **Paga con crypto (USDC) usando Daimo:**\n` +
+        `✅ Activación instantánea\n` +
+        `• 🏦 Coinbase / Binance\n` +
+        `• 💰 Venmo / Cash App\n` +
+        `• 💎 Crypto Wallets\n` +
+        `• 📱 Transferencia Directa\n\n` +
+        `🎥 **Lo que obtienes:**\n` +
+        `• Acceso al mejor contenido amateur PNP en Telegram\n` +
+        `• Disfruta videos completos de Santino y sus amigos\n` +
+        `• Conoce otros miembros cerca de ti\n` +
+        `• Sé parte de nuestros grupos comunitarios vibrantes\n` +
+        `• ¡Ponte high con nosotros y más!\n\n` +
+        `**Selecciona tu plan:**\n\n`;
+    } else {
+      planListMessage = `� **PNPtv Premium Plans**\n\n` +
+        `💰 **Pay with crypto (USDC) using Daimo:**\n` +
+        `✅ Instant activation\n` +
+        `• � Coinbase / Binance\n` +
+        `• 💰 Venmo / Cash App\n` +
+        `• 💎 Crypto Wallets\n` +
+        `• 📱 Direct Transfer\n\n` +
+        `🎥 **What you get:**\n` +
+        `• Access to the best amateur PNP content on Telegram\n` +
+        `• Enjoy full length videos of Santino and his boys\n` +
+        `• Meet other members nearby you\n` +
+        `• Be part of our vibrant community groups\n` +
+        `• Get spun with us and more!\n\n` +
+        `**Select your plan:**\n\n`;
+    }
 
-    // Build inline keyboard with plans showing USD prices
-    const buttons = plans.map((plan) => [
-      {
-        text: `${plan.icon || "💎"} ${plan.displayName || plan.name} - $${plan.price} USD`,
-        callback_data: `plan_select_${plan.id}`,
-      },
-    ]);
+    // Add each plan with details inline
+    plans.forEach((plan, index) => {
+      const duration = plan.durationDays || plan.duration;
+      let durationText = "";
+      
+      if (lang === "es") {
+        if (duration === 7) durationText = "semana";
+        else if (duration === 30) durationText = "mes";
+        else if (duration === 120) durationText = "4 meses";
+        else if (duration === 365) durationText = "año";
+        else durationText = `${duration} días`;
+      } else {
+        if (duration === 7) durationText = "week";
+        else if (duration === 30) durationText = "month";
+        else if (duration === 120) durationText = "4 months";
+        else if (duration === 365) durationText = "year";
+        else durationText = `${duration} days`;
+      }
+
+      planListMessage += `${plan.icon || "💎"} **${plan.displayName || plan.name}** — $${plan.price} / ${durationText}\n`;
+      
+      if (index < plans.length - 1) {
+        planListMessage += `\n`;
+      }
+    });
+
+    // Build inline keyboard with one button per plan
+    const buttons = plans.map((plan) => {
+      const duration = plan.durationDays || plan.duration;
+      let durationText = "";
+      
+      if (lang === "es") {
+        if (duration === 7) durationText = "semana";
+        else if (duration === 30) durationText = "mes";
+        else if (duration === 120) durationText = "4 meses";
+        else if (duration === 365) durationText = "año";
+        else durationText = `${duration} días`;
+      } else {
+        if (duration === 7) durationText = "week";
+        else if (duration === 30) durationText = "month";
+        else if (duration === 120) durationText = "4 months";
+        else if (duration === 365) durationText = "year";
+        else durationText = `${duration} days`;
+      }
+
+      return [
+        {
+          text: `${plan.icon || "💎"} ${plan.displayName || plan.name} — $${plan.price} / ${durationText}`,
+          callback_data: `daimo_plan_${plan.id}`,
+        },
+      ];
+    });
 
     buttons.push([
       {
@@ -64,7 +138,7 @@ module.exports = async (ctx) => {
     if (ctx.callbackQuery) {
       try {
         await ctx.answerCbQuery();
-        await ctx.editMessageText(channelDescription, {
+        await ctx.editMessageText(planListMessage, {
           parse_mode: "Markdown",
           reply_markup: {
             inline_keyboard: buttons,
@@ -77,7 +151,7 @@ module.exports = async (ctx) => {
         } catch (deleteError) {
           // Ignore delete errors
         }
-        await ctx.reply(channelDescription, {
+        await ctx.reply(planListMessage, {
           parse_mode: "Markdown",
           reply_markup: {
             inline_keyboard: buttons,
@@ -85,7 +159,7 @@ module.exports = async (ctx) => {
         });
       }
     } else {
-      await ctx.reply(channelDescription, {
+      await ctx.reply(planListMessage, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: buttons,

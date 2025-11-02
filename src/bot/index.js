@@ -3,7 +3,6 @@ const { Telegraf } = require('telegraf');
 const { db } = require("../config/firebase");
 const { t } = require("../utils/i18n");
 const logger = require("../utils/logger");
-const epayco = require("../config/epayco");
 const { ensureOnboarding } = require("../utils/guards");
 const { isAdmin, adminMiddleware } = require("../config/admin");
 const { getMenu } = require("../config/menus");
@@ -210,14 +209,78 @@ bot.action("show_help", async (ctx) => {
 bot.action("start_ai_chat", handleAIChatCallback);
 
 // Payment method selection handlers
-bot.action(/^pay_epayco_(.+)$/, async (ctx) => {
-  const planId = ctx.match[1];
-  await subscriptionHelpers.handleSubscription(ctx, planId, "epayco");
-});
-
 bot.action(/^pay_daimo_(.+)$/, async (ctx) => {
   const planId = ctx.match[1];
   await subscriptionHelpers.handleSubscription(ctx, planId, "daimo");
+});
+
+// Payment help/info handler
+bot.action("payment_help", async (ctx) => {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    const helpMessage = lang === "es" 
+      ? `💎 **Ayuda de Pago - Daimo Pay**\n\n` +
+        `**¿Qué es Daimo Pay?**\n` +
+        `Daimo Pay es una plataforma de pagos segura que acepta USDC (dólar digital estable) desde múltiples métodos:\n\n` +
+        `💵 **Cash App** - Muy popular en USA\n` +
+        `💸 **Venmo** - Rápido y fácil\n` +
+        `🏦 **Coinbase/Binance** - Exchanges crypto\n` +
+        `💰 **Zelle, Revolut, Wise** - Bancos digitales\n` +
+        `💎 **Wallets Crypto** - MetaMask, Trust, etc.\n\n` +
+        `**🔒 Beneficios de Seguridad:**\n\n` +
+        `✅ **Reembolsos Garantizados** - Protección 100% de tu dinero\n` +
+        `✅ **Verificación Blockchain** - Pagos transparentes e inmutables\n` +
+        `✅ **Activación Instantánea** - Tu plan se activa automáticamente\n` +
+        `✅ **Sin Cargos Ocultos** - Lo que ves es lo que pagas\n` +
+        `✅ **Cancela Cuando Quieras** - Sin contratos, sin penalizaciones\n\n` +
+        `**💡 ¿Cómo funciona?**\n` +
+        `1. Haz clic en "Pagar"\n` +
+        `2. Elige tu método preferido (Cash App, Venmo, etc.)\n` +
+        `3. Completa el pago en segundos\n` +
+        `4. ¡Tu suscripción se activa automáticamente!\n\n` +
+        `**🆘 ¿Necesitas ayuda?**\n` +
+        `Contacta: support@pnptv.app`
+      : `💎 **Payment Help - Daimo Pay**\n\n` +
+        `**What is Daimo Pay?**\n` +
+        `Daimo Pay is a secure payment platform that accepts USDC (stable digital dollar) from multiple methods:\n\n` +
+        `💵 **Cash App** - Most popular in USA\n` +
+        `💸 **Venmo** - Fast and easy\n` +
+        `🏦 **Coinbase/Binance** - Crypto exchanges\n` +
+        `💰 **Zelle, Revolut, Wise** - Digital banks\n` +
+        `💎 **Crypto Wallets** - MetaMask, Trust, etc.\n\n` +
+        `**🔒 Security Benefits:**\n\n` +
+        `✅ **Guaranteed Refunds** - 100% money-back protection\n` +
+        `✅ **Blockchain Verification** - Transparent & immutable payments\n` +
+        `✅ **Instant Activation** - Your plan activates automatically\n` +
+        `✅ **No Hidden Fees** - What you see is what you pay\n` +
+        `✅ **Cancel Anytime** - No contracts, no penalties\n\n` +
+        `**💡 How it works:**\n` +
+        `1. Click "Pay"\n` +
+        `2. Choose your preferred method (Cash App, Venmo, etc.)\n` +
+        `3. Complete payment in seconds\n` +
+        `4. Your subscription activates automatically!\n\n` +
+        `**🆘 Need help?**\n` +
+        `Contact: support@pnptv.app`;
+
+    await ctx.answerCbQuery();
+    await ctx.reply(helpMessage, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "« Volver" : "« Back",
+              callback_data: "show_subscription_plans",
+            },
+          ],
+        ],
+      },
+    });
+  } catch (error) {
+    logger.error("Error in payment_help handler:", error);
+    await ctx.answerCbQuery("Error loading help").catch(() => {});
+  }
 });
 
 bot.action("upgrade_tier", (ctx) => subscribeHandler(ctx));

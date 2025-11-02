@@ -133,10 +133,15 @@ bot.command('info', async (ctx) => {
 // Help command
 bot.command('help', async (ctx) => {
   try {
+    const userId = ctx.from.id.toString();
+    const { tier } = await require('./utils/permissions').getUserPermissions(userId);
+    
     const isAdmin = ctx.from.id === ctx.chat.id || 
                     ['administrator', 'creator'].includes(
                       (await ctx.getChatMember(ctx.from.id).catch(() => ({status: 'member'}))).status
                     );
+    
+    const isDiamond = tier === 'diamond-member';
     
     let helpText = `📚 *Santino Group Bot - Help*\n\n`;
     
@@ -157,11 +162,19 @@ bot.command('help', async (ctx) => {
       helpText += `/schedulevideocall - Schedule video call\n`;
       helpText += `/schedulelivestream - Schedule live stream\n`;
       helpText += `/listscheduled - View scheduled events\n\n`;
+    } else if (isDiamond) {
+      helpText += `*💎 Diamond Member Commands:*\n`;
+      helpText += `/schedulevideocall - Schedule video call\n`;
+      helpText += `/schedulelivestream - Schedule live stream\n`;
+      helpText += `/listscheduled - View scheduled events\n\n`;
     }
     
     helpText += `*ℹ️ How It Works:*\n`;
     helpText += `• Free users: Text only\n`;
     helpText += `• Premium users: Full media access\n`;
+    if (isDiamond) {
+      helpText += `• Diamond members: Can schedule events! 💎\n`;
+    }
     helpText += `• Permissions auto-sync with main bot\n`;
     helpText += `• Media from free users is auto-deleted\n\n`;
     

@@ -5,7 +5,7 @@ console.log("Iniciando Firebase...");
 
 let serviceAccount;
 
-// Check if Firebase credentials are in environment variable (Railway/Production)
+// Check if Firebase credentials are in environment variable (Production)
 const rawFirebaseCredentials = process.env.FIREBASE_CREDENTIALS;
 
 if (rawFirebaseCredentials) {

@@ -1,11 +1,15 @@
 /**
  * Subscription Flow Helpers
  * Handles payment link creation and subscription flow
+ * 
+ * Architecture:
+ * - Message Builders: Format user-facing messages
+ * - Payment Handlers: Process different payment methods
+ * - Main Handler: Orchestrates the subscription flow
  */
 
 const { t } = require("../../utils/i18n");
 const logger = require("../../utils/logger");
-const epayco = require("../../config/epayco");
 const daimo = require("../../config/daimo");
 const { ensureOnboarding } = require("../../utils/guards");
 const planService = require("../../services/planService");
@@ -13,6 +17,17 @@ const {
   PaymentGatewayError,
   PlanNotFoundError,
 } = require("../../utils/errors");
+
+// =============================================================================
+// CONSTANTS
+// =============================================================================
+
+const MAX_RETRIES = 3;
+const MIN_DAIMO_AMOUNT = 0.01;
+
+// =============================================================================
+// UTILITY FUNCTIONS
+// =============================================================================
 
 /**
  * Format plan features list for Markdown rendering
@@ -31,388 +46,464 @@ function formatPlanFeatures(plan, lang) {
 }
 
 /**
- * Handle subscription workflow for a plan
- * @param {object} ctx - Telegraf context
- * @param {string} planIdentifier - Plan id or slug
+ * Format price display with currency
+ * @param {object} plan
+ * @returns {string}
  */
-async function handleSubscription(ctx, planIdentifier, paymentMethod = null, retryCount = 0) {
-  if (!ensureOnboarding(ctx)) return;
+function formatPriceDisplay(plan) {
+  if (plan.priceInCOP) {
+    return `${plan.priceInCOP.toLocaleString()} ${plan.currency || "COP"}`;
+  }
+  return plan.price ? `$${plan.price} USD` : "Contact for pricing";
+}
 
-  // Answer callback query IMMEDIATELY to prevent timeout
-  // This stops the loading spinner while we process
+/**
+ * Answer callback query safely (ignore errors)
+ * @param {object} ctx
+ */
+async function answerCallbackQuery(ctx) {
   if (ctx.callbackQuery) {
-    await ctx.answerCbQuery().catch(() => {}); // Ignore errors if already answered
+    await ctx.answerCbQuery().catch(() => {});
+  }
+}
+
+/**
+ * Edit or send new message based on context
+ * @param {object} ctx
+ * @param {string} message
+ * @param {object} options
+ */
+async function editOrSendMessage(ctx, message, options = {}) {
+  try {
+    await ctx.editMessageText(message, options);
+  } catch (editError) {
+    // If edit fails, delete old and send new message
+    try {
+      await ctx.deleteMessage();
+    } catch (deleteError) {
+      // Ignore delete errors
+    }
+    await ctx.reply(message, options);
+  }
+}
+
+// =============================================================================
+// MESSAGE BUILDERS
+// =============================================================================
+
+/**
+ * Build plan details message
+ * @param {object} plan
+ * @param {string} lang
+ * @returns {string}
+ */
+function buildPlanDetailsMessage(plan, lang) {
+  const features = formatPlanFeatures(plan, lang);
+  const planName = plan.displayName || plan.name;
+  const duration = plan.durationDays || plan.duration;
+
+  if (lang === "es") {
+    return `${plan.icon || "💎"} **${planName}**\n\n` +
+      `💰 **Precio:** $${plan.price} USDC\n` +
+      `👤 **Duración:** ${duration === 30 ? 'mes (30 días)' : duration === 7 ? 'semana (7 días)' : duration === 120 ? '4 meses (120 días)' : duration === 365 ? 'año (365 días)' : `${duration} días`}\n` +
+      `📃 **Descripción:** ${plan.description || "Acceso premium a contenido exclusivo"}\n\n` +
+      `✨ **Características:**\n${features}\n\n` +
+      `💎 **Paga con Daimo (USDC Stablecoin):**\n` +
+      `• 💵 **Venmo / Cash App** — Fácil y rápido\n` +
+      `• 🏦 **Coinbase / Binance** — Exchanges populares\n` +
+      `• 💎 **Crypto Wallets** — MetaMask, Trust, etc.\n` +
+      `• 📱 **Transferencia Directa** — USDC en Base/Optimism\n\n` +
+      `🔒 **Seguro e Instantáneo:**\n` +
+      `✓ Verificación en blockchain\n` +
+      `✓ Activación automática tras pago\n` +
+      `✓ Protección completa de reembolso\n\n` +
+      `Haz clic abajo para proceder al pago:`;
+  }
+
+  return `${plan.icon || "💎"} **${planName}**\n\n` +
+    `💰 **Price:** $${plan.price} USDC\n` +
+    `👤 **Duration:** ${duration === 30 ? 'month (30 days)' : duration === 7 ? 'week (7 days)' : duration === 120 ? '4 months (120 days)' : duration === 365 ? 'year (365 days)' : `${duration} days`}\n` +
+    `📃 **Description:** ${plan.description || "Premium access to exclusive content"}\n\n` +
+    `✨ **Features:**\n${features}\n\n` +
+    `💎 **Pay with Daimo (USDC Stablecoin):**\n` +
+    `• 💵 **Venmo / Cash App** — Easy and fast\n` +
+    `• 🏦 **Coinbase / Binance** — Popular exchanges\n` +
+    `• 💎 **Crypto Wallets** — MetaMask, Trust, etc.\n` +
+    `• 📱 **Direct Transfer** — USDC on Base/Optimism\n\n` +
+    `🔒 **Secure & Instant:**\n` +
+    `✓ Blockchain verification\n` +
+    `✓ Automatic activation after payment\n` +
+    `✓ Full refund protection\n\n` +
+    `Click below to proceed with payment:`;
+}
+
+/**
+ * Build Nequi payment message
+ * @param {object} plan
+ * @param {string} lang
+ * @returns {string}
+ */
+function buildNequiPaymentMessage(plan, lang) {
+  const planName = plan.displayName || plan.name;
+  const features = formatPlanFeatures(plan, lang);
+  const priceDisplay = formatPriceDisplay(plan);
+
+  if (lang === "es") {
+    return `✨ **${planName}**\n\n${features}\n\n` +
+      `📃 **Detalles del Pago:**\n` +
+      `- Plan: ${planName}\n` +
+      `- Precio: ${priceDisplay}\n` +
+      `- Duración: ${plan.durationDays} días\n\n` +
+      `💳 **Método de Pago: Nequi Negocios**\n\n` +
+      `⚠️ **Importante:** Después de completar el pago, envía tu comprobante al administrador para activar tu suscripción manualmente.\n\n` +
+      `Haz clic en el botón para ir a Nequi:`;
+  }
+
+  return `✨ **${planName}**\n\n${features}\n\n` +
+    `📃 **Payment Details:**\n` +
+    `- Plan: ${planName}\n` +
+    `- Price: ${priceDisplay}\n` +
+    `- Duration: ${plan.durationDays} days\n\n` +
+    `💳 **Payment Method: Nequi Negocios**\n\n` +
+    `⚠️ **Important:** After completing payment, send your receipt to the admin for manual subscription activation.\n\n` +
+    `Click the button to go to Nequi:`;
+}
+
+/**
+ * Build Daimo payment message
+ * @param {object} plan
+ * @param {number} amountUSD
+ * @param {string} lang
+ * @returns {string}
+ */
+function buildDaimoPaymentMessage(plan, amountUSD, lang) {
+  const planName = plan.displayName || plan.name;
+  const duration = plan.durationDays || plan.duration;
+
+  if (lang === "es") {
+    return `💳 **Proceder al Pago**\n\n` +
+      `${plan.icon || "💎"} **Plan:** ${planName}\n` +
+      `💰 **Precio:** $${amountUSD.toFixed(2)} USDC\n` +
+      `👤 **Duración:** ${duration === 30 ? 'mes (30 días)' : duration === 7 ? 'semana (7 días)' : duration === 120 ? '4 meses (120 días)' : duration === 365 ? 'año (365 días)' : `${duration} días`}\n\n` +
+      `� **Pago Seguro con Daimo:**\n` +
+      `Haz clic en el botón de abajo para abrir la página de pago segura de Daimo.\n\n` +
+      `✓ Acepta pagos desde Venmo, Cash App, Coinbase, Binance y más\n` +
+      `✓ Tu suscripción se activará automáticamente tras el pago\n` +
+      `✓ Protección completa de reembolso garantizada\n\n` +
+      `Presiona el botón para continuar:`;
+  }
+
+  return `💳 **Proceed to Payment**\n\n` +
+    `${plan.icon || "💎"} **Plan:** ${planName}\n` +
+    `💰 **Price:** $${amountUSD.toFixed(2)} USDC\n` +
+    `👤 **Duration:** ${duration === 30 ? 'month (30 days)' : duration === 7 ? 'week (7 days)' : duration === 120 ? '4 months (120 days)' : duration === 365 ? 'year (365 days)' : `${duration} days`}\n\n` +
+    `� **Secure Payment with Daimo:**\n` +
+    `Click the button below to open Daimo's secure payment page.\n\n` +
+    `✓ Accepts payments from Venmo, Cash App, Coinbase, Binance and more\n` +
+    `✓ Your subscription will activate automatically after payment\n` +
+    `✓ Full refund protection guaranteed\n\n` +
+    `Press the button to continue:`;
+}
+
+/**
+ * Build error message based on error type
+ * @param {Error} error
+ * @param {string} lang
+ * @returns {string}
+ */
+function buildErrorMessage(error, lang) {
+  switch (error.code) {
+    case "PLAN_NOT_FOUND":
+      return lang === "es"
+        ? "⚠️ Plan no encontrado. Por favor selecciona otro plan."
+        : "⚠️ Plan not found. Please select another plan.";
+    
+    case "PAYMENT_GATEWAY_ERROR":
+      return lang === "es"
+        ? "⚠️ Error con el sistema de pago. Por favor intenta más tarde."
+        : "⚠️ Payment system error. Please try again later.";
+    
+    default:
+      return lang === "es"
+        ? `⚠️ Error inesperado. Por favor contacta a soporte.\n\nError: ${error.message}`
+        : `⚠️ Unexpected error. Please contact support.\n\nError: ${error.message}`;
+  }
+}
+
+// =============================================================================
+// KEYBOARD BUILDERS
+// =============================================================================
+
+/**
+ * Build payment method selection keyboard
+ * @param {object} plan
+ * @param {string} lang
+ * @returns {Array}
+ */
+function buildPaymentMethodKeyboard(plan, lang) {
+  const buttons = [];
+
+  // Direct payment button (Daimo)
+  if (process.env.DAIMO_APP_ID) {
+    buttons.push([
+      {
+        text: lang === "es" ? `💰 Pagar $${plan.price} USDC` : `💰 Pay $${plan.price} USDC`,
+        callback_data: `pay_daimo_${plan.id}`,
+      },
+    ]);
+  }
+
+  // Back button to plan list
+  buttons.push([
+    {
+      text: lang === "es" ? "« Volver a Planes" : "« Back to Plans",
+      callback_data: "show_subscription_plans",
+    },
+  ]);
+
+  return buttons;
+}
+
+/**
+ * Build Nequi payment keyboard
+ * @param {object} plan
+ * @param {string} lang
+ * @returns {Array}
+ */
+function buildNequiKeyboard(plan, lang) {
+  return [
+    [
+      {
+        text: lang === "es" ? "💳 Pagar con Nequi" : "💳 Pay with Nequi",
+        url: plan.paymentLink,
+      },
+    ],
+    [
+      {
+        text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
+        callback_data: "show_subscription_plans",
+      },
+    ],
+  ];
+}
+
+/**
+ * Build Daimo payment keyboard
+ * @param {string} paymentUrl
+ * @param {string} lang
+ * @returns {Array}
+ */
+function buildDaimoKeyboard(paymentUrl, lang) {
+  return [
+    [
+      {
+        text: lang === "es" ? "� Pagar Ahora" : "� Pay Now",
+        url: paymentUrl,
+      },
+    ],
+    [
+      {
+        text: lang === "es" ? "« Volver a Planes" : "« Back to Plans",
+        callback_data: "show_subscription_plans",
+      },
+    ],
+  ];
+}
+
+/**
+ * Build error retry keyboard
+ * @param {string} planIdentifier
+ * @param {string} lang
+ * @returns {Array}
+ */
+function buildErrorKeyboard(planIdentifier, lang) {
+  return [
+    [
+      {
+        text: lang === "es" ? "🔄 Reintentar" : "🔄 Retry",
+        callback_data: `daimo_plan_${planIdentifier}`,
+      },
+    ],
+    [
+      {
+        text: lang === "es" ? "« Volver a Planes" : "« Back to Plans",
+        callback_data: "show_subscription_plans",
+      },
+    ],
+  ];
+}
+
+// =============================================================================
+// PAYMENT HANDLERS
+// =============================================================================
+
+/**
+ * Show plan details with payment method selection
+ * @param {object} ctx
+ * @param {object} plan
+ * @param {string} lang
+ */
+async function showPaymentMethodSelection(ctx, plan, lang) {
+  const message = buildPlanDetailsMessage(plan, lang);
+  const keyboard = buildPaymentMethodKeyboard(plan, lang);
+
+  await editOrSendMessage(ctx, message, {
+    parse_mode: "Markdown",
+    reply_markup: { inline_keyboard: keyboard },
+  });
+}
+
+/**
+ * Handle Nequi payment method
+ * @param {object} ctx
+ * @param {object} plan
+ * @param {string} lang
+ */
+async function handleNequiPayment(ctx, plan, lang) {
+  const message = buildNequiPaymentMessage(plan, lang);
+  const keyboard = buildNequiKeyboard(plan, lang);
+
+  await editOrSendMessage(ctx, message, {
+    parse_mode: "Markdown",
+    reply_markup: { inline_keyboard: keyboard },
+  });
+}
+
+/**
+ * Handle Daimo payment method
+ * @param {object} ctx
+ * @param {object} plan
+ * @param {string} userId
+ * @param {string} lang
+ */
+async function handleDaimoPayment(ctx, plan, userId, lang) {
+  // Validate Daimo configuration
+  const daimoConfig = daimo.getConfig();
+  if (!daimoConfig.enabled) {
+    throw new PaymentGatewayError("Daimo Pay not configured");
+  }
+
+  // Validate amount
+  const amountUSD = plan.price;
+  if (amountUSD < MIN_DAIMO_AMOUNT) {
+    throw new PaymentGatewayError(
+      `Amount too small for Daimo: $${amountUSD}. Minimum is $${MIN_DAIMO_AMOUNT} USD`,
+      { amount: amountUSD, plan: plan.id }
+    );
   }
 
   try {
-    const lang = ctx.session.language || "en";
-    const identifier = String(planIdentifier || "").trim();
-    const MAX_RETRIES = 3;
+    // Create payment request
+    const paymentData = await daimo.createPaymentRequest({
+      amount: amountUSD,
+      userId,
+      plan: plan.id,
+    });
 
+    if (!paymentData.success || !paymentData.paymentUrl) {
+      throw new PaymentGatewayError("Daimo payment request failed", paymentData);
+    }
+
+    // Send payment message
+    const message = buildDaimoPaymentMessage(plan, amountUSD, lang);
+    const keyboard = buildDaimoKeyboard(paymentData.paymentUrl, lang);
+
+    await editOrSendMessage(ctx, message, {
+      parse_mode: "Markdown",
+      reply_markup: { inline_keyboard: keyboard },
+    });
+
+  } catch (daimoError) {
+    logger.error("[Subscription] Daimo payment error:", daimoError);
+
+    // Handle HTTPS requirement error in development
+    if (daimoError.message && daimoError.message.includes('HTTPS')) {
+      const devMessage = lang === "es"
+        ? `⚠️ **Daimo Pay no disponible en desarrollo local**\n\n` +
+          `Daimo Pay requiere HTTPS para funcionar en Telegram.\n\n` +
+          `💡 **Alternativa:**\n- Contacta al administrador para activación manual\n\n` +
+          `Disculpa las molestias.`
+        : `⚠️ **Daimo Pay not available in local development**\n\n` +
+          `Daimo Pay requires HTTPS to work in Telegram.\n\n` +
+          `💡 **Alternative:**\n- Contact admin for manual activation\n\n` +
+          `Sorry for the inconvenience.`;
+
+      await ctx.reply(devMessage, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
+                callback_data: "show_subscription_plans",
+              },
+            ],
+          ],
+        },
+      });
+      return;
+    }
+
+    throw new PaymentGatewayError(daimoError.message, {
+      originalError: daimoError,
+    });
+  }
+}
+
+// =============================================================================
+// MAIN HANDLER
+// =============================================================================
+
+/**
+ * Handle subscription workflow for a plan
+ * @param {object} ctx - Telegraf context
+ * @param {string} planIdentifier - Plan id or slug
+ * @param {string} paymentMethod - Selected payment method (optional)
+ * @param {number} retryCount - Retry attempt number
+ */
+async function handleSubscription(ctx, planIdentifier, paymentMethod = null, retryCount = 0) {
+  // Ensure user has completed onboarding
+  if (!ensureOnboarding(ctx)) return;
+
+  // Answer callback query immediately to prevent timeout
+  await answerCallbackQuery(ctx);
+
+  try {
+    const lang = ctx.session.language || "en";
+    const userId = ctx.from.id.toString();
+    const identifier = String(planIdentifier || "").trim();
+
+    // Fetch plan by ID or slug
     const plan =
       (await planService.getPlanById(identifier)) ||
       (await planService.getPlanBySlug(identifier.toLowerCase()));
-    if (!plan) throw new PlanNotFoundError(identifier);
+    
+    if (!plan) {
+      throw new PlanNotFoundError(identifier);
+    }
 
-    const userId = ctx.from.id.toString();
-    const features = formatPlanFeatures(plan, lang);
-    const priceDisplay = plan.priceInCOP 
-      ? `${plan.priceInCOP.toLocaleString()} ${plan.currency || "COP"}`
-      : plan.price || "Contact for pricing";
-    const planNameDisplay = plan.displayName || plan.name;
-
-    // If no payment method specified, show plan details with payment options
+    // Route to appropriate handler based on payment method
     if (!paymentMethod) {
-      // Plan details message
-      const copPrice = plan.priceInCOP ? `(${plan.priceInCOP.toLocaleString()} COP)` : '';
-      const planDetails =
-        lang === "es"
-          ? `${plan.icon || "💎"} **${planNameDisplay}**\n\n` +
-            `**Descripción:**\n${plan.description || "Plan de suscripción premium"}\n\n` +
-            `**Características:**\n${features}\n\n` +
-            `💰 **Precio:** $${plan.price} USD ${copPrice}\n` +
-            `⏱️ **Duración:** ${plan.durationDays || plan.duration} días\n\n` +
-            `**Selecciona tu método de pago:**`
-          : `${plan.icon || "💎"} **${planNameDisplay}**\n\n` +
-            `**Description:**\n${plan.description || "Premium subscription plan"}\n\n` +
-            `**Features:**\n${features}\n\n` +
-            `💰 **Price:** $${plan.price} USD ${copPrice}\n` +
-            `⏱️ **Duration:** ${plan.durationDays || plan.duration} days\n\n` +
-            `**Select your payment method:**`;
-
-      const paymentButtons = [];
-
-      // ePayco option (credit/debit cards - Colombia)
-      paymentButtons.push([
-        {
-          text: lang === "es" ? "💳 Pagar con Tarjeta (ePayco)" : "💳 Pay with Card (ePayco)",
-          callback_data: `pay_epayco_${plan.id}`,
-        },
-      ]);
-
-      // Daimo Pay option (USDC stablecoin)
-      if (process.env.DAIMO_APP_ID) {
-        paymentButtons.push([
-          {
-            text: lang === "es" ? "💰 Pagar con USDC (Daimo)" : "💰 Pay with USDC (Daimo)",
-            callback_data: `pay_daimo_${plan.id}`,
-          },
-        ]);
-      }
-
-      // Back button
-      paymentButtons.push([
-        {
-          text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
-          callback_data: "show_subscription_plans",
-        },
-      ]);
-
-      // Edit message to show plan details
-      try {
-        await ctx.editMessageText(planDetails, {
-          parse_mode: "Markdown",
-          reply_markup: {
-            inline_keyboard: paymentButtons,
-          },
-        });
-      } catch (editError) {
-        // If edit fails, delete old and send new message
-        try {
-          await ctx.deleteMessage();
-        } catch (deleteError) {
-          // Ignore delete errors
-        }
-        await ctx.reply(planDetails, {
-          parse_mode: "Markdown",
-          reply_markup: {
-            inline_keyboard: paymentButtons,
-          },
-        });
-      }
+      // Show plan details with payment method selection
+      await showPaymentMethodSelection(ctx, plan, lang);
       return;
     }
 
-    // Handle Nequi payment method (manual activation)
     if (plan.paymentMethod === "nequi") {
-      const message =
-        lang === "es"
-          ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💳 **Método de Pago: Nequi Negocios**\n\n⚠️ **Importante:** Después de completar el pago, envía tu comprobante al administrador para activar tu suscripción manualmente.\n\nHaz clic en el botón para ir a Nequi:`
-          : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💳 **Payment Method: Nequi Negocios**\n\n⚠️ **Important:** After completing payment, send your receipt to the admin for manual subscription activation.\n\nClick the button to go to Nequi:`;
-
-      // Edit message to show Nequi payment
-      try {
-        await ctx.editMessageText(message, {
-          parse_mode: "Markdown",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: lang === "es" ? "💳 Pagar con Nequi" : "💳 Pay with Nequi",
-                  url: plan.paymentLink,
-                },
-              ],
-              [
-                {
-                  text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
-                  callback_data: "show_subscription_plans",
-                },
-              ],
-            ],
-          },
-        });
-      } catch (editError) {
-        // If edit fails, delete old and send new message
-        try {
-          await ctx.deleteMessage();
-        } catch (deleteError) {
-          // Ignore delete errors
-        }
-        await ctx.reply(message, {
-          parse_mode: "Markdown",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: lang === "es" ? "💳 Pagar con Nequi" : "💳 Pay with Nequi",
-                  url: plan.paymentLink,
-                },
-              ],
-              [
-                {
-                  text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
-                  callback_data: "show_subscription_plans",
-                },
-              ],
-            ],
-          },
-        });
-      }
+      // Handle Nequi manual payment
+      await handleNequiPayment(ctx, plan, lang);
       return;
     }
 
-    // Handle Daimo Pay payment method (USDC stablecoin - automatic activation)
     if (paymentMethod === "daimo" || plan.paymentMethod === "daimo") {
-      const daimoConfig = daimo.getConfig();
-      if (!daimoConfig.enabled) {
-        throw new PaymentGatewayError("Daimo Pay not configured");
-      }
-
-      const userEmail = ctx.from.username
-        ? `${ctx.from.username}@telegram.user`
-        : `user${userId}@telegram.bot`;
-
-      // Use USD price directly since our plans are already in USD
-      // Daimo uses USDC which is pegged 1:1 to USD
-      const amountUSD = plan.price; // Plans are already in USD (see plans.js)
-      
-      // Validate amount is reasonable for USDC payments
-      if (amountUSD < 0.01) {
-        throw new PaymentGatewayError(
-          `Amount too small for Daimo: $${amountUSD}. Minimum is $0.01 USD`,
-          { amount: amountUSD, plan: plan.id }
-        );
-      }
-
-      try {
-        const paymentData = await daimo.createPaymentRequest({
-          amount: amountUSD,
-          userId,
-          plan: plan.id,
-        });
-
-        if (!paymentData.success || !paymentData.paymentUrl) {
-          throw new PaymentGatewayError(
-            "Daimo payment request failed",
-            paymentData
-          );
-        }
-
-        const message =
-          lang === "es"
-            ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: $${amountUSD.toFixed(2)} USD (USDC)\n- Precio COP: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💰 **Método de Pago: Daimo Pay (Stablecoin USDC)**\n\nPaga con USDC desde cualquier exchange, wallet o app de pago (Cash App, Zelle, Venmo, Revolut y Wise).\n\nTu suscripción se activará automáticamente tras el pago.\n\nHaz clic en el botón para continuar:`
-            : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: $${amountUSD.toFixed(2)} USD (USDC)\n- Price COP: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💰 **Payment Method: Daimo Pay (USDC Stablecoin)**\n\nPay with USDC from any exchange, wallet, or payment app (Cash App, Zelle, Venmo, Revolut and Wise).\n\nYour subscription will be activated automatically after payment.\n\nClick the button to proceed:`;
-
-        // Edit message to show Daimo payment
-        try {
-          await ctx.editMessageText(message, {
-            parse_mode: "Markdown",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: lang === "es" ? "💰 Pagar con USDC" : "💰 Pay with USDC",
-                    url: paymentData.paymentUrl,
-                  },
-                ],
-                [
-                  {
-                    text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
-                    callback_data: "show_subscription_plans",
-                  },
-                ],
-              ],
-            },
-          });
-        } catch (editError) {
-          // If edit fails, delete old and send new message
-          try {
-            await ctx.deleteMessage();
-          } catch (deleteError) {
-            // Ignore delete errors
-          }
-          await ctx.reply(message, {
-            parse_mode: "Markdown",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: lang === "es" ? "💰 Pagar con USDC" : "💰 Pay with USDC",
-                    url: paymentData.paymentUrl,
-                  },
-                ],
-                [
-                  {
-                    text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
-                    callback_data: "show_subscription_plans",
-                  },
-                ],
-              ],
-            },
-          });
-        }
-        return;
-      } catch (daimoError) {
-        logger.error("[Subscription] Daimo payment error:", daimoError);
-
-        // If it's an HTTPS requirement error in development, show user-friendly message
-        if (daimoError.message && daimoError.message.includes('HTTPS')) {
-          const devMessage = lang === "es"
-            ? `⚠️ **Daimo Pay no disponible en desarrollo local**\n\nDaimo Pay requiere HTTPS para funcionar en Telegram.\n\n💡 **Alternativas:**\n- Usa el método de pago ePayco\n- O contacta al administrador para activación manual\n\nDisculpa las molestias.`
-            : `⚠️ **Daimo Pay not available in local development**\n\nDaimo Pay requires HTTPS to work in Telegram.\n\n💡 **Alternatives:**\n- Use ePayco payment method\n- Or contact admin for manual activation\n\nSorry for the inconvenience.`;
-
-          await ctx.reply(devMessage, {
-            parse_mode: "Markdown",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
-                    callback_data: "show_subscription_plans",
-                  },
-                ],
-              ],
-            },
-          });
-          return;
-        }
-
-        throw new PaymentGatewayError(daimoError.message, {
-          originalError: daimoError,
-        });
-      }
+      // Handle Daimo automatic payment
+      await handleDaimoPayment(ctx, plan, userId, lang);
+      return;
     }
 
-    // Handle ePayco payment method (automatic activation)
-    if (paymentMethod === "epayco" || plan.paymentMethod === "epayco" || !paymentMethod) {
-      if (!process.env.EPAYCO_PUBLIC_KEY) {
-        throw new PaymentGatewayError("Payment gateway not configured");
-      }
+    // No valid payment method found
+    throw new PaymentGatewayError("No payment method configured");
 
-      const userEmail = ctx.from.username
-        ? `${ctx.from.username}@telegram.user`
-        : `user${userId}@telegram.bot`;
-
-      try {
-        const paymentData = await epayco.createPaymentLink({
-          name: plan.name,
-          description:
-            plan.description ||
-            `${plan.name} subscription - ${plan.durationDays} days`,
-          amount: plan.priceInCOP,
-          currency: plan.currency || "COP",
-          userId,
-          userEmail,
-          userName: ctx.from.first_name || ctx.from.username || "User",
-          plan: plan.id,
-        });
-
-        if (!paymentData.success || !paymentData.paymentUrl) {
-          throw new PaymentGatewayError(
-            "Payment link creation failed",
-            paymentData
-          );
-        }
-
-        const message =
-          lang === "es"
-            ? `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Detalles del Pago:**\n- Plan: ${planNameDisplay}\n- Precio: ${priceDisplay}\n- Duración: ${plan.durationDays} días\n\n💳 **Método de Pago: ePayco (Automático)**\n\nPaga con cualquier tarjeta de débito o crédito.\n\nTu suscripción se activará automáticamente tras el pago.\n\nHaz clic en el botón para continuar con el pago:`
-            : `✨ **${planNameDisplay}**\n\n${features}\n\n📃 **Payment Details:**\n- Plan: ${planNameDisplay}\n- Price: ${priceDisplay}\n- Duration: ${plan.durationDays} days\n\n💳 **Payment Method: ePayco (Automatic)**\n\nPay with any debit or credit card.\n\nYour subscription will be activated automatically after payment.\n\nClick the button to proceed with payment:`;
-
-        // Edit message to show ePayco payment
-        try {
-          await ctx.editMessageText(message, {
-            parse_mode: "Markdown",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: lang === "es" ? "🚀 Ir a Pagar" : "🚀 Go to Payment",
-                    url: paymentData.paymentUrl,
-                  },
-                ],
-                [
-                  {
-                    text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
-                    callback_data: "show_subscription_plans",
-                  },
-                ],
-              ],
-            },
-          });
-        } catch (editError) {
-          // If edit fails, delete old and send new message
-          try {
-            await ctx.deleteMessage();
-          } catch (deleteError) {
-            // Ignore delete errors
-          }
-          await ctx.reply(message, {
-            parse_mode: "Markdown",
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: lang === "es" ? "🚀 Ir a Pagar" : "🚀 Go to Payment",
-                    url: paymentData.paymentUrl,
-                  },
-                ],
-                [
-                  {
-                    text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
-                    callback_data: "show_subscription_plans",
-                  },
-                ],
-              ],
-            },
-          });
-        }
-        return;
-      } catch (paymentError) {
-        if (retryCount < MAX_RETRIES) {
-          logger.warn("[Subscription] Retrying payment link creation", {
-            attempt: retryCount + 1,
-            userId,
-            planId: plan.id,
-          });
-          return handleSubscription(ctx, planIdentifier, paymentMethod, retryCount + 1);
-        }
-        throw new PaymentGatewayError(paymentError.message, {
-          attempts: retryCount + 1,
-          originalError: paymentError,
-        });
-      }
-    }
   } catch (error) {
     logger.error("[Subscription] Error", {
       type: error.name,
@@ -421,90 +512,36 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
       stack: error.stack,
     });
 
-    const lang = ctx.session.language || "en";
-    let errorMessage;
-
-    switch (error.code) {
-      case "PLAN_NOT_FOUND":
-        errorMessage =
-          lang === "es"
-            ? "⚠️ Plan no encontrado. Por favor selecciona otro plan."
-            : "⚠️ Plan not found. Please select another plan.";
-        break;
-      case "PAYMENT_GATEWAY_ERROR":
-        errorMessage =
-          lang === "es"
-            ? "⚠️ Error con el sistema de pago. Por favor intenta más tarde."
-            : "⚠️ Payment system error. Please try again later.";
-        break;
-      default:
-        errorMessage =
-          lang === "es"
-            ? `⚠️ Error inesperado. Por favor contacta a soporte.\n\nError: ${error.message}`
-            : `⚠️ Unexpected error. Please contact support.\n\nError: ${error.message}`;
-    }
-
-    if (ctx.updateType === "callback_query") {
-      // Already answered callback query at the start, but try again in case of early errors
-      await ctx.answerCbQuery().catch(() => {});
-      try {
-        await ctx.editMessageText(errorMessage, {
-          parse_mode: "Markdown",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: lang === "es" ? "🔄 Reintentar" : "🔄 Retry",
-                  callback_data: `plan_select_${planIdentifier}`,
-                },
-              ],
-              [
-                {
-                  text: lang === "es" ? "🔙 Volver a Planes" : "🔙 Back to Plans",
-                  callback_data: "show_subscription_plans",
-                },
-              ],
-            ],
-          },
-        });
-      } catch (editError) {
-        // If edit fails, delete old and send new message
-        try {
-          await ctx.deleteMessage();
-        } catch (deleteError) {
-          // Ignore delete errors
-        }
-        await ctx.reply(errorMessage, { parse_mode: "Markdown" });
-      }
-    } else {
-      await ctx.reply(errorMessage, { parse_mode: "Markdown" });
-    }
+    await handleSubscriptionError(ctx, error, planIdentifier);
   }
 }
 
 /**
- * Process plan selection and create payment session
- * @param {string} planId - Selected plan ID
- * @param {string} userId - User ID
+ * Handle subscription errors
+ * @param {object} ctx
+ * @param {Error} error
+ * @param {string} planIdentifier
  */
-async function processPlanSelection(planId, userId) {
-  const plans = await planService.getActivePlans();
-  const selectedPlan = plans.find((p) => p.id === planId);
+async function handleSubscriptionError(ctx, error, planIdentifier) {
+  const lang = ctx.session.language || "en";
+  const errorMessage = buildErrorMessage(error, lang);
+  const keyboard = buildErrorKeyboard(planIdentifier, lang);
 
-  if (!selectedPlan) {
-    throw new Error("Plan not found");
+  if (ctx.updateType === "callback_query") {
+    await answerCallbackQuery(ctx);
+    
+    await editOrSendMessage(ctx, errorMessage, {
+      parse_mode: "Markdown",
+      reply_markup: { inline_keyboard: keyboard },
+    });
+  } else {
+    await ctx.reply(errorMessage, { parse_mode: "Markdown" });
   }
-
-  // Create payment session
-  const paymentSession = await createPaymentSession({
-    amount: selectedPlan.price,
-    planId: selectedPlan.id,
-    userId,
-    duration: selectedPlan.duration,
-  });
-
-  return paymentSession;
 }
+
+// =============================================================================
+// EXPORTS
+// =============================================================================
 
 module.exports = {
   handleSubscription,

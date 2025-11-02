@@ -121,7 +121,6 @@ async function handleDaimoPlanSelection(ctx) {
       return;
     }
 
-    const userId = ctx.from.id.toString();
     const planIdMatch = ctx.callbackQuery.data.match(/daimo_plan_(.+)/);
     
     if (!planIdMatch) {
@@ -131,113 +130,13 @@ async function handleDaimoPlanSelection(ctx) {
 
     const planId = planIdMatch[1];
 
-    // Validate plan
-    const plan = PLANS.find(p => p.id === planId);
-    if (!plan) {
-      await ctx.answerCbQuery('❌ Invalid plan selected', { show_alert: true });
-      return;
-    }
-
-    // Check if user already has active subscription
-    const hasActive = await hasDaimoSubscription(userId);
-    if (hasActive) {
-      await ctx.answerCbQuery('⚠️ You already have an active subscription', { show_alert: true });
-      return;
-    }
-
-    // Show loading message
-    await ctx.answerCbQuery('🔄 Creating secure payment link...', { show_alert: false });
-
-    // Create payment link via server-side Daimo API
-    const axios = require('axios');
-    const BOT_URL = process.env.BOT_URL || 'http://localhost:3000';
-    
-    let paymentLink;
-    try {
-      const response = await axios.post(`${BOT_URL}/api/daimo/create-payment`, {
-        userId: userId.toString(),
-        planId: planId,
-        amount: plan.price
-      });
-
-      if (!response.data.success) {
-        throw new Error('Failed to create payment link');
-      }
-
-      paymentLink = response.data.paymentUrl;
-      
-      logger.info('Daimo payment link created:', {
-        userId,
-        planId,
-        paymentId: response.data.paymentId,
-        paymentUrl: paymentLink
-      });
-    } catch (error) {
-      logger.error('Error creating Daimo payment link:', error);
-      await ctx.editMessageText(
-        '❌ *Payment Error*\n\n' +
-        'Sorry, we couldn\'t create your payment link. Please try again in a moment.\n\n' +
-        'If this issue persists, please contact support.',
-        {
-          parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: '🔄 Try Again', callback_data: `daimo_plan_${planId}` }],
-              [{ text: '« Back to Plans', callback_data: 'daimo_show_plans' }]
-            ]
-          }
-        }
-      );
-      return;
-    }
-
-    // Format features list
-    const features = plan.features.map(f => `• ${f}`).join('\n');
-
-    // Send detailed plan info with payment button
-    await ctx.editMessageText(
-      `💎 *${plan.name}*\n\n` +
-      `💰 *Price:* $${plan.price} USDC\n` +
-      `⏰ *Duration:* ${plan.periodLabel} (${plan.days} days)\n` +
-      `📝 *Description:* ${plan.description}\n\n` +
-      `✨ *Features:*\n${features}\n\n` +
-      `� *Payment Options via Daimo Pay:*\n` +
-      `• 🏦 Coinbase / Binance\n` +
-      `• 💰 Venmo / Cash App\n` +
-      `• 💎 Crypto Wallets\n` +
-      `• 📍 Direct Transfer\n\n` +
-      `🔒 *Secure & Instant:*\n` +
-      `• Blockchain verified payment\n` +
-      `• Instant subscription activation\n` +
-      `• Full refund protection\n\n` +
-      `Click below to choose your payment method:`,
-      {
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: `💳 Pay $${plan.price} USDC - Choose Method`, url: paymentLink }],
-            [
-              { text: '« Back to Plans', callback_data: 'daimo_show_plans' },
-              { text: '❓ Help', callback_data: 'daimo_help' }
-            ]
-          ]
-        }
-      }
-    );
-
-    // Log selection
-    logger.info('Daimo plan selected:', {
-      userId,
-      planId,
-      price: plan.price,
-      timestamp: new Date().toISOString()
-    });
-
-    await ctx.answerCbQuery();
+    // Use the subscription helper to handle the flow
+    const subscriptionHelpers = require('../helpers/subscriptionHelpers');
+    await subscriptionHelpers.handleSubscription(ctx, planId, null);
 
   } catch (error) {
     logger.error('Error handling Daimo plan selection:', error);
-    await ctx.answerCbQuery('❌ Sorry, there was an error. Please try again.', { show_alert: true });
+    await ctx.answerCbQuery('❌ Error processing request', { show_alert: true });
   }
 }
 

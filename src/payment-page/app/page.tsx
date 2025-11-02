@@ -1,9 +1,9 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { Suspense, useEffect, useState } from 'react'
-import { DaimoPayButton, useDaimoPayUI } from '@daimo/pay'
-import { baseUSDC, optimismUSDC } from '@daimo/pay-common'
+import { Suspense, useCallback, useEffect, useState } from 'react'
+import { DaimoPayButton, type PaymentCompletedEvent, type PaymentStartedEvent } from '@daimo/pay'
+import { baseUSDC } from '@daimo/pay-common'
 import { getAddress } from 'viem'
 
 interface PlanData {
@@ -28,7 +28,7 @@ function PaymentPageContent() {
   const amount = searchParams.get('amount')
 
   // Get environment variables
-  const appId = process.env.NEXT_PUBLIC_DAIMO_APP_ID || 'pnptv-bot'
+  const appId = process.env.NEXT_PUBLIC_DAIMO_APP_ID || 'pay-televisionlatina'
   const treasuryAddress = process.env.NEXT_PUBLIC_TREASURY_ADDRESS || ''
   const refundAddress = process.env.NEXT_PUBLIC_REFUND_ADDRESS || treasuryAddress
 
@@ -62,6 +62,50 @@ function PaymentPageContent() {
 
     fetchPlanData()
   }, [planId, userId, amount])
+
+  // Handle payment started - save event immediately
+  const handlePaymentStarted = useCallback((event: PaymentStartedEvent) => {
+    console.log('Payment started:', event)
+    
+    // Notify backend that payment was initiated
+    // This ensures we can correlate payments even if user loses connection
+    fetch(`${process.env.NEXT_PUBLIC_BOT_URL}/api/daimo/webhook`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_DAIMO_WEBHOOK_TOKEN || ''}`
+      },
+      body: JSON.stringify({
+        type: 'payment_started',
+        event,
+        userId,
+        planId,
+        amount,
+      }),
+    }).catch(console.error)
+  }, [userId, planId, amount])
+
+  // Handle payment completed
+  const handlePaymentCompleted = useCallback((event: PaymentCompletedEvent) => {
+    console.log('Payment completed:', event)
+    setPaymentCompleted(true)
+
+    // Notify backend that payment completed
+    fetch(`${process.env.NEXT_PUBLIC_BOT_URL}/api/daimo/webhook`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_DAIMO_WEBHOOK_TOKEN || ''}`
+      },
+      body: JSON.stringify({
+        type: 'payment_completed',
+        event,
+        userId,
+        planId,
+        amount,
+      }),
+    }).catch(console.error)
+  }, [userId, planId, amount])
 
   if (loading) {
     return (
@@ -181,41 +225,11 @@ function PaymentPageContent() {
             intent="Subscribe"
             refundAddress={getAddress(refundAddress)}
             toAddress={getAddress(treasuryAddress)}
-            toChain={optimismUSDC.chainId}
-            toToken={getAddress(optimismUSDC.token)}
+            toChain={baseUSDC.chainId}
+            toToken={getAddress(baseUSDC.token)}
             toUnits={amount || '0'}
-            defaultOpen={true}
-            closeOnSuccess={true}
-            onPaymentStarted={(payment) => {
-              console.log('Payment started:', payment)
-              // Notify backend that payment was initiated
-              fetch(`${process.env.NEXT_PUBLIC_BOT_URL}/api/payments/started`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  userId,
-                  planId,
-                  amount,
-                  reference: payment.reference,
-                }),
-              }).catch(console.error)
-            }}
-            onPaymentCompleted={(payment) => {
-              console.log('Payment completed:', payment)
-              setPaymentCompleted(true)
-
-              // Notify backend that payment completed
-              fetch(`${process.env.NEXT_PUBLIC_BOT_URL}/api/payments/completed`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  userId,
-                  planId,
-                  amount,
-                  reference: payment.reference,
-                }),
-              }).catch(console.error)
-            }}
+            onPaymentStarted={handlePaymentStarted}
+            onPaymentCompleted={handlePaymentCompleted}
           />
         </div>
 

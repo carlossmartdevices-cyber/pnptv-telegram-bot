@@ -15,14 +15,17 @@ async function savePersonalityChoice(userId, choice) {
     const emoji = choice.emoji;
     const name = choice.name;
     
-    // Update user document with personality choice
-    await db.collection('users').doc(userId).update({
+    // Update user document with personality choice and badge
+    await db.collection('users').doc(userId).set({
       personalityChoice: {
         emoji,
         name,
+        description: choice.description,
         selectedAt: new Date()
-      }
-    });
+      },
+      badge: `${emoji} ${name}`, // Add badge field for easy display
+      updatedAt: new Date()
+    }, { merge: true });
     
     logger.info(`User ${userId} selected personality: ${name} ${emoji}`);
     return true;
@@ -57,13 +60,18 @@ async function getUserPersonalityBadge(userId) {
 async function buildPersonalityKeyboard() {
   const choices = await communityConfig.getPersonalityChoices();
   
+  // Create 2x2 inline keyboard layout
   return {
-    inline_keyboard: choices.map((choice) => [
-      {
-        text: `${choice.emoji} ${choice.name}`,
-        callback_data: `personality_${choice.name.replace(/\s+/g, '_')}`
-      }
-    ])
+    inline_keyboard: [
+      [
+        { text: `${choices[0].emoji} ${choices[0].name}`, callback_data: `personality_${choices[0].name.replace(/\s+/g, '_')}` },
+        { text: `${choices[1].emoji} ${choices[1].name}`, callback_data: `personality_${choices[1].name.replace(/\s+/g, '_')}` }
+      ],
+      [
+        { text: `${choices[2].emoji} ${choices[2].name}`, callback_data: `personality_${choices[2].name.replace(/\s+/g, '_')}` },
+        { text: `${choices[3].emoji} ${choices[3].name}`, callback_data: `personality_${choices[3].name.replace(/\s+/g, '_')}` }
+      ]
+    ]
   };
 }
 
@@ -101,15 +109,15 @@ async function handlePersonalityChoice(ctx) {
       await communityConfig.incrementPersonalityCounter();
       
       await ctx.answerCbQuery(
-        `✅ You are now a ${selectedChoice.emoji} ${selectedChoice.name}!`,
-        { show_alert: true }
+        `✅ You are now a ${selectedChoice.emoji} ${selectedChoice.name}!`
       );
       
       // Edit message to show selection
       await ctx.editMessageText(
-        `👤 **Your Personality**\n\n` +
-        `${selectedChoice.emoji} ${selectedChoice.name}\n\n` +
-        `This badge has been added to your profile! 🎉`
+        `✅ **Tu personalidad / Your personality**\n\n` +
+        `${selectedChoice.emoji} **${selectedChoice.name}**\n\n` +
+        `This badge has been added to your profile! 🎉`,
+        { parse_mode: 'Markdown' }
       );
     } else {
       await ctx.answerCbQuery('❌ Error saving choice', { show_alert: true });

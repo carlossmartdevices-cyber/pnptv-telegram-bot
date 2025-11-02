@@ -22,7 +22,7 @@ const logger = winston.createLogger({
   ],
 });
 
-// Always log to console (required for Heroku and other cloud platforms)
+// Always log to console (required for cloud platforms)
 logger.add(
   new winston.transports.Console({
     format: winston.format.combine(

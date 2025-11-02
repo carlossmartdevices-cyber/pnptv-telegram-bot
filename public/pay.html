@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNPtv - Choose Payment Method</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo {
+            font-size: 56px;
+            margin-bottom: 16px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            color: #1a1a1a;
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 15px;
+            font-weight: 400;
+        }
+
+        .plan-summary {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf3 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            border: 2px solid #e0e7ff;
+        }
+
+        .plan-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .plan-detail:last-child {
+            margin-bottom: 0;
+            padding-top: 12px;
+            border-top: 2px dashed #d0d9e8;
+        }
+
+        .plan-label {
+            color: #555;
+            font-weight: 500;
+        }
+
+        .plan-value {
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+
+        .price-value {
+            font-size: 28px;
+            color: #667eea;
+        }
+
+        .section-title {
+            color: #1a1a1a;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 32px 0 16px;
+            text-align: center;
+        }
+
+        .payment-options {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .payment-btn {
+            background: white;
+            border: 2px solid #e0e7ff;
+            border-radius: 12px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .payment-btn:hover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f5f7ff 0%, #eef1ff 100%);
+            transform: translateX(4px);
+        }
+
+        .payment-btn:active {
+            transform: scale(0.98);
+        }
+
+        .payment-icon {
+            font-size: 32px;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .payment-info {
+            flex: 1;
+        }
+
+        .payment-name {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .payment-desc {
+            font-size: 13px;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .arrow {
+            color: #667eea;
+            font-size: 20px;
+        }
+
+        .back-btn {
+            width: 100%;
+            padding: 14px;
+            background: #f5f7fa;
+            border: 2px solid #e0e7ff;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 16px;
+        }
+
+        .back-btn:hover {
+            background: #eef1ff;
+            border-color: #667eea;
+        }
+
+        .security-note {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 24px;
+            padding: 14px;
+            background: #f0f9ff;
+            border-radius: 10px;
+            color: #0284c7;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid #bae6fd;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #666;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 2px solid #fca5a5;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 28px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .payment-btn {
+                padding: 16px 18px;
+            }
+
+            .payment-icon {
+                font-size: 28px;
+            }
+
+            .payment-name {
+                font-size: 15px;
+            }
+
+            .payment-desc {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">💎</div>
+            <h1>Choose Payment Method</h1>
+            <p class="subtitle">Pay with crypto (USDC) using Daimo</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div id="content">
+            <div class="plan-summary">
+                <div class="plan-detail">
+                    <span class="plan-label">Plan:</span>
+                    <span class="plan-value" id="planName">-</span>
+                </div>
+                <div class="plan-detail">
+                    <span class="plan-label">Duration:</span>
+                    <span class="plan-value" id="planDuration">-</span>
+                </div>
+                <div class="plan-detail">
+                    <span class="plan-label">Amount:</span>
+                    <span class="plan-value price-value" id="planPrice">$0.00</span>
+                </div>
+            </div>
+
+            <h2 class="section-title">💰 Select Your Payment App</h2>
+
+            <div class="payment-options">
+                <button class="payment-btn" onclick="selectPaymentMethod('venmo')">
+                    <span class="payment-icon">💸</span>
+                    <div class="payment-info">
+                        <div class="payment-name">Venmo</div>
+                        <div class="payment-desc">Easy & fast payment</div>
+                    </div>
+                    <span class="arrow">→</span>
+                </button>
+
+                <button class="payment-btn" onclick="selectPaymentMethod('cashapp')">
+                    <span class="payment-icon">💵</span>
+                    <div class="payment-info">
+                        <div class="payment-name">Cash App</div>
+                        <div class="payment-desc">Most popular in USA</div>
+                    </div>
+                    <span class="arrow">→</span>
+                </button>
+
+                <button class="payment-btn" onclick="selectPaymentMethod('coinbase')">
+                    <span class="payment-icon">🏦</span>
+                    <div class="payment-info">
+                        <div class="payment-name">Coinbase</div>
+                        <div class="payment-desc">Leading crypto exchange</div>
+                    </div>
+                    <span class="arrow">→</span>
+                </button>
+
+                <button class="payment-btn" onclick="selectPaymentMethod('binance')">
+                    <span class="payment-icon">🌐</span>
+                    <div class="payment-info">
+                        <div class="payment-name">Binance</div>
+                        <div class="payment-desc">Global exchange</div>
+                    </div>
+                    <span class="arrow">→</span>
+                </button>
+
+                <button class="payment-btn" onclick="selectPaymentMethod('wallet')">
+                    <span class="payment-icon">💎</span>
+                    <div class="payment-info">
+                        <div class="payment-name">Crypto Wallet</div>
+                        <div class="payment-desc">MetaMask, Trust, etc.</div>
+                    </div>
+                    <span class="arrow">→</span>
+                </button>
+
+                <button class="payment-btn" onclick="selectPaymentMethod('direct')">
+                    <span class="payment-icon">📱</span>
+                    <div class="payment-info">
+                        <div class="payment-name">Direct Transfer</div>
+                        <div class="payment-desc">USDC on Base/Optimism</div>
+                    </div>
+                    <span class="arrow">→</span>
+                </button>
+            </div>
+
+            <button class="back-btn" onclick="goBack()">« Back to Plans</button>
+
+            <div class="security-note">
+                <span>🔒</span>
+                <span>Secured by Daimo • Blockchain verified • Instant activation</span>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="loading-text">Creating secure payment link...</p>
+        </div>
+    </div>
+
+    <script>
+        // Parse URL parameters
+        const params = new URLSearchParams(window.location.search);
+        const planId = params.get('plan');
+        const userId = params.get('user');
+        const amount = params.get('amount');
+        const timestamp = params.get('ts');
+        const signature = params.get('sig');
+
+        // Plan information
+        const planInfo = {
+            'trial-pass': {
+                name: '🎫 Trial Pass',
+                duration: '7 days'
+            },
+            'trial-week': {
+                name: '🎫 Trial Pass',
+                duration: '7 days'
+            },
+            'pnp-member': {
+                name: '� PNP Member',
+                duration: '30 days'
+            },
+            'crystal-member': {
+                name: '� Crystal Member',
+                duration: '4 months'
+            },
+            'diamond-member': {
+                name: '� Diamond Member',
+                duration: '1 year'
+            }
+        };
+
+        // Initialize page
+        function init() {
+            if (!planId || !userId || !amount) {
+                showError('Invalid payment parameters. Please return to the bot and try again.');
+                return;
+            }
+
+            const plan = planInfo[planId];
+            if (!plan) {
+                showError('Unknown plan selected. Please return to the bot and select a valid plan.');
+                return;
+            }
+
+            document.getElementById('planName').textContent = plan.name;
+            document.getElementById('planDuration').textContent = plan.duration;
+            document.getElementById('planPrice').textContent = `$${parseFloat(amount).toFixed(2)} USDC`;
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function goBack() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.close();
+            } else if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = 'https://t.me/PNPtvbot';
+            }
+        }
+
+        async function selectPaymentMethod(method) {
+            console.log('Selected payment method:', method);
+
+            // Show loading
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                // Call backend API to create Daimo payment with selected method
+                const apiUrl = '/api/daimo/create-payment';
+                console.log('Calling API:', apiUrl);
+                
+                const requestBody = {
+                    userId: userId,
+                    planId: planId,
+                    amount: parseFloat(amount),
+                    paymentMethod: method,
+                    timestamp: timestamp,
+                    signature: signature
+                };
+                
+                console.log('Request body:', requestBody);
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API error response:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const data = await response.json();
+                console.log('API response:', data);
+
+                if (!data.success || !data.paymentUrl) {
+                    throw new Error(data.error || 'Failed to create payment link');
+                }
+
+                console.log('Payment link created:', data.paymentUrl);
+
+                // Redirect to Daimo payment page
+                window.location.href = data.paymentUrl;
+
+            } catch (error) {
+                console.error('Payment error:', error);
+                document.getElementById('content').style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
+                showError(`Failed to create payment link: ${error.message}\n\nPlease try again or contact support.`);
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

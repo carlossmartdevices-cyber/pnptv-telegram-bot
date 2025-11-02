@@ -10,7 +10,7 @@ const DAIMO_API_URL = process.env.DAIMO_API_URL || 'https://pay.daimo.com/api';
 const DAIMO_API_KEY = process.env.DAIMO_API_KEY;
 
 /**
- * Create a payment link via Daimo Pay API
+ * Create a payment link via Daimo Pay REST API
  * @param {Object} params Payment parameters
  * @param {string} params.userId - Telegram user ID
  * @param {string} params.planId - Subscription plan ID
@@ -24,6 +24,7 @@ async function createPaymentLink({
   userId,
   planId,
   amount,
+  paymentMethod = null,
   destinationAddress,
   refundAddress,
   metadata = {}
@@ -33,45 +34,88 @@ async function createPaymentLink({
   }
 
   const treasuryAddress = destinationAddress || process.env.NEXT_PUBLIC_TREASURY_ADDRESS;
-  const refundAddr = refundAddress || process.env.NEXT_PUBLIC_REFUND_ADDRESS || treasuryAddress;
+  const refundAddr = refundAddress || process.env.NEXT_PUBLIC_REFUND_ADDRESS;
+  
+  if (!treasuryAddress) {
+    throw new Error('NEXT_PUBLIC_TREASURY_ADDRESS not configured');
+  }
 
-  // Prepare payment data according to Daimo Pay API spec
-  // Reference: https://paydocs.daimo.com
-  const paymentData = {
-    display: {
-      intent: 'Subscribe',
-      preferredChains: [8453, 10], // Base and Optimism
-      preferredTokens: [
-        { chain: 8453, address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' }, // Base USDC
-        { chain: 10, address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85' }    // Optimism USDC
-      ],
-      paymentOptions: ['AllExchanges', 'AllPaymentApps'], // Show all available payment methods
-      redirectUri: `${process.env.NEXT_PUBLIC_BOT_URL || 'https://pnptv.app'}/payment/success?user=${userId}&plan=${planId}`
-    },
-    destination: {
-      destinationAddress: treasuryAddress,
-      chainId: 8453, // Base (primary chain)
-      tokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
-      amountUnits: amount.toFixed(2)
-    },
-    refundAddress: refundAddr,
-    metadata: {
-      userId: userId.toString(),
-      planId: planId.toString(),
-      ...metadata
-    }
-  };
+  if (!refundAddr) {
+    throw new Error('NEXT_PUBLIC_REFUND_ADDRESS not configured');
+  }
+
+  // Generate unique payment ID
+  const timestamp = Date.now();
+  const paymentId = `pay_${userId}_${planId}_${timestamp}`;
 
   try {
-    logger.info('[Daimo] Creating payment link:', {
+    logger.info('[Daimo] Creating payment via API:', {
       userId,
       planId,
-      amount: paymentData.destination.amountUnits
+      amount,
+      paymentMethod: paymentMethod || 'all',
+      paymentId
+    });
+
+    // Build payment options array based on preference
+    let paymentOptions = ['AllExchanges', 'AllPaymentApps']; // Default: show all
+    
+    if (paymentMethod) {
+      // Map specific payment methods
+      const methodMap = {
+        'coinbase': 'Coinbase',
+        'binance': 'Binance',
+        'cashapp': 'CashApp',
+        'venmo': 'Venmo',
+        'mercadopago': 'MercadoPago',
+        'wallet': 'AllExchanges'
+      };
+      
+      if (methodMap[paymentMethod]) {
+        paymentOptions = [methodMap[paymentMethod]];
+      }
+    }
+
+    // Create payment request via Daimo API
+    const requestBody = {
+      display: {
+        intent: 'Subscribe to PNPtv Premium',
+        preferredChains: [8453, 10], // Base and Optimism
+        preferredTokens: [
+          {
+            chain: 8453,
+            address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' // Base USDC
+          },
+          {
+            chain: 10,
+            address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85' // Optimism USDC
+          }
+        ],
+        paymentOptions: paymentOptions
+      },
+      destination: {
+        destinationAddress: treasuryAddress,
+        chainId: 8453, // Base (primary)
+        tokenAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base USDC
+        amountUnits: amount.toFixed(2)
+      },
+      refundAddress: refundAddr,
+      metadata: {
+        userId: userId.toString(),
+        planId: planId,
+        timestamp: timestamp.toString(),
+        ...metadata
+      }
+    };
+
+    logger.info('[Daimo] API Request:', {
+      url: `${DAIMO_API_URL}/payment`,
+      body: JSON.stringify(requestBody, null, 2)
     });
 
     const response = await axios.post(
       `${DAIMO_API_URL}/payment`,
-      paymentData,
+      requestBody,
       {
         headers: {
           'API-Key': DAIMO_API_KEY,
@@ -81,27 +125,27 @@ async function createPaymentLink({
       }
     );
 
-    logger.info('[Daimo] Payment link created:', {
-      paymentId: response.data.id,
-      paymentUrl: response.data.url
+    logger.info('[Daimo] Payment created successfully:', {
+      paymentId: response.data.id || paymentId,
+      url: response.data.url
     });
 
     return {
       success: true,
-      paymentId: response.data.id,
+      paymentId: response.data.id || paymentId,
       paymentUrl: response.data.url,
-      qrCode: response.data.qrCode,
-      expiresAt: response.data.expiresAt,
-      ...response.data
+      qrCode: response.data.qrCode || null,
+      expiresAt: response.data.expiresAt || new Date(timestamp + 24 * 60 * 60 * 1000).toISOString()
     };
   } catch (error) {
-    logger.error('[Daimo] Failed to create payment link:', {
+    logger.error('[Daimo] Failed to create payment:', {
       error: error.message,
       response: error.response?.data,
-      status: error.response?.status
+      status: error.response?.status,
+      stack: error.stack
     });
 
-    throw new Error(`Failed to create payment link: ${error.response?.data?.message || error.message}`);
+    throw new Error(`Failed to create payment link: ${error.response?.data?.error || error.message}`);
   }
 }
 

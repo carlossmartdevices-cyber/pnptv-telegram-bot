@@ -63,10 +63,10 @@ const PLAN_CREATION_STEPS = [
   },
   {
     key: 'paymentMethod',
-    prompt: 'Choose payment method (epayco, nequi, or daimo):',
+    prompt: 'Choose payment method (daimo only):',
     transform: (value) => value.trim().toLowerCase(),
-    validate: (value) => ['epayco', 'nequi', 'daimo'].includes(value),
-    errorMessage: 'Payment method must be either "epayco", "nequi", or "daimo".'
+    validate: (value) => ['daimo'].includes(value),
+    errorMessage: 'Payment method must be "daimo".'
   },
   {
     key: 'paymentLink',
@@ -249,14 +249,14 @@ const PLAN_EDIT_FIELDS = {
     prepare: (value) => ({ recommended: value }),
   },
   paymentMethod: {
-    label: 'Payment method (epayco/nequi/daimo)',
+    label: 'Payment method (daimo only)',
     transform: (value) => value.trim().toLowerCase(),
-    validate: (value) => ['epayco', 'nequi', 'daimo'].includes(value),
+    validate: (value) => ['daimo'].includes(value),
     prepare: (value) => ({
       paymentMethod: value,
-      requiresManualActivation: value === 'nequi'
+      requiresManualActivation: false
     }),
-    errorMessage: 'Payment method must be either "epayco", "nequi", or "daimo".'
+    errorMessage: 'Payment method must be "daimo".'
   },
   paymentLink: {
     label: 'Payment link (for Nequi)',
@@ -394,7 +394,7 @@ async function showPlanDetails(ctx, planId, options = {}) {
   if (plan.duration) {
     lines.push(`Duration: ${plan.duration} days`);
   }
-  lines.push(`Payment method: ${plan.paymentMethod || 'epayco'}`);
+  lines.push(`Payment method: ${plan.paymentMethod || 'daimo'}`);
   if (plan.paymentMethod === 'nequi' && plan.paymentLink) {
     lines.push(`Payment link: ${plan.paymentLink}`);
   }
@@ -828,7 +828,7 @@ async function showPlanCreationPreview(ctx) {
   }
 
   lines.push(`Duration: ${data.duration} days`);
-  lines.push(`Payment Method: ${(data.paymentMethod || 'epayco').toUpperCase()}`);
+  lines.push(`Payment Method: ${(data.paymentMethod || 'daimo').toUpperCase()}`);
 
   if (data.paymentMethod === 'nequi' && data.paymentLink) {
     lines.push(`Payment Link: ${data.paymentLink}`);
@@ -896,7 +896,7 @@ async function confirmPlanCreation(ctx) {
       icon: state.data.icon || '💎',
       cryptoBonus: state.data.cryptoBonus || null,
       recommended: Boolean(state.data.recommended),
-      paymentMethod: state.data.paymentMethod || 'epayco',
+      paymentMethod: state.data.paymentMethod || 'daimo',
       paymentLink: state.data.paymentLink || null,
     };
 
@@ -906,15 +906,7 @@ async function confirmPlanCreation(ctx) {
     let successMsg = `✅ **Plan created successfully!**\n\n`;
     successMsg += `${newPlan.icon || '💎'} **${newPlan.displayName || newPlan.name}**\n`;
     successMsg += `Payment method: ${newPlan.paymentMethod.toUpperCase()}\n`;
-
-    if (newPlan.paymentMethod === 'nequi') {
-      successMsg += `⚠️ Manual activation required for subscriptions.\n`;
-      successMsg += `Payment link: ${newPlan.paymentLink}`;
-    } else if (newPlan.paymentMethod === 'daimo') {
-      successMsg += `✓ Automatic activation via Daimo Pay API`;
-    } else {
-      successMsg += `✓ Automatic activation via ePayco API`;
-    }
+    successMsg += `✓ Automatic activation via Daimo Pay API`;
 
     await ctx.answerCbQuery('Plan created!').catch(() => {});
     await ctx.reply(successMsg, { parse_mode: 'Markdown' });
