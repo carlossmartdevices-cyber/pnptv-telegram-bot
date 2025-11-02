@@ -3,7 +3,6 @@ const { Telegraf } = require('telegraf');
 const { db } = require("../config/firebase");
 const { t } = require("../utils/i18n");
 const logger = require("../utils/logger");
-const epayco = require("../config/epayco");
 const { ensureOnboarding } = require("../utils/guards");
 const { isAdmin, adminMiddleware } = require("../config/admin");
 const { getMenu } = require("../config/menus");
@@ -209,16 +208,7 @@ bot.action("show_help", async (ctx) => {
 // AI Chat callback handler
 bot.action("start_ai_chat", handleAIChatCallback);
 
-// Payment method selection handlers
-bot.action(/^pay_epayco_(.+)$/, async (ctx) => {
-  const planId = ctx.match[1];
-  await subscriptionHelpers.handleSubscription(ctx, planId, "epayco");
-});
-
-bot.action(/^pay_daimo_(.+)$/, async (ctx) => {
-  const planId = ctx.match[1];
-  await subscriptionHelpers.handleSubscription(ctx, planId, "daimo");
-});
+// Payment method selection handlers removed (Daimo & ePayco)
 
 bot.action("upgrade_tier", (ctx) => subscribeHandler(ctx));
 bot.action("subscribe_prime", (ctx) => subscribeHandler(ctx));
