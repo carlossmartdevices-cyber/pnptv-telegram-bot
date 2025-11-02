@@ -1,4 +1,4 @@
-const i18n = require("../../config/i18n");
+const i18n = require("../../utils/i18n");
 const { ensureOnboarding } = require("../../utils/guards");
 const logger = require("../../utils/logger");
 
@@ -59,8 +59,7 @@ You are the official customer support assistant for PNPtv, providing:
 - PNP Diamond Member ($99.99/year): Annual VIP membership with exclusive benefits
 
 **Payment Methods:**
-- ePayco (credit/debit cards)
-- Daimo (USDC cryptocurrency payments)
+- Manual activation by admin after payment confirmation
 
 **Support:**
 - Email: support@pnptv.app
@@ -137,7 +136,7 @@ async function startAIChat(ctx) {
 
   // Check if Mistral AI is available
   if (!mistral) {
-    const message = i18n.getText(language, "aiChatNoAPI");
+    const message = i18n.t(language, "aiChatNoAPI");
     if (ctx.callbackQuery) {
       await ctx.answerCbQuery();
       await ctx.editMessageText(message, { parse_mode: "Markdown" });
@@ -156,7 +155,7 @@ async function startAIChat(ctx) {
   ctx.session.aiChatActive = true;
   ctx.session.aiChatHistory = [];
 
-  const welcomeMessage = i18n.getText(language, "aiChatWelcome");
+  const welcomeMessage = i18n.t(language, "aiChatWelcome");
 
   // Send welcome message with back button
   const keyboard = {
@@ -165,9 +164,7 @@ async function startAIChat(ctx) {
         {
           text: language === "es" ? "🔙 Volver al Menú" : "🔙 Back to Menu",
           callback_data: "back_to_main",
-        },
-      ],
-    ],
+        }]],
   };
 
   if (ctx.callbackQuery) {
@@ -207,7 +204,7 @@ async function endAIChat(ctx) {
   ctx.session.aiChatActive = false;
   ctx.session.aiChatHistory = null;
 
-  const message = i18n.getText(language, "aiChatEnded");
+  const message = i18n.t(language, "aiChatEnded");
   await ctx.reply(message, { parse_mode: "Markdown" });
 
   // Return to main menu
@@ -231,13 +228,13 @@ async function handleChatMessage(ctx) {
   const now = Date.now();
   const lastMessageTime = messageTimestamps.get(userId) || 0;
   if (now - lastMessageTime < RATE_LIMIT_MS) {
-    await ctx.reply(i18n.getText(language, "aiChatRateLimit"), { parse_mode: "Markdown" });
+    await ctx.reply(i18n.t(language, "aiChatRateLimit"), { parse_mode: "Markdown" });
     return;
   }
   messageTimestamps.set(userId, now);
 
   // Show typing indicator
-  const thinkingMsg = await ctx.reply(i18n.getText(language, "aiChatThinking"), {
+  const thinkingMsg = await ctx.reply(i18n.t(language, "aiChatThinking"), {
     parse_mode: "Markdown",
   });
 
@@ -330,7 +327,7 @@ async function handleChatMessage(ctx) {
       // Ignore if deletion fails
     }
 
-    await ctx.reply(i18n.getText(language, "aiChatError"), { parse_mode: "Markdown" });
+    await ctx.reply(i18n.t(language, "aiChatError"), { parse_mode: "Markdown" });
   }
 }
 
