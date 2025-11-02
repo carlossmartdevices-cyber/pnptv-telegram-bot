@@ -282,7 +282,7 @@ async function handleChatMessage(ctx) {
       completion = await mistral.chat.complete({
         model: "mistral-small-latest",
         messages: messages,
-        maxTokens: 500,
+        maxTokens: 300, // Reduced to ensure messages fit in Telegram's 4096 char limit
         temperature: 0.7,
       });
 
@@ -302,11 +302,39 @@ async function handleChatMessage(ctx) {
       // Ignore if deletion fails
     }
 
-    // Send AI response
-    await ctx.reply(aiResponse, { parse_mode: "Markdown" });
+    // Send AI response (Telegram max message length is 4096 characters)
+    const MAX_MESSAGE_LENGTH = 4000; // Leave some buffer for markdown formatting
+
+    if (aiResponse.length > MAX_MESSAGE_LENGTH) {
+      // Split long messages into chunks
+      const chunks = [];
+      let currentChunk = "";
+      const lines = aiResponse.split("\n");
+
+      for (const line of lines) {
+        if ((currentChunk + line + "\n").length > MAX_MESSAGE_LENGTH) {
+          if (currentChunk) chunks.push(currentChunk.trim());
+          currentChunk = line + "\n";
+        } else {
+          currentChunk += line + "\n";
+        }
+      }
+      if (currentChunk) chunks.push(currentChunk.trim());
+
+      // Send chunks sequentially
+      for (const chunk of chunks) {
+        await ctx.reply(chunk, { parse_mode: "Markdown" });
+      }
+    } else {
+      await ctx.reply(aiResponse, { parse_mode: "Markdown" });
+    }
 
   } catch (error) {
-    logger.error("AI chat error:", error);
+    logger.error("AI chat error:", {
+      message: error.message,
+      code: error.code,
+      description: error.description
+    });
 
     // Delete "thinking" message
     try {
