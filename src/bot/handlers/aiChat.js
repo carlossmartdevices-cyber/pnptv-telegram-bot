@@ -169,23 +169,11 @@ async function startAIChat(ctx) {
 
   if (ctx.callbackQuery) {
     await ctx.answerCbQuery();
-    try {
-      await ctx.editMessageText(welcomeMessage, {
-        parse_mode: "Markdown",
-        reply_markup: keyboard,
-      });
-    } catch (editError) {
-      // If edit fails, delete old and send new
-      try {
-        await ctx.deleteMessage();
-      } catch (deleteError) {
-        // Ignore delete errors
-      }
-      await ctx.reply(welcomeMessage, {
-        parse_mode: "Markdown",
-        reply_markup: keyboard,
-      });
-    }
+    // Always send new message instead of editing to avoid "message too long" errors
+    await ctx.reply(welcomeMessage, {
+      parse_mode: "Markdown",
+      reply_markup: keyboard,
+    });
   } else {
     await ctx.reply(welcomeMessage, {
       parse_mode: "Markdown",
