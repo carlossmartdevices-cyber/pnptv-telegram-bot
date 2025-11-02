@@ -1,4 +1,4 @@
-const i18n = require("../../utils/i18n");
+const i18n = require("../../config/i18n");
 const { ensureOnboarding } = require("../../utils/guards");
 const logger = require("../../utils/logger");
 
