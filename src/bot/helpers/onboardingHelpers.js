@@ -81,15 +81,26 @@ async function handleEmailSubmission(ctx) {
     // Generate one-time use invite link for free channel
     let inviteLink = null;
     try {
-      const freeChannelId = "-1003159260496";
+      // Use FREE_CHANNEL_ID from env, fallback to hardcoded value
+      const freeChannelId = process.env.FREE_CHANNEL_ID || "-1003159260496";
+
+      logger.info(`Attempting to generate free channel invite for user ${userId} to channel ${freeChannelId}`);
+
       const invite = await ctx.telegram.createChatInviteLink(freeChannelId, {
         member_limit: 1,
         name: `Free - User ${userId}`,
       });
       inviteLink = invite.invite_link;
+
+      logger.info(`✅ Successfully generated invite link for user ${userId}: ${inviteLink}`);
       console.log("Generated invite link for user:", userId);
     } catch (error) {
-      logger.error(`Failed to generate invite link for user ${userId}:`, error);
+      logger.error(`❌ Failed to generate invite link for user ${userId}:`, {
+        error: error.message,
+        code: error.code,
+        description: error.description,
+        channelId: process.env.FREE_CHANNEL_ID || "-1003159260496"
+      });
     }
 
     // Send channel invite if successful
