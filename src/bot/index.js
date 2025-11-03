@@ -25,6 +25,7 @@ const session = createFirestoreSession({
 });
 const rateLimitMiddleware = require("./middleware/rateLimit");
 const errorHandler = require("./middleware/errorHandler");
+const privateResponseMiddleware = require("./middleware/privateResponseMiddleware");
 
 // Start session cleanup service
 const { sessionCleanup } = require("../utils/sessionCleanup");
@@ -49,11 +50,22 @@ const {
   toggleAdsOptOut,
 } = require("./handlers/profile");
 const subscribeHandler = require("./handlers/subscribe");
+
+// Community Features (Integrated from SantinoBot)
+const {
+  handleNearby,
+  handleLibrary,
+  handleTopTracks,
+  handleScheduleCall,
+  handleScheduleStream,
+  handleUpcoming
+} = require("./handlers/community");
+const { handleNewMember, handleMediaMessage } = require("./helpers/groupManagement");
 const {
   showDaimoPlans,
   handleDaimoPlanSelection,
-  handleShowPlansCallback,
-} = require("./handlers/daimoSubscription");
+  handleDaimoHelp,
+} = require("./handlers/daimoPayHandler");
 const {
   adminPanel,
   handleAdminCallback,
@@ -80,6 +92,7 @@ bot.use(session); // Firestore session middleware
 
 // Apply middleware
 bot.use(rateLimitMiddleware());
+bot.use(privateResponseMiddleware()); // Redirect group responses to private chat
 
 // Middleware to set Sentry user context
 bot.use(async (ctx, next) => {
@@ -111,7 +124,7 @@ bot.catch((error, ctx) => {
 bot.start(startHandler);
 bot.command("help", helpHandler);
 bot.command("map", mapHandler);
-bot.command("nearby", nearbyHandler);
+bot.command("nearby", handleNearby);
 bot.command("live", liveHandler);
 bot.command("app", appHandler);
 bot.command("profile", viewProfile);
@@ -123,19 +136,27 @@ bot.command("plans", adminMiddleware(), async (ctx) => {
 bot.command("aichat", startAIChat);
 bot.command("endchat", endAIChat);
 
+// ===== COMMUNITY FEATURES (Integrated from SantinoBot) =====
+bot.command("library", handleLibrary);
+bot.command("toptracks", handleTopTracks);
+bot.command("schedulecall", handleScheduleCall);
+bot.command("schedulestream", handleScheduleStream);
+bot.command("upcoming", handleUpcoming);
+
 // ===== ONBOARDING FLOW =====
 // Handle both language callback formats: lang_xx and language_xx
-bot.action(/lang_(.+)/, (ctx) => {
-  console.log("=== LANG CALLBACK RECEIVED ===");
-  console.log("Callback data:", ctx.callbackQuery.data);
-  console.log("User ID:", ctx.from.id);
+// FIXED: Exclude bcast_lang_xx by checking callback data manually
+bot.action(/lang_(.+)/, async (ctx) => {
+  const callbackData = ctx.callbackQuery.data;
+  // Skip if this is a broadcast language selection
+  if (callbackData.startsWith('bcast_')) {
+    await ctx.answerCbQuery();
+    return;
+  }
   return onboardingHelpers.handleLanguageSelection(ctx);
 });
 
 bot.action(/language_(.+)/, (ctx) => {
-  console.log("=== LANGUAGE CALLBACK RECEIVED ===");
-  console.log("Callback data:", ctx.callbackQuery.data);
-  console.log("User ID:", ctx.from.id);
   return onboardingHelpers.handleLanguageSelection(ctx);
 });
 bot.action("confirm_age", onboardingHelpers.handleAgeConfirmation);
@@ -164,9 +185,14 @@ bot.action(/^plan_select_(.+)$/, async (ctx) => {
   await subscriptionHelpers.handleSubscription(ctx, planId);
 });
 
-// Daimo payment plans
+// Back to subscription plans handler
+bot.action("show_subscription_plans", async (ctx) => {
+  await subscribeHandler(ctx);
+});
+
+// ===== DAIMO PAY HANDLERS =====
 bot.action("daimo_show_plans", async (ctx) => {
-  await handleShowPlansCallback(ctx);
+  await showDaimoPlans(ctx);
 });
 
 bot.action(/^daimo_plan_(.+)$/, async (ctx) => {
@@ -174,22 +200,7 @@ bot.action(/^daimo_plan_(.+)$/, async (ctx) => {
 });
 
 bot.action("daimo_help", async (ctx) => {
-  await ctx.answerCbQuery();
-  await ctx.reply(
-    "💎 *Daimo Payment Help*\n\n" +
-    "Daimo Pay allows you to subscribe with USDC stablecoin:\n\n" +
-    "✅ No credit card needed\n" +
-    "✅ Instant activation\n" +
-    "✅ Secure blockchain payment\n" +
-    "✅ Low fees\n\n" +
-    "Each plan renews automatically unless cancelled.",
-    { parse_mode: "Markdown" }
-  );
-});
-
-// Back to subscription plans handler
-bot.action("show_subscription_plans", async (ctx) => {
-  await subscribeHandler(ctx);
+  await handleDaimoHelp(ctx);
 });
 
 // Main menu item handlers
@@ -269,6 +280,7 @@ bot.action("settings_back", viewProfile);
 
 bot.action(/^plan:/, handlePlanCallback);
 bot.action(/^admin_/, handleAdminCallback);
+bot.action(/^bcast_/, handleAdminCallback);  // Broadcast callbacks
 
 // ===== MAP CALLBACKS =====
 
@@ -600,6 +612,21 @@ bot.on("text", async (ctx) => {
 // ===== LOCATION MESSAGE HANDLER =====
 
 bot.on("location", handleLocation);
+
+// ===== GROUP MANAGEMENT (Integrated from SantinoBot) =====
+// Handle new members joining groups
+bot.on('new_chat_members', handleNewMember);
+
+// Handle media messages for permission enforcement
+bot.on(['photo', 'video', 'document', 'audio', 'voice', 'video_note', 'sticker', 'animation'], async (ctx, next) => {
+  // Only apply group restrictions in group chats
+  if (ctx.chat.type === 'group' || ctx.chat.type === 'supergroup') {
+    await handleMediaMessage(ctx);
+  } else {
+    // In private chats, continue with normal handling
+    return next();
+  }
+});
 
 // Add action handlers
 bot.action("cancel_delete", (ctx) =>

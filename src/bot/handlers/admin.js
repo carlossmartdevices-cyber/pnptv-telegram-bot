@@ -26,10 +26,19 @@ async function adminPanel(ctx) {
       ? "⚙️ **Panel de Administración**\n\nSelecciona una opción:"
       : "⚙️ **Admin Panel**\n\nSelect an option:";
 
-    await ctx.reply(message, {
-      reply_markup: getMenu("admin"),
-      parse_mode: "Markdown",
-    });
+    // Try to edit the message first, fall back to new message if that fails
+    try {
+      await ctx.editMessageText(message, {
+        reply_markup: getMenu("admin"),
+        parse_mode: "Markdown",
+      });
+    } catch (editError) {
+      // If edit fails, send new message
+      await ctx.reply(message, {
+        reply_markup: getMenu("admin"),
+        parse_mode: "Markdown",
+      });
+    }
 
     logger.info(`Admin ${ctx.from.id} accessed admin panel`);
   } catch (error) {
@@ -96,6 +105,7 @@ async function showStats(ctx) {
 
     // Calculate revenue estimates from active subscriptions
     let monthlyRevenue = 0;
+    let annualRevenue = 0;
     // Revenue calculation now based on actual subscription plans
 
     try {
@@ -146,9 +156,7 @@ async function showStats(ctx) {
             {
               text: lang === "es" ? "« Volver" : "« Back",
               callback_data: "admin_back",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -170,43 +178,73 @@ async function listUsers(ctx) {
       ? "👥 **Gestión de Usuarios**\n\nSelecciona una opción:"
       : "👥 **User Management**\n\nSelect an option:";
 
-    await ctx.reply(message, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: lang === "es" ? "📋 Listar Todos" : "📋 List All",
-              callback_data: "admin_list_all",
-            },
-          ],
-          [
-            {
-              text: lang === "es" ? "🔍 Buscar Usuario" : "🔍 Search User",
-              callback_data: "admin_search_user",
-            },
-          ],
-          [
-            {
-              text: lang === "es" ? "🥇 Usuarios Premium" : "🥇 Premium Users",
-              callback_data: "admin_list_premium",
-            },
-          ],
-          [
-            {
-              text: lang === "es" ? "📅 Nuevos (7 días)" : "📅 New (7 days)",
-              callback_data: "admin_list_new",
-            },
-          ],
-          [
-            {
-              text: lang === "es" ? "« Volver" : "« Back",
-              callback_data: "admin_back",
-            },
-          ],
-        ],
-      },
-    });
+    // Try to edit the message first, fall back to new message if that fails
+    try {
+      await ctx.editMessageText(message, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "📋 Listar Todos" : "📋 List All",
+                callback_data: "admin_list_all",
+              }],
+            [
+              {
+                text: lang === "es" ? "🔍 Buscar Usuario" : "🔍 Search User",
+                callback_data: "admin_search_user",
+              }],
+            [
+              {
+                text: lang === "es" ? "🥇 Usuarios Premium" : "🥇 Premium Users",
+                callback_data: "admin_list_premium",
+              }],
+            [
+              {
+                text: lang === "es" ? "📅 Nuevos (7 días)" : "📅 New (7 days)",
+                callback_data: "admin_list_new",
+              }],
+            [
+              {
+                text: lang === "es" ? "« Volver" : "« Back",
+                callback_data: "admin_back",
+              }]],
+        },
+      });
+    } catch (editError) {
+      // If edit fails, send new message
+      await ctx.reply(message, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "📋 Listar Todos" : "📋 List All",
+                callback_data: "admin_list_all",
+              }],
+            [
+              {
+                text: lang === "es" ? "🔍 Buscar Usuario" : "🔍 Search User",
+                callback_data: "admin_search_user",
+              }],
+            [
+              {
+                text: lang === "es" ? "🥇 Usuarios Premium" : "🥇 Premium Users",
+                callback_data: "admin_list_premium",
+              }],
+            [
+              {
+                text: lang === "es" ? "📅 Nuevos (7 días)" : "📅 New (7 days)",
+                callback_data: "admin_list_new",
+              }],
+            [
+              {
+                text: lang === "es" ? "« Volver" : "« Back",
+                callback_data: "admin_back",
+              }]],
+        },
+      });
+    }
 
     logger.info(`Admin ${ctx.from.id} accessed user management`);
   } catch (error) {
@@ -280,8 +318,7 @@ async function listAllUsers(ctx, page = 1) {
       {
         text: lang === "es" ? "« Volver" : "« Back",
         callback_data: "admin_users",
-      },
-    ]);
+      }]);
 
     await ctx.reply(message, {
       parse_mode: "Markdown",
@@ -414,8 +451,7 @@ async function showUserDetails(ctx, userId, userData) {
         {
           text: lang === "es" ? "💬 Mensaje" : "💬 Message",
           callback_data: `admin_message_${userId}`,
-        },
-      ],
+        }],
       [
         userData.banned
           ? {
@@ -425,15 +461,12 @@ async function showUserDetails(ctx, userId, userData) {
           : {
               text: lang === "es" ? "🚫 Banear" : "🚫 Ban",
               callback_data: `admin_ban_${userId}`,
-            },
-      ],
+            }],
       [
         {
           text: lang === "es" ? "« Volver" : "« Back",
           callback_data: "admin_users",
-        },
-      ],
-    ];
+        }]];
 
     await ctx.reply(message, {
       parse_mode: "Markdown",
@@ -499,44 +532,37 @@ async function editUserTier(ctx, userId) {
           {
             text: `⏱️ Trial Week - 7d`,
             callback_data: `admin_tier:trial-week:7:${userId}`,
-          },
-        ],
+          }],
         // PNP Member
         [
           {
             text: `⭐ PNP Member - 30d`,
             callback_data: `admin_tier:pnp-member:30:${userId}`,
-          },
-        ],
+          }],
         // Crystal Member
         [
           {
             text: `💎 PNP Crystal - 120d`,
             callback_data: `admin_tier:crystal-member:120:${userId}`,
-          },
-        ],
+          }],
         // Diamond Member
         [
           {
             text: `👑 PNP Diamond - 365d`,
             callback_data: `admin_tier:diamond-member:365:${userId}`,
-          },
-        ],
+          }],
         // Free tier
         [
           {
             text: lang === "es" ? "⚪ Gratis (sin expiración)" : "⚪ Free (no expiration)",
             callback_data: `admin_tier:free:0:${userId}`,
-          },
-        ],
+          }],
         // Cancel
         [
           {
             text: lang === "es" ? "« Cancelar" : "« Cancel",
             callback_data: `admin_user_${userId}`,
-          },
-        ],
-      ],
+          }]],
     };
 
     await ctx.reply(message, {
@@ -660,10 +686,19 @@ async function broadcastMessage(ctx) {
       ]
     };
 
-    await ctx.reply(message, {
-      parse_mode: "Markdown",
-      reply_markup: keyboard
-    });
+    // Try to edit the message first, fall back to new message if that fails
+    try {
+      await ctx.editMessageText(message, {
+        parse_mode: "Markdown",
+        reply_markup: keyboard
+      });
+    } catch (editError) {
+      // If edit fails, send new message
+      await ctx.reply(message, {
+        parse_mode: "Markdown",
+        reply_markup: keyboard
+      });
+    }
 
     logger.info(`Admin ${ctx.from.id} initiated enhanced broadcast wizard`);
   } catch (error) {
@@ -694,6 +729,7 @@ async function handleBroadcastWizard(ctx, action) {
 
     // Step 1: Language selection
     if (action.startsWith("bcast_lang_")) {
+      console.log(">>> PROCESSING LANGUAGE SELECTION:", action);
       const langChoice = action.replace("bcast_lang_", "");
       wizard.targetLanguage = langChoice;
       wizard.step = 2;
@@ -1262,9 +1298,7 @@ async function showExpiringMemberships(ctx) {
                 {
                   text: lang === "es" ? "« Volver" : "« Back",
                   callback_data: "admin_back",
-                },
-              ],
-            ],
+                }]],
           },
         }
       );
@@ -1300,9 +1334,7 @@ async function showExpiringMemberships(ctx) {
             {
               text: lang === "es" ? "« Volver" : "« Back",
               callback_data: "admin_back",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -1356,9 +1388,7 @@ async function runExpirationCheck(ctx) {
             {
               text: lang === "es" ? "« Volver" : "« Back",
               callback_data: "admin_back",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -1457,15 +1487,12 @@ async function banUser(ctx, userId) {
             {
               text: lang === "es" ? "✅ Sí, Banear" : "✅ Yes, Ban",
               callback_data: `admin_confirm_ban_${userId}`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "❌ Cancelar" : "❌ Cancel",
               callback_data: `admin_user_${userId}`,
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -1631,9 +1658,7 @@ async function listPremiumUsers(ctx) {
                 {
                   text: lang === "es" ? "« Volver" : "« Back",
                   callback_data: "admin_users",
-                },
-              ],
-            ],
+                }]],
           },
         }
       );
@@ -1672,9 +1697,7 @@ async function listPremiumUsers(ctx) {
             {
               text: lang === "es" ? "« Volver" : "« Back",
               callback_data: "admin_users",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -1724,9 +1747,7 @@ async function listNewUsers(ctx) {
                 {
                   text: lang === "es" ? "« Volver" : "« Back",
                   callback_data: "admin_users",
-                },
-              ],
-            ],
+                }]],
           },
         }
       );
@@ -1759,9 +1780,7 @@ async function listNewUsers(ctx) {
             {
               text: lang === "es" ? "« Volver" : "« Back",
               callback_data: "admin_users",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -1785,19 +1804,33 @@ async function startMembershipActivation(ctx) {
       ? "✨ **Activación Manual de Membresía**\n\nEnvía el ID del usuario para activar su membresía.\n\nPuedes obtener el ID desde:\n• 👥 User Management → Search User\n• El perfil del usuario en Telegram"
       : "✨ **Manual Membership Activation**\n\nSend the user ID to activate their membership.\n\nYou can get the ID from:\n• 👥 User Management → Search User\n• The user's Telegram profile";
 
-    await ctx.reply(message, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: lang === "es" ? "« Cancelar" : "« Cancel",
-              callback_data: "admin_back",
-            },
-          ],
-        ],
-      },
-    });
+    // Try to edit the message first, fall back to new message if that fails
+    try {
+      await ctx.editMessageText(message, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "« Cancelar" : "« Cancel",
+                callback_data: "admin_back",
+              }]],
+        },
+      });
+    } catch (editError) {
+      // If edit fails, send new message
+      await ctx.reply(message, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "« Cancelar" : "« Cancel",
+                callback_data: "admin_back",
+              }]],
+        },
+      });
+    }
 
     logger.info(`Admin ${ctx.from.id} initiated manual membership activation`);
   } catch (error) {
@@ -1846,15 +1879,12 @@ async function processActivationUserId(ctx, userIdInput) {
             {
               text: "⚪ Free",
               callback_data: `admin_quick_activate_${userId}_Free_0`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "« Cancelar" : "« Cancel",
               callback_data: "admin_back",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -1958,15 +1988,12 @@ async function executeQuickActivation(ctx, userId, tier, durationDays) {
             {
               text: lang === "es" ? "✨ Activar Otra" : "✨ Activate Another",
               callback_data: "admin_activate_membership",
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "« Volver al Panel" : "« Back to Panel",
               callback_data: "admin_back",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -1993,19 +2020,33 @@ async function startUpdateMember(ctx) {
       ? "📝 **Actualizar Miembro**\n\nEnvía el ID del usuario para actualizar su membresía.\n\nPuedes cambiar el tier o modificar la fecha de expiración."
       : "📝 **Update Member**\n\nSend the user ID to update their membership.\n\nYou can change the tier or modify the expiration date.";
 
-    await ctx.reply(message, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: lang === "es" ? "« Cancelar" : "« Cancel",
-              callback_data: "admin_back",
-            },
-          ],
-        ],
-      },
-    });
+    // Try to edit the message first, fall back to new message if that fails
+    try {
+      await ctx.editMessageText(message, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "« Cancelar" : "« Cancel",
+                callback_data: "admin_back",
+              }]],
+        },
+      });
+    } catch (editError) {
+      // If edit fails, send new message
+      await ctx.reply(message, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "« Cancelar" : "« Cancel",
+                callback_data: "admin_back",
+              }]],
+        },
+      });
+    }
 
     logger.info(`Admin ${ctx.from.id} initiated member update`);
   } catch (error) {
@@ -2079,21 +2120,17 @@ async function processUpdateMemberUserId(ctx, userIdInput) {
             {
               text: lang === "es" ? "💎 Cambiar Tier" : "💎 Change Tier",
               callback_data: `admin_change_tier_${userId}`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "📅 Modificar Expiración" : "📅 Modify Expiration",
               callback_data: `admin_modify_expiration_${userId}`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "« Cancelar" : "« Cancel",
               callback_data: "admin_back",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -2117,19 +2154,33 @@ async function startExtendMembership(ctx) {
       ? "🔄 **Extender Membresía**\n\nEnvía el ID del usuario para extender su membresía.\n\nEsto agregará días adicionales a la fecha de expiración actual."
       : "🔄 **Extend Membership**\n\nSend the user ID to extend their membership.\n\nThis will add additional days to the current expiration date.";
 
-    await ctx.reply(message, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: lang === "es" ? "« Cancelar" : "« Cancel",
-              callback_data: "admin_back",
-            },
-          ],
-        ],
-      },
-    });
+    // Try to edit the message first, fall back to new message if that fails
+    try {
+      await ctx.editMessageText(message, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "« Cancelar" : "« Cancel",
+                callback_data: "admin_back",
+              }]],
+        },
+      });
+    } catch (editError) {
+      // If edit fails, send new message
+      await ctx.reply(message, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "« Cancelar" : "« Cancel",
+                callback_data: "admin_back",
+              }]],
+        },
+      });
+    }
 
     logger.info(`Admin ${ctx.from.id} initiated membership extension`);
   } catch (error) {
@@ -2197,8 +2248,7 @@ async function processExtendUserId(ctx, userIdInput) {
             {
               text: lang === "es" ? "+1 mes" : "+1 month",
               callback_data: `admin_extend_days_${userId}_30`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "+4 meses" : "+4 months",
@@ -2207,27 +2257,22 @@ async function processExtendUserId(ctx, userIdInput) {
             {
               text: lang === "es" ? "+1 año" : "+1 year",
               callback_data: `admin_extend_days_${userId}_365`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "💎 Hacer Vitalicio" : "💎 Make Lifetime",
               callback_data: `admin_extend_days_${userId}_999999`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "✏️ Personalizado" : "✏️ Custom",
               callback_data: `admin_extend_custom_${userId}`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "« Cancelar" : "« Cancel",
               callback_data: "admin_back",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -2278,14 +2323,19 @@ async function executeExtendMembership(ctx, userId, daysToAdd) {
     } else {
       // Calculate new expiration date
       const currentExpiration = userData.membershipExpiresAt.toDate();
-      newExpiration = new Date(currentExpiration);
+      const now = new Date();
+      // If membership is expired, extend from today. Otherwise extend from current expiration.
+      const baseDate = currentExpiration > now ? currentExpiration : now;
+      newExpiration = new Date(baseDate);
       newExpiration.setDate(newExpiration.getDate() + daysToAdd);
     }
 
-    // Update membership expiration
+    // Update membership expiration with audit trail
     await db.collection("users").doc(userId).update({
       membershipExpiresAt: newExpiration,
       membershipIsPremium: true,
+      tierUpdatedAt: new Date(),
+      tierUpdatedBy: ctx.from.id.toString(),
       lastActive: new Date(),
     });
 
@@ -2340,15 +2390,12 @@ async function executeExtendMembership(ctx, userId, daysToAdd) {
             {
               text: lang === "es" ? "🔄 Extender Otra" : "🔄 Extend Another",
               callback_data: "admin_extend_membership",
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "« Volver al Panel" : "« Back to Panel",
               callback_data: "admin_back",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -2479,9 +2526,16 @@ async function executeModifyExpiration(ctx, userId, dateInput) {
 
     const userData = userDoc.data();
 
-    // Update membership expiration
+    // Determine if this is a premium membership based on expiration
+    const now = new Date();
+    const isPremium = newExpiration && newExpiration > now;
+
+    // Update membership expiration with complete audit trail
     await db.collection("users").doc(userId).update({
       membershipExpiresAt: newExpiration,
+      membershipIsPremium: isPremium,
+      tierUpdatedAt: new Date(),
+      tierUpdatedBy: ctx.from.id.toString(),
       lastActive: new Date(),
     });
 
@@ -2584,15 +2638,12 @@ async function viewPlanDetails(ctx, planName) {
             {
               text: lang === "es" ? "✏️ Editar" : "✏️ Edit",
               callback_data: `admin_plan_edit_${planName.toLowerCase()}`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "« Volver a Planes" : "« Back to Plans",
               callback_data: "admin_plans",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -2624,39 +2675,32 @@ async function editPlanMenu(ctx, planName) {
             {
               text: lang === "es" ? "💵 Precio USD" : "💵 USD Price",
               callback_data: `admin_plan_edit_price_${planName.toLowerCase()}`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "💵 Precio COP" : "💵 COP Price",
               callback_data: `admin_plan_edit_cop_${planName.toLowerCase()}`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "⏱️ Duración" : "⏱️ Duration",
               callback_data: `admin_plan_edit_duration_${planName.toLowerCase()}`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "📝 Descripción" : "📝 Description",
               callback_data: `admin_plan_edit_desc_${planName.toLowerCase()}`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "✨ Características" : "✨ Features",
               callback_data: `admin_plan_edit_features_${planName.toLowerCase()}`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "« Volver" : "« Back",
               callback_data: "admin_plans",
-            },
-          ],
-        ].filter(row => row.length > 0),
+            }]].filter(row => row.length > 0),
       },
     });
 
@@ -2730,9 +2774,7 @@ async function startPlanEdit(ctx, planName, field) {
             {
               text: lang === "es" ? "« Cancelar" : "« Cancel",
               callback_data: "admin_plans",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -2849,15 +2891,12 @@ async function executePlanEdit(ctx, planName, field, newValue) {
               {
                 text: lang === "es" ? "✏️ Editar Otro Campo" : "✏️ Edit Another Field",
                 callback_data: `admin_plan_edit_${planName.toLowerCase()}`,
-              },
-            ],
+              }],
             [
               {
                 text: lang === "es" ? "« Volver a Planes" : "« Back to Plans",
                 callback_data: "admin_plans",
-              },
-            ],
-          ],
+              }]],
         },
       });
 
@@ -2930,7 +2969,7 @@ async function showPlanStats(ctx) {
     message += lang === "es" ? "💰 **Totales**\n" : "💰 **Totals**\n";
     message += `• ${lang === "es" ? "Suscriptores activos" : "Active subscribers"}: ${premiumActive}\n`;
     message += `• ${lang === "es" ? "Tasa de conversión" : "Conversion rate"}: ${conversionRate}%\n`;
-    message += `\n${lang === "es" ? "ℹ️ Para ingresos detallados, usar los reportes de Firestore o ePayco" : "ℹ️ For detailed revenue, use Firestore or ePayco reports"}`;
+    message += `\n${lang === "es" ? "ℹ️ Para ingresos detallados, usar los reportes de Firestore" : "ℹ️ For detailed revenue, use Firestore reports"}`;
 
     await ctx.reply(message, {
       parse_mode: "Markdown",
@@ -2940,15 +2979,12 @@ async function showPlanStats(ctx) {
             {
               text: lang === "es" ? "🔄 Actualizar" : "🔄 Refresh",
               callback_data: "admin_plan_stats",
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "« Volver a Planes" : "« Back to Plans",
               callback_data: "admin_plans",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -3011,39 +3047,32 @@ async function configureMenus(ctx) {
             {
               text: lang === "es" ? "🏠 Ver Main" : "🏠 View Main",
               callback_data: "admin_menu_view_main",
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "👤 Ver Profile" : "👤 View Profile",
               callback_data: "admin_menu_view_profile",
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "⚙️ Ver Admin" : "⚙️ View Admin",
               callback_data: "admin_menu_view_admin",
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "💎 Ver Subscription" : "💎 View Subscription",
               callback_data: "admin_menu_view_subscription",
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "🔄 Reload Menus" : "🔄 Reload Menus",
               callback_data: "admin_menu_reload",
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "« Volver" : "« Back",
               callback_data: "admin_back",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -3143,21 +3172,17 @@ async function viewMenuDetails(ctx, menuName) {
             {
               text: lang === "es" ? "📊 Analizar Estructura" : "📊 Analyze Structure",
               callback_data: `admin_menu_analyze_${menuName}`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "🔍 Test Menu" : "🔍 Test Menu",
               callback_data: `admin_menu_test_${menuName}`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "« Volver a Menús" : "« Back to Menus",
               callback_data: "admin_menus",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -3263,15 +3288,12 @@ async function analyzeMenuStructure(ctx, menuName) {
             {
               text: lang === "es" ? "🔍 Test Menu" : "🔍 Test Menu",
               callback_data: `admin_menu_test_${menuName}`,
-            },
-          ],
+            }],
           [
             {
               text: lang === "es" ? "« Volver" : "« Back",
               callback_data: `admin_menu_view_${menuName}`,
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -3319,9 +3341,7 @@ async function testMenu(ctx, menuName) {
               {
                 text: lang === "es" ? "« Volver a Menús" : "« Back to Menus",
                 callback_data: "admin_menus",
-              },
-            ],
-          ],
+              }]],
         },
       }
     );
@@ -3362,9 +3382,7 @@ async function reloadMenus(ctx) {
             {
               text: lang === "es" ? "« Volver a Menús" : "« Back to Menus",
               callback_data: "admin_menus",
-            },
-          ],
-        ],
+            }]],
       },
     });
 
@@ -3545,9 +3563,10 @@ async function handleAdminCallback(ctx) {
       await showExpiringMemberships(ctx);
     } else if (action === "admin_expire_check") {
       await runExpirationCheck(ctx);
-    } else if (action.startsWith("admin_give_xp_")) {
-      const userId = action.replace("admin_give_xp_", "");
-      await giveXP(ctx, userId);
+    // XP feature not yet implemented - commented out to prevent errors
+    // } else if (action.startsWith("admin_give_xp_")) {
+    //   const userId = action.replace("admin_give_xp_", "");
+    //   await giveXP(ctx, userId);
     } else if (action.startsWith("admin_message_")) {
       const userId = action.replace("admin_message_", "");
       await messageUser(ctx, userId);

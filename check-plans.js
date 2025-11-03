@@ -39,7 +39,7 @@ async function checkAndFixPlans() {
       console.log('⚠️  Issues found and fixed');
     }
   } catch (error) {
-    console.error('Error:', error.message);now check ythh
+    console.error('Error:', error.message);
   }
 }
 

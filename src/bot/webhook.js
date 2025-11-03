@@ -80,8 +80,18 @@ app.get("/ready", async (req, res) => {
 });
 
 // API routes for payment page
+logger.info('Loading API routes from ./api/routes');
 const apiRoutes = require('./api/routes');
+logger.info('API routes loaded', { type: typeof apiRoutes, stackLength: apiRoutes.stack ? apiRoutes.stack.length : 'No stack' });
 app.use('/api', apiRoutes);
+logger.info('API routes mounted at /api');
+
+// Daimo Pay webhook routes
+const daimoPayRoutes = require('../api/daimo-pay-routes');
+app.use('/daimo', daimoPayRoutes);
+
+// Make bot instance available to routes
+app.set('bot', bot);
 
 // Serve static assets for payment page
 app.use("/assets", express.static(path.join(__dirname, "../../public/payment/assets")));

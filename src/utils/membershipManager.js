@@ -93,12 +93,7 @@ function generateConfirmationMessage({
   }
 
   if (paymentMethod) {
-    const methodDisplay = paymentMethod === 'daimo' 
-      ? (isSpanish ? 'Daimo Pay (Crypto)' : 'Daimo Pay (Crypto)')
-      : paymentMethod === 'epayco' 
-      ? (isSpanish ? 'ePayco (Tarjeta)' : 'ePayco (Card)')
-      : paymentMethod;
-    message += isSpanish ? `• Método de Pago: ${methodDisplay}\n` : `• Payment Method: ${methodDisplay}\n`;
+    message += isSpanish ? `• Método de Pago: ${paymentMethod}\n` : `• Payment Method: ${paymentMethod}\n`;
   }
 
   if (reference) {
@@ -135,12 +130,24 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
       throw new Error("userId and tier are required");
     }
 
+    // Validate tier exists
+    const validTiers = ["Free", "Basic", "Premium", "VIP", "Creator"];
+    if (!validTiers.includes(tier)) {
+      throw new Error(`Invalid tier: ${tier}. Must be one of: ${validTiers.join(", ")}`);
+    }
+
     const now = new Date();
     const expirationDate = calculateExpirationDate(durationDays);
     const isPremium = tier !== "Free" && expirationDate !== null;
 
+    // Get current user data to save previous tier
+    const userDoc = await db.collection("users").doc(userId).get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+    const previousTier = userData.tier || "Free";
+
     const updateData = {
       tier,
+      previousTier,
       tierUpdatedAt: now,
       tierUpdatedBy: activatedBy,
       membershipExpiresAt: expirationDate,

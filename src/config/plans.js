@@ -4,6 +4,21 @@
 // Keep values minimal and accurate to the current production plans.
 const plans = {
 	// New canonical plans
+	TEST_PLAN: {
+		id: 'test-1usd',
+		name: 'Test Plan',
+		displayName: 'Test Plan ($1)',
+		price: 1.00,
+		priceInCOP: 1.00 * 4000,
+		currency: 'USD',
+		duration: 1,
+		durationDays: 1,
+		tier: 'trial-week',
+		description: 'Test plan for $1 USD - 1 day access',
+		features: ['Test access', 'Payment testing', '1 day duration'],
+		active: true,
+		isTest: true,
+	},
 	TRIAL_WEEK: {
 		id: 'trial-week',
 		name: 'Trial Week',

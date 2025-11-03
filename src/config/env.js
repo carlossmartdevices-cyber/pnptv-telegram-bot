@@ -19,15 +19,10 @@ const REQUIRED_ENV_VARS = {
   important: [
     'NODE_ENV',
     'PORT',
-    'FIREBASE_PROJECT_ID',
-  ],
+    'FIREBASE_PROJECT_ID'],
   optional: [
     'FIREBASE_CLIENT_EMAIL',  // Optional - extracted from FIREBASE_CREDENTIALS
-    'EPAYCO_PUBLIC_KEY',
-    'EPAYCO_PRIVATE_KEY',
-    'EPAYCO_P_CUST_ID',
-    'EPAYCO_P_KEY',
-    'SENTRY_DSN',
+                    'SENTRY_DSN',
     'MISTRAL_API_KEY',        // Mistral AI for chat functionality
   ],
 };
@@ -41,8 +36,7 @@ const SENSITIVE_PATTERNS = [
   /secret/i,
   /password/i,
   /credential/i,
-  /private/i,
-];
+  /private/i];
 
 /**
  * Check if a variable name is sensitive
@@ -109,8 +103,7 @@ function validateEnv(options = {}) {
         /^test[-_]?/i,
         /^changeme/i,
         /^placeholder/i,
-        /xxx/i,
-      ];
+        /xxx/i];
 
       if (placeholderPatterns.some(pattern => pattern.test(value))) {
         exposedSecrets.push({

@@ -29,6 +29,37 @@ module.exports = async (ctx) => {
     const userRef = db.collection("users").doc(userId);
     const doc = await userRef.get();
 
+    // Check if this is a redirect from group interaction
+    const startPayload = ctx.message?.text?.split(' ')[1];
+    if (startPayload === 'group_redirect') {
+      const lang = ctx.session?.language || "en";
+      await ctx.reply(
+        lang === "es"
+          ? "🎉 ¡Perfecto! Ahora puedo enviarte respuestas privadas.\n\n💬 Regresa al grupo y usa cualquier comando del bot - todas las respuestas llegarán aquí a tu chat privado."
+          : "🎉 Perfect! Now I can send you private responses.\n\n💬 Go back to the group and use any bot command - all responses will come here to your private chat.",
+        {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: lang === "es" ? "📋 Ver Comandos Disponibles" : "📋 View Available Commands",
+                  callback_data: "show_help"
+                }
+              ],
+              [
+                {
+                  text: lang === "es" ? "👤 Mi Perfil" : "👤 My Profile",
+                  callback_data: "show_my_profile"
+                }
+              ]
+            ]
+          }
+        }
+      );
+      return;
+    }
+
     // Admin exception: Always force fresh onboarding for testing purposes
     // TEMPORARILY DISABLED - Uncomment to re-enable admin fresh onboarding
     /*

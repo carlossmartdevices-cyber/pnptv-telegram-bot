@@ -249,6 +249,89 @@ router.post('/payment/completed', async (req, res) => {
 });
 
 /**
+ * POST /api/daimo/create-payment
+ * Create a new Daimo payment request
+ */
+router.post('/daimo/create-payment', async (req, res) => {
+  console.log('DEBUG: Route handler called!', req.method, req.url);
+  logger.info('DEBUG: Daimo create-payment route accessed', { method: req.method, url: req.url, body: req.body });
+  
+  try {
+    const { planId, userId, amount } = req.body;
+
+    logger.info(`API: Creating Daimo payment - User: ${userId}, Plan: ${planId}, Amount: ${amount}`);
+
+    if (!planId || !userId || !amount) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters: planId, userId, amount'
+      });
+    }
+
+    // Get plan details to validate
+    const plan = await planService.getPlanById(planId);
+    if (!plan) {
+      return res.status(404).json({
+        success: false,
+        error: 'Plan not found'
+      });
+    }
+
+    // Create payment with Daimo Pay service
+    const daimoPayService = require('../../services/daimoPayService');
+    const paymentResult = await daimoPayService.createPayment({
+      planName: plan.name,
+      planId,
+      userId,
+      amount: parseFloat(amount),
+      userName: `User ${userId}`
+    });
+
+    if (!paymentResult.success) {
+      logger.error('Failed to create Daimo payment:', paymentResult.error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create payment',
+        details: paymentResult.error
+      });
+    }
+
+    // Store payment intent
+    const reference = `${planId}_${userId}_${Date.now()}`;
+    try {
+      await db.collection('payment_intents').doc(reference).set({
+        userId,
+        planId,
+        amount: parseFloat(amount),
+        reference,
+        status: 'created',
+        provider: 'daimo',
+        paymentId: paymentResult.paymentId,
+        checkoutUrl: paymentResult.checkoutUrl,
+        createdAt: Date.now(),
+      });
+    } catch (dbError) {
+      logger.warn('Failed to store payment intent:', dbError);
+    }
+
+    res.json({
+      success: true,
+      paymentId: paymentResult.paymentId,
+      checkoutUrl: paymentResult.checkoutUrl,
+      reference
+    });
+
+  } catch (error) {
+    logger.error('API: Error creating Daimo payment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to create payment'
+    });
+  }
+});
+
+/**
  * POST /api/daimo/payment-completed
  * Called from payment page when Daimo payment completes
  */
@@ -287,8 +370,16 @@ router.post('/daimo/payment-completed', async (req, res) => {
 });
 
 /**
+ * GET /api/test
+ * Simple test route
+ */
+router.get('/test', (req, res) => {
+  res.json({ success: true, message: 'API routes are working!' });
+});
+
+/**
  * GET /api/payments/status
- * Check payment status (for polling from payment page)
+ * Check payment status by reference
  */
 router.get('/payments/status', async (req, res) => {
   try {

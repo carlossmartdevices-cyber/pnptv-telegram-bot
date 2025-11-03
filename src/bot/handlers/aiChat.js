@@ -1,4 +1,4 @@
-const i18n = require("../../config/i18n");
+const { t } = require("../../utils/i18n");
 const { ensureOnboarding } = require("../../utils/guards");
 const logger = require("../../utils/logger");
 
@@ -161,7 +161,7 @@ async function startAIChat(ctx) {
 
   // Check if Mistral AI is available
   if (!mistral) {
-    const message = i18n.t(language, "aiChatNoAPI");
+    const message = t(ctx, "aiChatNoAPI");
     if (ctx.callbackQuery) {
       await ctx.answerCbQuery();
       await ctx.editMessageText(message, { parse_mode: "Markdown" });
@@ -176,33 +176,36 @@ async function startAIChat(ctx) {
     await initializeAgent();
   }
 
-  // Initialize chat session
+  // Initialize chat session - CLEAN UP ANY PENDING REQUESTS
   ctx.session.aiChatActive = true;
   ctx.session.aiChatHistory = [];
+  ctx.session.waitingFor = null;  // Clear any pending admin/form operations
+  ctx.session.editingField = null;  // Clear field editing state
 
-  const welcomeMessage = i18n.t(language, "aiChatWelcome");
+  const welcomeMessage = t(ctx, "aiChatWelcome");
 
   // Send welcome message with back button
   const keyboard = {
     inline_keyboard: [
       [
         {
-          text: language === "es" ? "🔙 Volver al Menú" : "🔙 Back to Menu",
+          text: language === "es" ? "🔙 Back" : "🔙 Back",
           callback_data: "back_to_main",
-        }]],
+        }
+      ]
+    ],
   };
 
-  if (ctx.callbackQuery) {
-    await ctx.answerCbQuery();
-    // Always send new message instead of editing to avoid "message too long" errors
+  try {
     await ctx.reply(welcomeMessage, {
       parse_mode: "Markdown",
       reply_markup: keyboard,
     });
-  } else {
-    await ctx.reply(welcomeMessage, {
+  } catch (error) {
+    // Fallback: Send without keyboard if message is too long
+    logger.warn("[AI] Welcome message failed, sending simple version:", error.message);
+    await ctx.reply("🤖 *AI Support*\n\nHi! How can I help?", {
       parse_mode: "Markdown",
-      reply_markup: keyboard,
     });
   }
 }
@@ -217,7 +220,7 @@ async function endAIChat(ctx) {
   ctx.session.aiChatActive = false;
   ctx.session.aiChatHistory = null;
 
-  const message = i18n.t(language, "aiChatEnded");
+  const message = t(ctx, "aiChatEnded");
   await ctx.reply(message, { parse_mode: "Markdown" });
 
   // Return to main menu
@@ -229,32 +232,54 @@ async function endAIChat(ctx) {
  * Handle chat messages
  */
 async function handleChatMessage(ctx) {
-  if (!ctx.session.aiChatActive) {
-    return; // Not in chat mode
+  // Guard: must have message text
+  if (!ctx.message || !ctx.message.text) {
+    return;
+  }
+
+  // Guard: must be in active chat
+  if (!ctx.session?.aiChatActive) {
+    return;
+  }
+
+  // Guard: if waitingFor is set, DON'T process as AI (let admin handlers take over)
+  // This shouldn't happen if startAIChat cleaned it up, but double-check
+  if (ctx.session?.waitingFor) {
+    return;
   }
 
   const language = ctx.session.language || "en";
   const userId = ctx.from.id;
   const userMessage = ctx.message.text;
 
+  // Guard: abort commands
+  if (userMessage.startsWith("/")) {
+    return;
+  }
+
   // Rate limiting
   const now = Date.now();
   const lastMessageTime = messageTimestamps.get(userId) || 0;
   if (now - lastMessageTime < RATE_LIMIT_MS) {
-    await ctx.reply(i18n.t(language, "aiChatRateLimit"), { parse_mode: "Markdown" });
+    await ctx.reply(t(ctx, "aiChatRateLimit"), { parse_mode: "Markdown" }).catch(() => {});
     return;
   }
   messageTimestamps.set(userId, now);
 
   // Show typing indicator
-  const thinkingMsg = await ctx.reply(i18n.t(language, "aiChatThinking"), {
-    parse_mode: "Markdown",
-  });
+  let thinkingMsg;
+  try {
+    thinkingMsg = await ctx.reply(t(ctx, "aiChatThinking"), {
+      parse_mode: "Markdown",
+    });
+  } catch (e) {
+    logger.warn("[AI] Could not send thinking message:", e.message);
+  }
 
   try {
-    // Ensure agent is initialized
-    if (AGENT_ID === null && mistral) {
-      await initializeAgent();
+    // Initialize history if needed
+    if (!ctx.session.aiChatHistory) {
+      ctx.session.aiChatHistory = [];
     }
 
     // Add user message to history
@@ -263,55 +288,38 @@ async function handleChatMessage(ctx) {
       content: userMessage,
     });
 
-    // Keep only last 20 messages to manage token usage
+    // Keep only last 20 messages
     if (ctx.session.aiChatHistory.length > 20) {
       ctx.session.aiChatHistory = ctx.session.aiChatHistory.slice(-20);
     }
 
-    // Prepare messages with language preference
     const languagePrompt = language === "es"
-      ? "Responde en español."
-      : "Respond in English.";
+      ? "Responde en español siempre."
+      : "Always respond in English.";
 
-    let completion;
-    let aiResponse;
+    // Use Chat Completions API (fallback mode - no agent needed)
+    const messages = [
+      {
+        role: "system",
+        content: AGENT_INSTRUCTIONS + `\n\n${languagePrompt}`,
+      },
+      ...ctx.session.aiChatHistory.slice(-10),
+    ];
 
-    // Use Agents API if agent ID is configured
-    if (AGENT_ID) {
-      const messages = [
-        ...ctx.session.aiChatHistory.slice(-10), // Last 10 messages for context
-        {
-          role: "user",
-          content: `${languagePrompt}\n\n${userMessage}`,
-        }
-      ];
+    if (!mistral) {
+      throw new Error("Mistral API not initialized");
+    }
 
-      completion = await mistral.agents.complete({
-        agentId: AGENT_ID,
-        messages: messages,
-      });
+    const completion = await mistral.chat.complete({
+      model: "mistral-small-latest",
+      messages: messages,
+      maxTokens: 200,
+      temperature: 0.7,
+    });
 
-      aiResponse = completion.choices?.[0]?.message?.content ||
-                  completion.message?.content ||
-                  "I apologize, but I couldn't process your request. Please try again.";
-    } else {
-      // Fall back to Chat Completions API
-      const messages = [
-        {
-          role: "system",
-          content: AGENT_INSTRUCTIONS + `\n\n${languagePrompt}`,
-        },
-        ...ctx.session.aiChatHistory.slice(-10), // Last 10 messages
-      ];
-
-      completion = await mistral.chat.complete({
-        model: "mistral-small-latest",
-        messages: messages,
-        maxTokens: 300, // Reduced to ensure messages fit in Telegram's 4096 char limit
-        temperature: 0.7,
-      });
-
-      aiResponse = completion.choices[0].message.content;
+    const aiResponse = completion.choices?.[0]?.message?.content;
+    if (!aiResponse) {
+      throw new Error("No response from Mistral");
     }
 
     // Add AI response to history
@@ -320,55 +328,47 @@ async function handleChatMessage(ctx) {
       content: aiResponse,
     });
 
-    // Delete "thinking" message
-    try {
-      await ctx.telegram.deleteMessage(ctx.chat.id, thinkingMsg.message_id);
-    } catch (e) {
-      // Ignore if deletion fails
+    // Delete thinking message
+    if (thinkingMsg) {
+      try {
+        await ctx.telegram.deleteMessage(ctx.chat.id, thinkingMsg.message_id);
+      } catch (e) {
+        // Ignore
+      }
     }
 
-    // Send AI response (Telegram max message length is 4096 characters)
-    const MAX_MESSAGE_LENGTH = 4000; // Leave some buffer for markdown formatting
-
-    if (aiResponse.length > MAX_MESSAGE_LENGTH) {
-      // Split long messages into chunks
-      const chunks = [];
-      let currentChunk = "";
-      const lines = aiResponse.split("\n");
-
-      for (const line of lines) {
-        if ((currentChunk + line + "\n").length > MAX_MESSAGE_LENGTH) {
-          if (currentChunk) chunks.push(currentChunk.trim());
-          currentChunk = line + "\n";
-        } else {
-          currentChunk += line + "\n";
-        }
-      }
-      if (currentChunk) chunks.push(currentChunk.trim());
-
-      // Send chunks sequentially
+    // Send response (handle long messages)
+    const MAX_LENGTH = 4000;
+    if (aiResponse.length > MAX_LENGTH) {
+      const chunks = aiResponse.match(/[\s\S]{1,3900}/g) || [];
       for (const chunk of chunks) {
-        await ctx.reply(chunk, { parse_mode: "Markdown" });
+        await ctx.reply(chunk, { parse_mode: "Markdown" }).catch(() => {});
       }
     } else {
-      await ctx.reply(aiResponse, { parse_mode: "Markdown" });
+      await ctx.reply(aiResponse, { parse_mode: "Markdown" }).catch(() => {});
     }
 
   } catch (error) {
-    logger.error("AI chat error:", {
+    logger.error("[AI Chat Error]:", {
       message: error.message,
-      code: error.code,
-      description: error.description
+      userId,
+      stack: error.stack
     });
 
-    // Delete "thinking" message
-    try {
-      await ctx.telegram.deleteMessage(ctx.chat.id, thinkingMsg.message_id);
-    } catch (e) {
-      // Ignore if deletion fails
+    // Delete thinking message
+    if (thinkingMsg) {
+      try {
+        await ctx.telegram.deleteMessage(ctx.chat.id, thinkingMsg.message_id);
+      } catch (e) {
+        // Ignore
+      }
     }
 
-    await ctx.reply(i18n.t(language, "aiChatError"), { parse_mode: "Markdown" });
+    const errorMsg = language === "es"
+      ? "❌ Perdón, ocurrió un error. Intenta de nuevo o escribe /endchat para salir."
+      : "❌ Sorry, something went wrong. Try again or type /endchat to exit.";
+    
+    await ctx.reply(errorMsg, { parse_mode: "Markdown" }).catch(() => {});
   }
 }
 

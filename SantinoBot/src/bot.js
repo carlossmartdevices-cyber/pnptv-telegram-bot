@@ -9,6 +9,7 @@ const {
   handleAdminCommand 
 } = require('./handlers/groupHandlers');
 const { startPermissionSync, startCleanupTasks } = require('./services/syncService');
+const musicService = require('./services/musicService');
 const userDataService = require('./services/userDataService');
 const userDataSync = require('./utils/userDataSync');
 const {
@@ -27,6 +28,14 @@ const {
   cmdListScheduled
 } = require('./handlers/adminCommands');
 const { handlePersonalityChoice } = require('./handlers/personalityHandler');
+const {
+  cmdAddTrack,
+  cmdPlaylist,
+  cmdScheduleMusic,
+  cmdLibrary,
+  cmdTopTracks,
+  cmdUpcomingMusic
+} = require('./handlers/musicCommands');
 
 // Validate environment variables
 const requiredEnvVars = ['BOT_TOKEN', 'FIREBASE_PROJECT_ID', 'FIREBASE_CLIENT_EMAIL', 'FIREBASE_PRIVATE_KEY'];
@@ -88,9 +97,9 @@ bot.on(['photo', 'video', 'document', 'audio', 'voice', 'video_note', 'sticker',
 bot.on('text', (ctx) => {
   const text = ctx.message.text;
   
-  // Check for admin commands
+  // Skip if it's a command - let bot.command() handlers process it
   if (text.startsWith('/')) {
-    return handleAdminCommand(ctx);
+    return;
   }
   
   // Regular text message
@@ -133,10 +142,38 @@ bot.command('info', async (ctx) => {
 // Help command
 bot.command('help', async (ctx) => {
   try {
-    const isAdmin = ctx.from.id === ctx.chat.id || 
-                    ['administrator', 'creator'].includes(
-                      (await ctx.getChatMember(ctx.from.id).catch(() => ({status: 'member'}))).status
-                    );
+    const userId = ctx.from.id.toString();
+    
+    // Use Promise.race to timeout Firebase call after 3 seconds
+    const getUserPermissionsWithTimeout = () => {
+      return Promise.race([
+        require('./utils/permissions').getUserPermissions(userId),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Firebase timeout')), 3000)
+        )
+      ]);
+    };
+    
+    let tier = 'Free';
+    try {
+      const permissions = await getUserPermissionsWithTimeout();
+      tier = permissions.tier || 'Free';
+    } catch (error) {
+      logger.warn(`Could not fetch tier for user ${userId}: ${error.message}`);
+      // Continue with default 'Free' tier
+    }
+    
+    let isAdmin = false;
+    try {
+      isAdmin = ctx.from.id === ctx.chat.id || 
+                ['administrator', 'creator'].includes(
+                  (await ctx.getChatMember(ctx.from.id).catch(() => ({status: 'member'}))).status
+                );
+    } catch (error) {
+      logger.warn(`Could not check admin status: ${error.message}`);
+    }
+    
+    const isDiamond = tier === 'diamond-member';
     
     let helpText = `📚 *Santino Group Bot - Help*\n\n`;
     
@@ -149,6 +186,11 @@ bot.command('help', async (ctx) => {
     helpText += `/subscription - Check subscription status\n`;
     helpText += `/datainfo - Data service information\n\n`;
     
+    helpText += `*🎵 Music & Podcasts:*\n`;
+    helpText += `/library - View music library\n`;
+    helpText += `/toptracks - Most played tracks\n`;
+    helpText += `/upcomingmusic - Scheduled broadcasts\n\n`;
+    
     if (isAdmin) {
       helpText += `*👑 Admin Commands:*\n`;
       helpText += `/refresh - Refresh user permissions\n`;
@@ -156,12 +198,26 @@ bot.command('help', async (ctx) => {
       helpText += `/broadcast - Send broadcast message\n`;
       helpText += `/schedulevideocall - Schedule video call\n`;
       helpText += `/schedulelivestream - Schedule live stream\n`;
-      helpText += `/listscheduled - View scheduled events\n\n`;
+      helpText += `/listscheduled - View scheduled events\n`;
+      helpText += `/addtrack - Add music/podcast to library\n`;
+      helpText += `/playlist - Create/view playlists\n`;
+      helpText += `/schedulemusic - Schedule music broadcast\n\n`;
+    } else if (isDiamond) {
+      helpText += `*💎 Diamond Member Commands:*\n`;
+      helpText += `/schedulevideocall - Schedule video call\n`;
+      helpText += `/schedulelivestream - Schedule live stream\n`;
+      helpText += `/listscheduled - View scheduled events\n`;
+      helpText += `/addtrack - Add music/podcast to library\n`;
+      helpText += `/playlist - Create/view playlists\n`;
+      helpText += `/schedulemusic - Schedule music broadcast\n\n`;
     }
     
     helpText += `*ℹ️ How It Works:*\n`;
     helpText += `• Free users: Text only\n`;
     helpText += `• Premium users: Full media access\n`;
+    if (isDiamond) {
+      helpText += `• Diamond members: Can schedule events! 💎\n`;
+    }
     helpText += `• Permissions auto-sync with main bot\n`;
     helpText += `• Media from free users is auto-deleted\n\n`;
     
@@ -169,6 +225,7 @@ bot.command('help', async (ctx) => {
     helpText += `Contact support for subscription options!`;
     
     await ctx.reply(helpText, { parse_mode: 'Markdown' });
+    logger.info(`Sent help to user ${userId}`);
   } catch (error) {
     logger.error('Error in help command:', error);
     await ctx.reply('❌ Error displaying help. Try /info instead.').catch(() => {});
@@ -189,6 +246,14 @@ bot.command('schedulevideocall', cmdScheduleVideoCall);
 bot.command('schedulelivestream', cmdScheduleLiveStream);
 bot.command('broadcast', cmdBroadcast);
 bot.command('listscheduled', cmdListScheduled);
+
+// Music & Podcast Commands
+bot.command('addtrack', cmdAddTrack);
+bot.command('playlist', cmdPlaylist);
+bot.command('schedulemusic', cmdScheduleMusic);
+bot.command('library', cmdLibrary);
+bot.command('toptracks', cmdTopTracks);
+bot.command('upcomingmusic', cmdUpcomingMusic);
 
 // Callback query handler for inline buttons (personality choices, etc)
 bot.on('callback_query', async (ctx) => {
@@ -212,6 +277,11 @@ async function startBot() {
     // Start background services
     startPermissionSync(bot);
     startCleanupTasks();
+    
+    // Start music broadcast notifications (if group ID configured)
+    if (allowedGroupId) {
+      musicService.startBroadcastScheduler(bot, allowedGroupId);
+    }
     
     // Start bot
     if (process.env.NODE_ENV === 'production' && process.env.WEBHOOK_URL) {

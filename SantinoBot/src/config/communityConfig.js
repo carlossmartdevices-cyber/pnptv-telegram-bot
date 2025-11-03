@@ -46,23 +46,34 @@ async function updateCommunityConfig(updates) {
  */
 function getDefaultConfig() {
   return {
-    welcomeTitle: '👋 Welcome to PNPtv! The Telegram Community',
-    santinoPMessage: '[Personal message from Santino will be here]',
-    communityDescription: '[Community description will be here]',
-    communityRules: `
-📋 **Community Rules:**
-1. Respect all members
-2. No spam or promotional content
-3. Keep conversations relevant
-4. No hate speech or discrimination
-5. Follow Telegram guidelines
+    welcomeTitle: '**Bienvenido al Grupo de Miembros de PNPtv!**',
+    santinoPMessage: `Esta es la parte de la comunidad donde empieza a parecer un culto.
+**Adora a Santino. El Meth Daddy.**
 
-[More rules can be added here]
-    `.trim(),
+Aquí eres libre.
+Libre para ser tú mismo, para vivir tu sexualidad como quieras,
+y para preguntar lo que otros temen decir.
+
+Disfruta tu tiempo, explora, conéctate,
+y recuerda: este es un espacio seguro
+para la autenticidad, la curiosidad y el placer.`,
+    communityDescription: `**Welcome to the PNPtv! Members Group**
+
+This is the part of the community where it starts to look like a cult.
+Worship Santino. The Meth Daddy.
+
+Here, you're free.
+Free to be yourself, to live your sexuality however you like,
+and to ask anything without fear or shame.
+
+Enjoy your time, explore, connect,
+and remember: this is a safe space
+for authenticity, curiosity, and pleasure.`,
+    communityRules: '',
     personalityChoices: [
-      { emoji: '🧜', name: 'Chem Mermaid', description: 'Aquatic vibes' },
-      { emoji: '👯', name: 'Slam Slut', description: 'Party lover' },
-      { emoji: '🧮', name: 'M*th Alpha', description: 'Brainy type' },
+      { emoji: '�', name: 'Slam Slut', description: 'Party lover' },
+      { emoji: '�', name: 'Meth Alpha', description: 'Brainy type' },
+      { emoji: '🐚', name: 'Chem Mermaid', description: 'Aquatic vibes' },
       { emoji: '👑', name: 'Spun Royal', description: 'Elite member' }
     ],
     maxPersonalityMembers: 1000,
@@ -114,10 +125,21 @@ async function incrementPersonalityCounter() {
 async function buildWelcomeMessage() {
   const config = await getCommunityConfig();
   
-  return `${config.welcomeTitle}\n\n` +
-    `💬 **From Santino:**\n${config.santinoPMessage}\n\n` +
-    `ℹ️ **About Us:**\n${config.communityDescription}\n\n` +
-    `${config.communityRules}`;
+  let message = `${config.welcomeTitle}\n\n`;
+  
+  if (config.santinoPMessage) {
+    message += `${config.santinoPMessage}\n\n`;
+  }
+  
+  if (config.communityDescription) {
+    message += `${config.communityDescription}`;
+  }
+  
+  if (config.communityRules) {
+    message += `\n\n${config.communityRules}`;
+  }
+  
+  return message;
 }
 
 module.exports = {

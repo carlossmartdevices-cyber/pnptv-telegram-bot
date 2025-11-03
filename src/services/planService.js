@@ -78,7 +78,7 @@ class PlanService {
     icon,
     cryptoBonus,
     recommended = false,
-    paymentMethod = "epayco", // "epayco" or "nequi"
+    paymentMethod = // or "nequi"
     paymentLink = null, // For manual Nequi payments
     requiresManualActivation = false
   }) {
@@ -89,8 +89,8 @@ class PlanService {
     }
 
     // Validate payment method
-    if (!["epayco", "nequi", "daimo"].includes(paymentMethod)) {
-      throw new Error("Payment method must be either 'epayco', 'nequi', or 'daimo'");
+    if (!["nequi"].includes(paymentMethod)) {
+      throw new Error("Payment method must be either 'nequi', or ");
     }
 
     // If Nequi, require payment link
@@ -98,7 +98,7 @@ class PlanService {
       throw new Error("Payment link is required for Nequi payment method");
     }
 
-    // If Daimo, ensure amount is in USD (Daimo uses USDC)
+    // Daimo payment requires USD
     if (paymentMethod === "daimo" && currency !== "USD") {
       logger.warn(`Daimo payment requires USD, converting from ${currency}`);
     }
@@ -460,8 +460,7 @@ class PlanService {
       // Cache miss - calculate stats
       const [allPlans, usersSnapshot] = await Promise.all([
         this.getAllPlans(),
-        db.collection("users").get(),
-      ]);
+        db.collection("users").get()]);
 
       const stats = {};
       const now = new Date();

@@ -13,11 +13,11 @@ function startPermissionSync(bot) {
     
     try {
       const now = new Date();
-      
+
       // Find users with expired memberships
+      // Split the query to avoid multiple inequality filters
       const expiredQuery = await db.collection('users')
         .where('membershipExpiresAt', '<=', now)
-        .where('tier', '!=', 'Free')
         .get();
 
       let updatedCount = 0;
@@ -26,7 +26,12 @@ function startPermissionSync(bot) {
         try {
           const userId = doc.id;
           const userData = doc.data();
-          
+
+          // Filter out Free tier users in code instead of query
+          if (userData.tier === 'Free' || !userData.tier) {
+            continue;
+          }
+
           // Update to Free tier
           await db.collection('users').doc(userId).update({
             tier: 'Free',

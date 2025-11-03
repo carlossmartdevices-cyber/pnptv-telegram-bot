@@ -7,6 +7,7 @@ const { db } = require('../../config/firebase');
 const { t } = require('../../utils/i18n');
 const logger = require('../../utils/logger');
 const { getMenu } = require('../../config/menus');
+const { activateMembership } = require('../../utils/membershipManager');
 
 const AGE_VERIFICATION_INTERVAL_HOURS = 168; // 7 days
 const AGE_VERIFICATION_INTERVAL_MS = AGE_VERIFICATION_INTERVAL_HOURS * 60 * 60 * 1000;
@@ -353,6 +354,18 @@ async function handlePrivacyAcceptance(ctx) {
     }
 
     logger.info(`User ${userId} completed onboarding`);
+
+    // Auto-activate Free tier membership if enabled
+    if (isNewUser && process.env.AUTO_ACTIVATE_FREE_USERS === 'true') {
+      try {
+        logger.info(`Auto-activating Free tier membership for new user ${userId}`);
+        await activateMembership(userId, "Free", "system", 0, ctx.telegram);
+        logger.info(`✅ Successfully auto-activated Free tier for user ${userId}`);
+      } catch (activationError) {
+        // Log the error but don't block onboarding
+        logger.warn(`Failed to auto-activate Free tier for user ${userId}:`, activationError.message);
+      }
+    }
 
     if (isNewUser) {
       await ctx.editMessageText(t("profileCreated", lang), {

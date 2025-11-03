@@ -3,6 +3,7 @@ const communityConfig = require('../config/communityConfig');
 const videoCallService = require('../services/videoCallService');
 const liveStreamService = require('../services/liveStreamService');
 const broadcastService = require('../services/broadcastService');
+const { getUserPermissions } = require('../utils/permissions');
 
 /**
  * Admin Commands Handler
@@ -44,13 +45,13 @@ async function cmdConfigWelcome(ctx) {
 
 /**
  * Command: /schedulevideocall
- * Admin schedules a video call
+ * Admin or Diamond member schedules a video call
  */
 async function cmdScheduleVideoCall(ctx) {
   try {
-    const isAdmin = await checkIsAdmin(ctx);
-    if (!isAdmin) {
-      await ctx.reply('❌ Admin only command');
+    const isAuthorized = await checkIsAdminOrDiamond(ctx);
+    if (!isAuthorized) {
+      await ctx.reply('❌ This command is only available to group administrators and Diamond members.');
       return;
     }
     
@@ -100,13 +101,13 @@ async function cmdScheduleVideoCall(ctx) {
 
 /**
  * Command: /schedulelivestream
- * Admin schedules a live stream with performer
+ * Admin or Diamond member schedules a live stream with performer
  */
 async function cmdScheduleLiveStream(ctx) {
   try {
-    const isAdmin = await checkIsAdmin(ctx);
-    if (!isAdmin) {
-      await ctx.reply('❌ Admin only command');
+    const isAuthorized = await checkIsAdminOrDiamond(ctx);
+    if (!isAuthorized) {
+      await ctx.reply('❌ This command is only available to group administrators and Diamond members.');
       return;
     }
     
@@ -262,13 +263,13 @@ async function cmdBroadcast(ctx) {
 
 /**
  * Command: /listscheduled
- * Admin views all scheduled events
+ * Admin or Diamond member views all scheduled events
  */
 async function cmdListScheduled(ctx) {
   try {
-    const isAdmin = await checkIsAdmin(ctx);
-    if (!isAdmin) {
-      await ctx.reply('❌ Admin only command');
+    const isAuthorized = await checkIsAdminOrDiamond(ctx);
+    if (!isAuthorized) {
+      await ctx.reply('❌ This command is only available to group administrators and Diamond members.');
       return;
     }
     
@@ -317,11 +318,40 @@ async function checkIsAdmin(ctx) {
   }
 }
 
+/**
+ * Helper: Check if user is admin OR diamond member
+ * Diamond members can schedule events
+ */
+async function checkIsAdminOrDiamond(ctx) {
+  try {
+    // First check if they're a group admin
+    const member = await ctx.getChatMember(ctx.from.id);
+    if (member.status === 'administrator' || member.status === 'creator') {
+      return true;
+    }
+    
+    // Check if they're a diamond member
+    const userId = ctx.from.id.toString();
+    const { tier } = await getUserPermissions(userId);
+    
+    if (tier === 'diamond-member') {
+      logger.info(`Diamond member ${userId} accessing admin feature`);
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    logger.error('Error checking admin/diamond status:', error);
+    return false;
+  }
+}
+
 module.exports = {
   cmdConfigWelcome,
   cmdScheduleVideoCall,
   cmdScheduleLiveStream,
   cmdBroadcast,
   cmdListScheduled,
-  checkIsAdmin
+  checkIsAdmin,
+  checkIsAdminOrDiamond
 };

@@ -59,9 +59,7 @@ async function handleNewMember(ctx) {
         try {
           const keyboard = await personalityHandler.buildPersonalityKeyboard();
           await ctx.reply(
-            `🎭 **Who Are You?**\n\n` +
-            `Choose your personality type to get a special badge! ✨\n\n` +
-            `This feature is limited to the first 1000 members.`,
+            `🎭 **Elige quién eres / Choose who you are:**`,
             {
               reply_markup: keyboard,
               parse_mode: 'Markdown'

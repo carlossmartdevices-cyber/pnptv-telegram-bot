@@ -63,10 +63,10 @@ const PLAN_CREATION_STEPS = [
   },
   {
     key: 'paymentMethod',
-    prompt: 'Choose payment method (epayco, nequi, or daimo):',
+    prompt: 'Choose payment method (manual/nequi):',
     transform: (value) => value.trim().toLowerCase(),
-    validate: (value) => ['epayco', 'nequi', 'daimo'].includes(value),
-    errorMessage: 'Payment method must be either "epayco", "nequi", or "daimo".'
+    validate: (value) => ['manual', 'nequi'].includes(value),
+    errorMessage: 'Payment method must be either "manual" or "nequi".'
   },
   {
     key: 'paymentLink',
@@ -76,19 +76,6 @@ const PLAN_CREATION_STEPS = [
     transform: (value) => value.trim(),
     validate: (value) => value.length > 0,
     errorMessage: 'Payment link is required for Nequi payment method.'
-  },
-  {
-    key: 'daimoAppId',
-    prompt: 'Enter your Daimo App ID (or type "skip" to use default from .env):',
-    optional: true,
-    conditional: (data) => data.paymentMethod === 'daimo',
-    transform: (value) => {
-      const trimmed = value.trim();
-      if (!trimmed || trimmed.toLowerCase() === 'skip') {
-        return undefined;
-      }
-      return trimmed;
-    },
   },
   {
     key: 'description',
@@ -132,8 +119,7 @@ const PLAN_CREATION_STEPS = [
       }
       throw new Error('Please reply with yes or no.');
     },
-  },
-];
+  }];
 
 const PLAN_EDIT_FIELDS = {
   name: {
@@ -251,12 +237,12 @@ const PLAN_EDIT_FIELDS = {
   paymentMethod: {
     label: 'Payment method (epayco/nequi/daimo)',
     transform: (value) => value.trim().toLowerCase(),
-    validate: (value) => ['epayco', 'nequi', 'daimo'].includes(value),
+    validate: (value) => ['manual', 'nequi'].includes(value),
     prepare: (value) => ({
       paymentMethod: value,
-      requiresManualActivation: value === 'nequi'
+      requiresManualActivation: true
     }),
-    errorMessage: 'Payment method must be either "epayco", "nequi", or "daimo".'
+    errorMessage: 'Payment method must be either "manual" or "nequi".'
   },
   paymentLink: {
     label: 'Payment link (for Nequi)',
@@ -337,9 +323,7 @@ async function showPlanDashboard(ctx, options = {}) {
   const buttons = [
     [
       { text: '➕ Create Plan', callback_data: 'plan:create' },
-      { text: '🔄 Refresh', callback_data: 'plan:refresh' },
-    ],
-  ];
+      { text: '🔄 Refresh', callback_data: 'plan:refresh' }]];
 
   plans.forEach((plan) => {
     const label = `${plan.icon || '📋'} ${plan.displayName || plan.name || 'Plan'}`;
@@ -394,7 +378,7 @@ async function showPlanDetails(ctx, planId, options = {}) {
   if (plan.duration) {
     lines.push(`Duration: ${plan.duration} days`);
   }
-  lines.push(`Payment method: ${plan.paymentMethod || 'epayco'}`);
+  lines.push(`Payment method: ${plan.paymentMethod || 'manual'}`);
   if (plan.paymentMethod === 'nequi' && plan.paymentLink) {
     lines.push(`Payment link: ${plan.paymentLink}`);
   }
@@ -747,34 +731,26 @@ async function showPlanEditMenu(ctx, planId) {
   const buttons = [
     [
       { text: 'Name', callback_data: `plan:editField:${planId}:name` },
-      { text: 'Display name', callback_data: `plan:editField:${planId}:displayName` },
-    ],
+      { text: 'Display name', callback_data: `plan:editField:${planId}:displayName` }],
     [
       { text: 'Tier', callback_data: `plan:editField:${planId}:tier` },
-      { text: 'Duration', callback_data: `plan:editField:${planId}:duration` },
-    ],
+      { text: 'Duration', callback_data: `plan:editField:${planId}:duration` }],
     [
       { text: 'Price (USD)', callback_data: `plan:editField:${planId}:price` },
-      { text: 'Price (COP)', callback_data: `plan:editField:${planId}:priceInCOP` },
-    ],
+      { text: 'Price (COP)', callback_data: `plan:editField:${planId}:priceInCOP` }],
     [
       { text: 'Currency', callback_data: `plan:editField:${planId}:currency` },
-      { text: 'Recommended', callback_data: `plan:editField:${planId}:recommended` },
-    ],
+      { text: 'Recommended', callback_data: `plan:editField:${planId}:recommended` }],
     [
       { text: 'Payment method', callback_data: `plan:editField:${planId}:paymentMethod` },
-      { text: 'Payment link', callback_data: `plan:editField:${planId}:paymentLink` },
-    ],
+      { text: 'Payment link', callback_data: `plan:editField:${planId}:paymentLink` }],
     [
       { text: 'Description', callback_data: `plan:editField:${planId}:description` },
-      { text: 'Features', callback_data: `plan:editField:${planId}:features` },
-    ],
+      { text: 'Features', callback_data: `plan:editField:${planId}:features` }],
     [
       { text: 'Icon', callback_data: `plan:editField:${planId}:icon` },
-      { text: 'Crypto bonus', callback_data: `plan:editField:${planId}:cryptoBonus` },
-    ],
-    [{ text: '⬅️ Back', callback_data: `plan:view:${planId}` }],
-  ];
+      { text: 'Crypto bonus', callback_data: `plan:editField:${planId}:cryptoBonus` }],
+    [{ text: '⬅️ Back', callback_data: `plan:view:${planId}` }]];
 
   await ctx.editMessageText('Select the field you want to modify:', {
     reply_markup: Markup.inlineKeyboard(buttons).reply_markup,
@@ -828,7 +804,7 @@ async function showPlanCreationPreview(ctx) {
   }
 
   lines.push(`Duration: ${data.duration} days`);
-  lines.push(`Payment Method: ${(data.paymentMethod || 'epayco').toUpperCase()}`);
+  lines.push(`Payment Method: ${(data.paymentMethod || 'manual').toUpperCase()}`);
 
   if (data.paymentMethod === 'nequi' && data.paymentLink) {
     lines.push(`Payment Link: ${data.paymentLink}`);
@@ -857,13 +833,10 @@ async function showPlanCreationPreview(ctx) {
 
   const keyboard = Markup.inlineKeyboard([
     [
-      { text: '✅ Create Plan', callback_data: 'plan:confirmCreate' },
-    ],
+      { text: '✅ Create Plan', callback_data: 'plan:confirmCreate' }],
     [
       { text: '✏️ Edit Details', callback_data: 'plan:editPreview' },
-      { text: '❌ Cancel', callback_data: 'plan:cancelCreate' },
-    ],
-  ]);
+      { text: '❌ Cancel', callback_data: 'plan:cancelCreate' }]]);
 
   await ctx.reply(lines.join('\n'), {
     parse_mode: 'Markdown',
@@ -896,7 +869,7 @@ async function confirmPlanCreation(ctx) {
       icon: state.data.icon || '💎',
       cryptoBonus: state.data.cryptoBonus || null,
       recommended: Boolean(state.data.recommended),
-      paymentMethod: state.data.paymentMethod || 'epayco',
+      paymentMethod: state.data.paymentMethod || 'manual',
       paymentLink: state.data.paymentLink || null,
     };
 
@@ -910,10 +883,8 @@ async function confirmPlanCreation(ctx) {
     if (newPlan.paymentMethod === 'nequi') {
       successMsg += `⚠️ Manual activation required for subscriptions.\n`;
       successMsg += `Payment link: ${newPlan.paymentLink}`;
-    } else if (newPlan.paymentMethod === 'daimo') {
-      successMsg += `✓ Automatic activation via Daimo Pay API`;
     } else {
-      successMsg += `✓ Automatic activation via ePayco API`;
+      successMsg += `⚠️ Manual activation required by admin.`;
     }
 
     await ctx.answerCbQuery('Plan created!').catch(() => {});
@@ -949,12 +920,9 @@ async function showDeleteConfirmation(ctx, planId) {
 
   const buttons = [
     [
-      { text: '✅ Yes, Delete Forever', callback_data: `plan:deleteConfirm:${planId}` },
-    ],
+      { text: '✅ Yes, Delete Forever', callback_data: `plan:deleteConfirm:${planId}` }],
     [
-      { text: '❌ No, Cancel', callback_data: `plan:deleteCancel:${planId}` },
-    ],
-  ];
+      { text: '❌ No, Cancel', callback_data: `plan:deleteCancel:${planId}` }]];
 
   const keyboard = Markup.inlineKeyboard(buttons);
 

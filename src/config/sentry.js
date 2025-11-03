@@ -56,13 +56,10 @@ function initSentry(options = {}) {
           const sensitiveKeys = [
             "TELEGRAM_TOKEN",
             "TELEGRAM_BOT_TOKEN",
-            "EPAYCO_PRIVATE_KEY",
-            "EPAYCO_P_KEY",
-            "FIREBASE_PRIVATE_KEY",
+                                    "FIREBASE_PRIVATE_KEY",
             "FIREBASE_CREDENTIALS",
             "SENTRY_DSN",
-            "DAIMO_API_KEY",
-          ];
+            ];
           sensitiveKeys.forEach((key) => {
             if (event.contexts.runtime.env[key]) {
               event.contexts.runtime.env[key] = "[FILTERED]";
@@ -82,8 +79,7 @@ function initSentry(options = {}) {
         // Network errors
         "ECONNRESET",
         "ETIMEDOUT",
-        "ENOTFOUND",
-      ],
+        "ENOTFOUND"],
     });
 
     logger.info("Sentry initialized successfully", {
