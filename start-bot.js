@@ -14,6 +14,9 @@ const bot = require('./src/bot/index');
 // Import scheduler
 const { initializeScheduler } = require('./src/services/scheduler');
 
+// Import message auto-delete cleanup
+const { clearAllTimers } = require('./src/utils/messageAutoDelete');
+
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', error);
@@ -28,12 +31,14 @@ process.on('unhandledRejection', (reason, promise) => {
 // Graceful shutdown
 process.once('SIGINT', () => {
   logger.info('Received SIGINT, stopping bot...');
+  clearAllTimers(); // Clean up message deletion timers
   bot.stop('SIGINT');
   process.exit(0);
 });
 
 process.once('SIGTERM', () => {
   logger.info('Received SIGTERM, stopping bot...');
+  clearAllTimers(); // Clean up message deletion timers
   bot.stop('SIGTERM');
   process.exit(0);
 });

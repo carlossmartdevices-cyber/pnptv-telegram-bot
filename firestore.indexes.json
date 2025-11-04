@@ -5,7 +5,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "tier",
+          "fieldPath": "membershipIsPremium",
           "order": "ASCENDING"
         },
         {
@@ -15,26 +15,16 @@
       ]
     },
     {
-      "collectionGroup": "users",
+      "collectionGroup": "scheduledBroadcasts",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "tier",
+          "fieldPath": "status",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "tierUpdatedAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "users",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
+          "fieldPath": "scheduledTime",
+          "order": "ASCENDING"
         }
       ]
     }

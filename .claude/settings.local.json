@@ -31,7 +31,18 @@
       "Bash(pm2 save:*)",
       "Bash(NODE_ENV=production pm2 start:*)",
       "Bash(pm2 flush:*)",
-      "Bash(WEBHOOK_URL=https://pnptv.app BOT_URL=https://pnptv.app pm2 start:*)"
+      "Bash(WEBHOOK_URL=https://pnptv.app BOT_URL=https://pnptv.app pm2 start:*)",
+      "Bash(git push:*)",
+      "Bash(git config:*)",
+      "Bash(tee:*)",
+      "Bash(timeout 300 node:*)",
+      "Bash(timeout 350 node:*)",
+      "Bash(awk:*)",
+      "Bash(pm2 status:*)",
+      "Bash(npm install:*)",
+      "Bash(curl:*)",
+      "Bash(cd /root/bot 1/SantinoBot)",
+      "Bash(cd:*)"
     ],
     "deny": [],
     "ask": []

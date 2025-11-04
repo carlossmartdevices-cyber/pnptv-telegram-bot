@@ -26,6 +26,7 @@ const session = createFirestoreSession({
 const rateLimitMiddleware = require("./middleware/rateLimit");
 const errorHandler = require("./middleware/errorHandler");
 const privateResponseMiddleware = require("./middleware/privateResponseMiddleware");
+const autoDeleteMiddleware = require("./middleware/autoDeleteMiddleware");
 
 // Start session cleanup service
 const { sessionCleanup } = require("../utils/sessionCleanup");
@@ -48,17 +49,22 @@ const {
   handlePhotoMessage,
   showSettings,
   toggleAdsOptOut,
+  showLanguageSelection,
+  setLanguage,
 } = require("./handlers/profile");
 const subscribeHandler = require("./handlers/subscribe");
 
-// Community Features (Integrated from SantinoBot)
+// Community Features
 const {
   handleNearby,
   handleLibrary,
   handleTopTracks,
   handleScheduleCall,
   handleScheduleStream,
-  handleUpcoming
+  handleUpcoming,
+  handlePlaylist,
+  handleAddTrack,
+  handleDeleteEvent
 } = require("./handlers/community");
 const { handleNewMember, handleMediaMessage } = require("./helpers/groupManagement");
 const {
@@ -92,6 +98,7 @@ bot.use(session); // Firestore session middleware
 
 // Apply middleware
 bot.use(rateLimitMiddleware());
+bot.use(autoDeleteMiddleware()); // Auto-delete bot messages in groups after 5 minutes
 bot.use(privateResponseMiddleware()); // Redirect group responses to private chat
 
 // Middleware to set Sentry user context
@@ -136,12 +143,15 @@ bot.command("plans", adminMiddleware(), async (ctx) => {
 bot.command("aichat", startAIChat);
 bot.command("endchat", endAIChat);
 
-// ===== COMMUNITY FEATURES (Integrated from SantinoBot) =====
+// ===== COMMUNITY FEATURES =====
 bot.command("library", handleLibrary);
 bot.command("toptracks", handleTopTracks);
 bot.command("schedulecall", handleScheduleCall);
 bot.command("schedulestream", handleScheduleStream);
 bot.command("upcoming", handleUpcoming);
+bot.command("playlist", handlePlaylist);
+bot.command("addtrack", handleAddTrack);
+bot.command("deleteevent", handleDeleteEvent);
 
 // ===== ONBOARDING FLOW =====
 // Handle both language callback formats: lang_xx and language_xx
@@ -274,13 +284,78 @@ bot.action("edit_photo", handleEditPhoto);
 // Profile settings
 bot.action("profile_settings", showSettings);
 bot.action("settings_toggle_ads", toggleAdsOptOut);
+bot.action("settings_change_language", showLanguageSelection);
+bot.action("settings_set_lang_en", (ctx) => setLanguage(ctx, "en"));
+bot.action("settings_set_lang_es", (ctx) => setLanguage(ctx, "es"));
 bot.action("settings_back", viewProfile);
 
 // ===== ADMIN CALLBACKS =====
 
 bot.action(/^plan:/, handlePlanCallback);
 bot.action(/^admin_/, handleAdminCallback);
-bot.action(/^bcast_/, handleAdminCallback);  // Broadcast callbacks
+// Broadcast handlers
+bot.action("simple_broadcast_confirm", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleAdminCallback(ctx);
+});
+
+bot.action("broadcast_add_media", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleAdminCallback(ctx);
+});
+
+bot.action("broadcast_text_only", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleAdminCallback(ctx);
+});
+
+// New broadcast language callbacks (route to admin handler)
+bot.action("broadcast_multi_language", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleAdminCallback(ctx);
+});
+
+bot.action("broadcast_single_message", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleAdminCallback(ctx);
+});
+
+bot.action("broadcast_multi_text_only", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleAdminCallback(ctx);
+});
+
+bot.action("broadcast_formatting_help", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleAdminCallback(ctx);
+});
+
+// ===== BROADCAST SEGMENTATION CALLBACKS =====
+
+bot.action("broadcast_select_segment", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleAdminCallback(ctx);
+});
+
+bot.action("broadcast_all_users", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleAdminCallback(ctx);
+});
+
+bot.action("broadcast_segment_more", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleAdminCallback(ctx);
+});
+
+bot.action("broadcast_back_to_start", async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleAdminCallback(ctx);
+});
+
+bot.action(/^broadcast_segment_/, async (ctx) => {
+  await ctx.answerCbQuery();
+  await handleAdminCallback(ctx);
+});
 
 // ===== MAP CALLBACKS =====
 
@@ -393,7 +468,7 @@ bot.action("back_to_main", async (ctx) => {
 // ===== MEDIA MESSAGE HANDLERS =====
 bot.on("photo", async (ctx, next) => {
   // Check if admin is uploading broadcast media
-  if (ctx.session.waitingFor === "broadcast_media" && isAdmin(ctx.from.id)) {
+  if ((ctx.session.waitingFor === "broadcast_media" || ctx.session.waitingFor === "broadcast_text") && isAdmin(ctx.from.id)) {
     const { handleBroadcastMedia } = require("./handlers/admin");
     await handleBroadcastMedia(ctx, "photo");
   } else {
@@ -403,7 +478,7 @@ bot.on("photo", async (ctx, next) => {
 
 bot.on("video", async (ctx) => {
   // Check if admin is uploading broadcast media
-  if (ctx.session.waitingFor === "broadcast_media" && isAdmin(ctx.from.id)) {
+  if ((ctx.session.waitingFor === "broadcast_media" || ctx.session.waitingFor === "broadcast_text") && isAdmin(ctx.from.id)) {
     const { handleBroadcastMedia } = require("./handlers/admin");
     await handleBroadcastMedia(ctx, "video");
   }
@@ -411,9 +486,33 @@ bot.on("video", async (ctx) => {
 
 bot.on("document", async (ctx) => {
   // Check if admin is uploading broadcast media
-  if (ctx.session.waitingFor === "broadcast_media" && isAdmin(ctx.from.id)) {
+  if ((ctx.session.waitingFor === "broadcast_media" || ctx.session.waitingFor === "broadcast_text") && isAdmin(ctx.from.id)) {
     const { handleBroadcastMedia } = require("./handlers/admin");
     await handleBroadcastMedia(ctx, "document");
+  }
+});
+
+bot.on("audio", async (ctx) => {
+  // Check if admin is uploading broadcast media
+  if ((ctx.session.waitingFor === "broadcast_media" || ctx.session.waitingFor === "broadcast_text") && isAdmin(ctx.from.id)) {
+    const { handleBroadcastMedia } = require("./handlers/admin");
+    await handleBroadcastMedia(ctx, "audio");
+  }
+});
+
+bot.on("voice", async (ctx) => {
+  // Check if admin is uploading broadcast media
+  if ((ctx.session.waitingFor === "broadcast_media" || ctx.session.waitingFor === "broadcast_text") && isAdmin(ctx.from.id)) {
+    const { handleBroadcastMedia } = require("./handlers/admin");
+    await handleBroadcastMedia(ctx, "voice");
+  }
+});
+
+bot.on("animation", async (ctx) => {
+  // Check if admin is uploading broadcast media
+  if ((ctx.session.waitingFor === "broadcast_media" || ctx.session.waitingFor === "broadcast_text") && isAdmin(ctx.from.id)) {
+    const { handleBroadcastMedia } = require("./handlers/admin");
+    await handleBroadcastMedia(ctx, "animation");
   }
 });
 bot.on("text", async (ctx) => {
@@ -490,10 +589,29 @@ bot.on("text", async (ctx) => {
       if (isAdmin(ctx.from.id)) {
         await sendBroadcast(ctx, ctx.message.text);
       }
+    } else if (ctx.session.waitingFor === "broadcast_message_en") {
+      // Admin broadcast message - English text for multi-language
+      if (isAdmin(ctx.from.id)) {
+        const { handleBroadcastEnglishMessage } = require("./handlers/admin");
+        await handleBroadcastEnglishMessage(ctx, ctx.message.text);
+      }
+    } else if (ctx.session.waitingFor === "broadcast_message_es") {
+      // Admin broadcast message - Spanish text for multi-language
+      if (isAdmin(ctx.from.id)) {
+        const { handleBroadcastSpanishMessage } = require("./handlers/admin");
+        await handleBroadcastSpanishMessage(ctx, ctx.message.text);
+      }
     } else if (ctx.session.waitingFor === "broadcast_text") {
       // Admin broadcast message - step 4 text (new wizard)
       if (isAdmin(ctx.from.id)) {
-        await sendBroadcast(ctx, ctx.message.text);
+        if (ctx.session.broadcastWizard) {
+          // Wizard mode - handle step 4
+          const { handleBroadcastWizardText } = require("./handlers/admin");
+          await handleBroadcastWizardText(ctx, ctx.message.text);
+        } else {
+          // Legacy mode
+          await sendBroadcast(ctx, ctx.message.text);
+        }
       }
     } else if (ctx.session.waitingFor === "broadcast_buttons") {
       // Admin broadcast buttons - step 5
@@ -613,7 +731,7 @@ bot.on("text", async (ctx) => {
 
 bot.on("location", handleLocation);
 
-// ===== GROUP MANAGEMENT (Integrated from SantinoBot) =====
+// ===== GROUP MANAGEMENT =====
 // Handle new members joining groups
 bot.on('new_chat_members', handleNewMember);
 

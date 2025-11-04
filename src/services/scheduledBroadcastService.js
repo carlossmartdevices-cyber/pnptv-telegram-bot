@@ -1,6 +1,7 @@
 const { db } = require("../config/firebase");
 const logger = require("../utils/logger");
 const cron = require("node-cron");
+const admin = require("firebase-admin");
 
 /**
  * Scheduled Broadcast Service
@@ -68,8 +69,29 @@ async function getScheduledBroadcasts() {
 
     return broadcasts;
   } catch (error) {
-    logger.error("Error getting scheduled broadcasts:", error);
-    return [];
+    logger.error("Error getting scheduled broadcasts with complex query, trying simple query:", error);
+    
+    // Fallback to simple query without orderBy if complex query fails
+    try {
+      const snapshot = await db
+        .collection(COLLECTION)
+        .where("status", "==", "pending")
+        .get();
+
+      const broadcasts = [];
+      snapshot.forEach((doc) => {
+        broadcasts.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+
+      // Sort in memory as fallback
+      return broadcasts.sort((a, b) => new Date(a.scheduledTime) - new Date(b.scheduledTime));
+    } catch (fallbackError) {
+      logger.error("Error with fallback query:", fallbackError);
+      return [];
+    }
   }
 }
 
@@ -118,7 +140,11 @@ async function createScheduledBroadcast(broadcastData) {
     }
 
     // Validate scheduled time is in future
-    if (broadcastData.scheduledTime < new Date()) {
+    const scheduledTimestamp = broadcastData.scheduledTime instanceof admin.firestore.Timestamp 
+      ? broadcastData.scheduledTime 
+      : admin.firestore.Timestamp.fromDate(broadcastData.scheduledTime);
+    
+    if (scheduledTimestamp.toDate() < new Date()) {
       logger.warn("Cannot schedule broadcast for past time");
       return null;
     }
@@ -126,8 +152,8 @@ async function createScheduledBroadcast(broadcastData) {
     const broadcast = {
       ...broadcastData,
       status: "pending",
-      createdAt: new Date(),
-      scheduledTime: broadcastData.scheduledTime,
+      createdAt: admin.firestore.Timestamp.now(),
+      scheduledTime: scheduledTimestamp,
       sentAt: null,
       statistics: {
         sent: 0,
@@ -167,7 +193,7 @@ async function cancelScheduledBroadcast(broadcastId) {
 
     await db.collection(COLLECTION).doc(broadcastId).update({
       status: "cancelled",
-      cancelledAt: new Date(),
+      cancelledAt: admin.firestore.Timestamp.now(),
     });
 
     logger.info(`Scheduled broadcast cancelled: ${broadcastId}`);

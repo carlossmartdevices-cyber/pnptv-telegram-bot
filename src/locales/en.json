@@ -1,5 +1,5 @@
 {
-  "emailPrompt": "📧 **Join Our Community**\n\nEnter your email to become part of PNPtv! Telegram Community and get access to:\n\n✨ Free channel access\n🌍 Nearby members feature (top 3 visible)\n🔍 3 searches weekly\n\nYour email:",
+  "emailPrompt": "📧 **Join Our Community**\n\nEnter your email to become part of PNPtv! Telegram Community and get access to:\n\n✨ Share photos & videos in community group\n🌍 Nearby members feature (top 3 visible)\n🔍 3 searches weekly\n\nYour email:",
   "emailInvalid": "❌ Please enter a valid email address",
   "emailConfirmed": "✅ Email confirmed! Welcome to PNPtv Community!",
   "welcome": "💫 **Welcome to PNPtv!**\n\nBienvenidos a PNPtv!",
@@ -115,5 +115,7 @@
   "aiChatError": "❌ Sorry, something went wrong. Let's try again, or type /endchat to exit.",
   "aiChatEnded": "✅ Chat ended. Returning to main menu...",
   "aiChatNoAPI": "🤖 AI support is currently unavailable. Please reach out to support@pnptv.app for assistance.",
-  "aiChatRateLimit": "💫 Easy, love — let's take a breath. Give me just a moment before your next message."
+  "aiChatRateLimit": "💫 Easy, love — let's take a breath. Give me just a moment before your next message.",
+  "groupWelcomeFreeMember": "👋 Welcome @{username}!\n\n🎉 Welcome to PNPtv Community!\n\n🆓 **Free Member**\n• Share photos and videos ✅\n• Access to community content\n• Join the conversation!\n\n💎 Upgrade to premium for exclusive Santino content and VIP features!\n\n📌 Check out our guide: https://pnptv.app/guide",
+  "groupWelcomePremiumMember": "👋 Welcome @{username}!\n\n🎉 Welcome to PNPtv Community!\n\n💎 **{tier} Member**\n• Full media access\n• Premium content unlocked\n• Exclusive features\n• Status: Active ✅\n\n🔥 You're all set — enjoy the ride!\n\n📌 Check out our guide: https://pnptv.app/guide"
 }

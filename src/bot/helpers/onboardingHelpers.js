@@ -107,13 +107,34 @@ async function handleEmailSubmission(ctx) {
     // Send channel invite if successful
     if (inviteLink) {
       await ctx.reply(
-        `🎉 *Welcome to PNPtv Community!*\n\nHere's your exclusive invite to our free channel. This link can only be used once:\n\n${inviteLink}`,
-        { parse_mode: "Markdown" }
+        `🎉 Welcome to PNPtv Community!\n\nHere's your exclusive invite to our free channel. This link can only be used once:\n\n${inviteLink}`,
+        { parse_mode: "HTML" }
       );
+      
+      // Send group invite link as well
+      const freeGroupId = process.env.FREE_GROUP_ID || "-1003291737499";
+      try {
+        const groupInvite = await ctx.telegram.createChatInviteLink(freeGroupId, {
+          expire_date: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // Expires in 7 days
+          member_limit: 1
+        });
+        
+        await ctx.reply(
+          `👥 Join our community group for discussions and updates:\n\n${groupInvite.invite_link}`,
+          { parse_mode: "HTML" }
+        );
+      } catch (error) {
+        logger.warn("Failed to create group invite link:", error);
+        // Fallback to generic link if invite creation fails
+        await ctx.reply(
+          `👥 Join our community group for discussions and updates:\n\nhttps://t.me/+O0f_5ngX0uQ4ODVh`,
+          { parse_mode: "HTML" }
+        );
+      }
     } else {
       await ctx.reply(
         `⚠️ We're having trouble generating your channel invite. You'll receive it shortly at support@pnptv.app`,
-        { parse_mode: "Markdown" }
+        { parse_mode: "HTML" }
       );
     }
 

@@ -1,0 +1,163 @@
+
+═══════════════════════════════════════════════════════════════
+                    📱 PNPtv BOT - USER MANUAL
+═══════════════════════════════════════════════════════════════
+
+🇺🇸 ENGLISH VERSION
+
+─────────────────────────────────────────────────────────────
+
+🚀 BASIC COMMANDS
+
+/start          → Start the bot / Main menu
+/help           → Show this help
+/profile        → View/edit your profile
+/subscribe      → View membership plans
+/aichat         → 24/7 AI support
+
+─────────────────────────────────────────────────────────────
+
+🌍 DISCOVERY & COMMUNITY
+
+/nearby         → Find members near you
+                  • Free: 3 searches/week, see 3 members
+                  • Premium: Unlimited, see ALL members
+
+/map            → Interactive map view
+
+─────────────────────────────────────────────────────────────
+
+🎵 MUSIC & ENTERTAINMENT
+
+/toptracks      → Most played tracks (Free + Premium)
+/library        → Music library (Premium only)
+/upcoming       → Scheduled events (Free + Premium)
+
+─────────────────────────────────────────────────────────────
+
+📹 LIVE FEATURES (Premium)
+
+/schedulecall   → Schedule video calls
+/schedulestream → Schedule live streams
+/live           → Access live content
+
+─────────────────────────────────────────────────────────────
+
+💎 MEMBERSHIP LEVELS
+
+🆓 FREE TIER:
+   • Basic profile access
+   • Top tracks
+   • 3 nearby searches per week
+   • See 3 nearby members
+   • View events
+   • AI support
+
+💎 PREMIUM TIER ($):
+   ✅ Everything in Free PLUS:
+   • Exclusive premium channel
+   • Full music library
+   • Unlimited nearby searches
+   • See ALL nearby members
+   • Video calls
+   • Live streaming
+   • Priority support
+   • Exclusive content
+
+   Upgrade now: /subscribe
+
+─────────────────────────────────────────────────────────────
+
+🆘 SUPPORT
+
+AI Chat:        /aichat
+Email:          support@pnptv.app
+Website:        https://pnptv.app
+
+═══════════════════════════════════════════════════════════════
+
+
+🇪🇸 VERSIÓN EN ESPAÑOL
+
+─────────────────────────────────────────────────────────────
+
+🚀 COMANDOS BÁSICOS
+
+/start          → Iniciar el bot / Menú principal
+/help           → Mostrar esta ayuda
+/profile        → Ver/editar tu perfil
+/subscribe      → Ver planes de membresía
+/aichat         → Soporte IA 24/7
+
+─────────────────────────────────────────────────────────────
+
+🌍 DESCUBRIMIENTO Y COMUNIDAD
+
+/nearby         → Encuentra miembros cerca de ti
+                  • Gratis: 3 búsquedas/semana, ve 3 miembros
+                  • Premium: Ilimitado, ve TODOS los miembros
+
+/map            → Vista de mapa interactivo
+
+─────────────────────────────────────────────────────────────
+
+🎵 MÚSICA Y ENTRETENIMIENTO
+
+/toptracks      → Pistas más reproducidas (Gratis + Premium)
+/library        → Biblioteca musical (Solo Premium)
+/upcoming       → Eventos programados (Gratis + Premium)
+
+─────────────────────────────────────────────────────────────
+
+📹 FUNCIONES EN VIVO (Premium)
+
+/schedulecall   → Programar videollamadas
+/schedulestream → Programar transmisiones en vivo
+/live           → Acceder a contenido en vivo
+
+─────────────────────────────────────────────────────────────
+
+💎 NIVELES DE MEMBRESÍA
+
+🆓 NIVEL GRATUITO:
+   • Acceso básico al perfil
+   • Pistas top
+   • 3 búsquedas cercanas por semana
+   • Ver 3 miembros cercanos
+   • Ver eventos
+   • Soporte IA
+
+💎 NIVEL PREMIUM ($):
+   ✅ Todo lo gratuito MÁS:
+   • Canal premium exclusivo
+   • Biblioteca musical completa
+   • Búsquedas cercanas ilimitadas
+   • Ver TODOS los miembros cercanos
+   • Videollamadas
+   • Transmisión en vivo
+   • Soporte prioritario
+   • Contenido exclusivo
+
+   Actualiza ahora: /subscribe
+
+─────────────────────────────────────────────────────────────
+
+🆘 SOPORTE
+
+Chat IA:        /aichat
+Email:          support@pnptv.app
+Sitio Web:      https://pnptv.app
+
+═══════════════════════════════════════════════════════════════
+
+💡 CONSEJOS RÁPIDOS / QUICK TIPS
+
+🇺🇸 EN: Complete profile → Share location → Use /nearby
+🇪🇸 ES: Completa perfil → Comparte ubicación → Usa /nearby
+
+─────────────────────────────────────────────────────────────
+
+Version 2.0 | November 2025 | PNPtv Bot
+
+═══════════════════════════════════════════════════════════════
+

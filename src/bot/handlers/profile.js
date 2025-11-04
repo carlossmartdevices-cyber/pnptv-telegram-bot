@@ -361,15 +361,23 @@ async function showSettings(ctx) {
 
     const userData = doc.data() || {};
     const adsOptOut = userData.adsOptOut || false;
+    const currentLanguage = userData.language || lang || "en";
+    const languageDisplay = currentLanguage === "es" ? "🇪🇸 Español" : "🇺🇸 English";
 
     const message = lang === "es"
-      ? `⚙️ **Configuración**\n\n📢 Mensajes publicitarios: ${adsOptOut ? "❌ Desactivados" : "✅ Activados"}\n\n${adsOptOut ? "No recibirás mensajes de difusión del administrador." : "Recibirás mensajes de difusión del administrador."}`
-      : `⚙️ **Settings**\n\n📢 Advertisement messages: ${adsOptOut ? "❌ Disabled" : "✅ Enabled"}\n\n${adsOptOut ? "You will not receive broadcast messages from admins." : "You will receive broadcast messages from admins."}`;
+      ? `⚙️ **Configuración**\n\n🌐 Idioma: ${languageDisplay}\n\n📢 Mensajes publicitarios: ${adsOptOut ? "❌ Desactivados" : "✅ Activados"}\n\n${adsOptOut ? "No recibirás mensajes de difusión del administrador." : "Recibirás mensajes de difusión del administrador."}`
+      : `⚙️ **Settings**\n\n🌐 Language: ${languageDisplay}\n\n📢 Advertisement messages: ${adsOptOut ? "❌ Disabled" : "✅ Enabled"}\n\n${adsOptOut ? "You will not receive broadcast messages from admins." : "You will receive broadcast messages from admins."}`;
 
     await ctx.editMessageText(message, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "🌐 Cambiar idioma" : "🌐 Change language",
+              callback_data: "settings_change_language",
+            },
+          ],
           [
             {
               text: adsOptOut
@@ -435,6 +443,80 @@ async function toggleAdsOptOut(ctx) {
   }
 }
 
+/**
+ * Show language selection menu
+ */
+async function showLanguageSelection(ctx) {
+  const userId = ctx.from.id.toString();
+  const lang = ctx.session.language || "en";
+
+  try {
+    const message = lang === "es"
+      ? "🌐 **Cambiar Idioma**\n\nSelecciona tu idioma preferido:"
+      : "🌐 **Change Language**\n\nSelect your preferred language:";
+
+    await ctx.editMessageText(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "🇺🇸 English",
+              callback_data: "settings_set_lang_en",
+            },
+            {
+              text: "🇪🇸 Español",
+              callback_data: "settings_set_lang_es",
+            },
+          ],
+          [
+            {
+              text: lang === "es" ? "« Volver" : "« Back",
+              callback_data: "profile_settings",
+            },
+          ],
+        ],
+      },
+    });
+
+    logger.info(`User ${userId} opened language selection`);
+  } catch (error) {
+    logger.error("Error showing language selection:", error);
+    await ctx.reply(t("error", lang));
+  }
+}
+
+/**
+ * Set user language
+ */
+async function setLanguage(ctx, newLang) {
+  const userId = ctx.from.id.toString();
+
+  try {
+    // Update in database
+    await db.collection("users").doc(userId).update({
+      language: newLang,
+    });
+
+    // Update session
+    ctx.session.language = newLang;
+
+    const message = newLang === "es"
+      ? "✅ Idioma cambiado a Español"
+      : "✅ Language changed to English";
+
+    await ctx.answerCbQuery(message);
+
+    // Refresh settings view with new language
+    await showSettings(ctx);
+
+    logger.info(`User ${userId} changed language to ${newLang}`);
+  } catch (error) {
+    logger.error("Error setting language:", error);
+    await ctx.answerCbQuery("Error changing language");
+  }
+}
+
 module.exports = {
   viewProfile,
   handleEditPhoto,
@@ -442,4 +524,6 @@ module.exports = {
   deletePhoto,
   showSettings,
   toggleAdsOptOut,
+  showLanguageSelection,
+  setLanguage,
 };

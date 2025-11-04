@@ -176,7 +176,12 @@ router.post('/payment/completed', async (req, res) => {
     // Get bot instance
     const bot = require('../index');
     
-    const result = await activateMembership(userId, plan.tier, `${paymentMethod}_app`, durationDays, bot);
+    const result = await activateMembership(userId, plan.tier, `${paymentMethod}_app`, durationDays, bot, {
+      paymentAmount: amount,
+      paymentCurrency: paymentMethod === 'daimo' ? 'USDC' : 'COP',
+      paymentMethod: paymentMethod === 'daimo' ? 'Daimo USDC' : 'Bank Transfer',
+      reference: reference
+    });
 
     // Store payment metadata
     const now = new Date();

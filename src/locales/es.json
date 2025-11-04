@@ -1,5 +1,5 @@
 {
-  "emailPrompt": "📧 **Únete a Nuestra Comunidad**\n\nIngresa tu email para ser parte de la Comunidad PNPtv! en Telegram y obtén acceso a:\n\n✨ Canal gratuito\n🌍 Función de miembros cercanos (3 visibles)\n🔍 3 búsquedas semanales\n\nTu email:",
+  "emailPrompt": "📧 **Únete a Nuestra Comunidad**\n\nIngresa tu email para ser parte de la Comunidad PNPtv! en Telegram y obtén acceso a:\n\n✨ Comparte fotos y videos en el grupo comunitario\n🌍 Función de miembros cercanos (3 visibles)\n🔍 3 búsquedas semanales\n\nTu email:",
   "emailInvalid": "❌ Por favor ingresa un email válido",
   "emailConfirmed": "✅ ¡Email confirmado! ¡Bienvenido a la Comunidad PNPtv!",
   "welcome": "💫 **¡Bienvenidos a PNPtv!**\n\n¡Bienvenidos a PNPtv!",
@@ -115,5 +115,7 @@
   "aiChatError": "❌ Lo siento, algo salió mal. Intentemos de nuevo, o escribe /endchat para salir.",
   "aiChatEnded": "✅ Chat finalizado. Volviendo al menú principal...",
   "aiChatNoAPI": "🤖 El soporte de IA no está disponible en este momento. Por favor escribe a support@pnptv.app para asistencia.",
-  "aiChatRateLimit": "💫 Tranquilo, amor — respiremos un momento. Dame solo un instante antes de tu próximo mensaje."
+  "aiChatRateLimit": "💫 Tranquilo, amor — respiremos un momento. Dame solo un instante antes de tu próximo mensaje.",
+  "groupWelcomeFreeMember": "👋 ¡Bienvenido @{username}!\n\n🎉 ¡Bienvenido a la Comunidad PNPtv!\n\n🆓 **Miembro Gratuito**\n• Comparte fotos y videos ✅\n• Acceso al contenido de la comunidad\n• ¡Únete a la conversación!\n\n💎 ¡Mejora a premium para contenido exclusivo de Santino y funciones VIP!\n\n📌 Consulta nuestra guía: https://pnptv.app/guide",
+  "groupWelcomePremiumMember": "👋 ¡Bienvenido @{username}!\n\n🎉 ¡Bienvenido a la Comunidad PNPtv!\n\n💎 **Miembro {tier}**\n• Acceso completo a medios\n• Contenido premium desbloqueado\n• Características exclusivas\n• Estado: Activo ✅\n\n🔥 ¡Todo listo — ¡que disfrutes!\n\n📌 Consulta nuestra guía: https://pnptv.app/guide"
 }

@@ -1,0 +1,576 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+✅ Environment loaded from /root/bot 1/.env
+✅ Environment variables validated successfully
+✓ Sentry initialized (environment: auto)
+Iniciando Firebase...
+FIREBASE_CREDENTIALS length: 2327 chars
+First 200 chars: {"type":"service_account","project_id":"pnptv-b8af8","private_key_id":"1ccc8fb4b1ec59dffbbc53d0c50cea631c4e40ce","private_key":"-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgE...
+✅ Using Firebase credentials from environment variable
+   Project ID: pnptv-b8af8
+   Client Email: firebase-adminsdk-fbsvc@pnptv-b8af8.iam.gserviceaccount.com
+Firebase ha sido inicializado correctamente.
+
+=== Sending Premium Channel Invite Links (HTML Format) ===
+
+Found 82 Premium members
+
+⏳ Using 3-second delay between requests
+
+--- User 1071160931 (@Fedorius) ---
+✓ Link generated
+✅ Sent
+
+--- User 1090072883 (Growl Time) ---
+✓ Link generated
+✅ Sent
+
+--- User 1100099683 (Joseph) ---
+✓ Link generated
+✅ Sent
+
+--- User 1234213234 (Ichiro Elias) ---
+✓ Link generated
+✅ Sent
+
+--- User 1268661883 (LP) ---
+✓ Link generated
+✅ Sent
+
+--- User 1368640424 (Juan 🇨🇴) ---
+✓ Link generated
+✅ Sent
+
+--- User 1475485409 (Jo) ---
+⏳ Rate limited, waiting 17s...
+❌ Retry failed
+--- User 1555839860 (JD) ---
+✓ Link generated
+✅ Sent
+
+--- User 1684976172 (JuanMa Ruiz) ---
+✓ Link generated
+✅ Sent
+
+--- User 1771672066 (Carlos) ---
+✓ Link generated
+✅ Sent
+
+--- User 1853540313 (A) ---
+✓ Link generated
+✅ Sent
+
+--- User 2077767307 (brix_33) ---
+✓ Link generated
+✅ Sent
+
+--- User 2120179967 (Tat) ---
+✓ Link generated
+✅ Sent
+
+--- User 5034174384 (T) ---
+✓ Link generated
+✅ Sent
+
+--- User 521921359 (Max) ---
+✓ Link generated
+✅ Sent
+
+--- User 5272134668 (CKCK) ---
+✓ Link generated
+✅ Sent
+
+--- User 5346270416 (XXLatinBoy) ---
+✓ Link generated
+✅ Sent
+
+--- User 5373548942 (Naughty) ---
+⏳ Rate limited, waiting 30s...
+❌ Retry failed
+--- User 540482380 (Yuekiu) ---
+✓ Link generated
+✅ Sent
+
+--- User 5463213541 (José R) ---
+✓ Link generated
+✅ Sent
+
+--- User 5475643506 (Corey) ---
+✓ Link generated
+✅ Sent
+
+--- User 5519461158 (Shima) ---
+✓ Link generated
+✅ Sent
+
+--- User 5556393716 (stl) ---
+✓ Link generated
+✅ Sent
+
+--- User 5575449547 (C) ---
+✓ Link generated
+✅ Sent
+
+--- User 579971848 (Deku) ---
+✓ Link generated
+✅ Sent
+
+--- User 5830119032 (Je2786) ---
+✓ Link generated
+✅ Sent
+
+--- User 5836948764 (edward) ---
+✓ Link generated
+✅ Sent
+
+--- User 5849505145 (FireFX) ---
+✓ Link generated
+✅ Sent
+
+--- User 5869566424 (Tony) ---
+⏳ Rate limited, waiting 30s...
+❌ Retry failed
+--- User 5990112447 (12216) ---
+✓ Link generated
+✅ Sent
+
+--- User 6025431055 (aarolu10) ---
+✓ Link generated
+✅ Sent
+
+--- User 6091427813 (Raccone3) ---
+✓ Link generated
+✅ Sent
+
+--- User 6218516061 (brkfre) ---
+✓ Link generated
+✅ Sent
+
+--- User 6381844084 (mafercm) ---
+✓ Link generated
+✅ Sent
+
+--- User 6426453759 (Mr. R.) ---
+✓ Link generated
+✅ Sent
+
+--- User 6496516609 (PartyTime!) ---
+✓ Link generated
+✅ Sent
+
+--- User 6512908422 (Fratboy101) ---
+✓ Link generated
+✅ Sent
+
+--- User 6557776792 (José) ---
+✓ Link generated
+✅ Sent
+
+--- User 6785135243 (Cesar) ---
+✓ Link generated
+✅ Sent
+
+--- User 6798050167 (Simon) ---
+⏳ Rate limited, waiting 31s...
+❌ Retry failed
+--- User 6890340367 (Local) ---
+✓ Link generated
+✅ Sent
+
+--- User 6965613313 (Thesedarkhours) ---
+✓ Link generated
+✅ Sent
+
+--- User 6984257203 (Nico) ---
+✓ Link generated
+✅ Sent
+
+--- User 7004233882 (g) ---
+✓ Link generated
+✅ Sent
+
+--- User 7018573427 (Juicy Pork Bunz) ---
+✓ Link generated
+⚠️ Skipped (unavailable)
+
+--- User 7071683657 (lukel02) ---
+✓ Link generated
+✅ Sent
+
+--- User 7088487175 (Twink) ---
+✓ Link generated
+✅ Sent
+
+--- User 7105094968 (Spun⬇️Sub) ---
+✓ Link generated
+✅ Sent
+
+--- User 7166356500 (D) ---
+✓ Link generated
+✅ Sent
+
+--- User 7178374095 (German) ---
+✓ Link generated
+✅ Sent
+
+--- User 7216485226 (Lygnios) ---
+⏳ Rate limited, waiting 30s...
+❌ Retry failed
+--- User 7246621722 (PNP) ---
+✓ Link generated
+✅ Sent
+
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+✅ Environment loaded from /root/bot 1/.env
+✅ Environment variables validated successfully
+✓ Sentry initialized (environment: auto)
+Iniciando Firebase...
+FIREBASE_CREDENTIALS length: 2327 chars
+First 200 chars: {"type":"service_account","project_id":"pnptv-b8af8","private_key_id":"1ccc8fb4b1ec59dffbbc53d0c50cea631c4e40ce","private_key":"-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgE...
+✅ Using Firebase credentials from environment variable
+   Project ID: pnptv-b8af8
+   Client Email: firebase-adminsdk-fbsvc@pnptv-b8af8.iam.gserviceaccount.com
+Firebase ha sido inicializado correctamente.
+
+=== Sending Premium Channel Invite Links (HTML Format) ===
+
+Found 82 Premium members
+
+⏳ Using 3-second delay between requests
+
+--- User 1071160931 (@Fedorius) ---
+✓ Link generated
+✅ Sent
+
+--- User 1090072883 (Growl Time) ---
+✓ Link generated
+✅ Sent
+
+--- User 1100099683 (Joseph) ---
+✓ Link generated
+✅ Sent
+
+--- User 1234213234 (Ichiro Elias) ---
+✓ Link generated
+✅ Sent
+
+--- User 1268661883 (LP) ---
+✓ Link generated
+✅ Sent
+
+--- User 1368640424 (Juan 🇨🇴) ---
+⏳ Rate limited, waiting 20s...
+❌ Retry failed
+--- User 1475485409 (Jo) ---
+✓ Link generated
+✅ Sent
+
+--- User 1555839860 (JD) ---
+✓ Link generated
+✅ Sent
+
+--- User 1684976172 (JuanMa Ruiz) ---
+✓ Link generated
+✅ Sent
+
+--- User 1771672066 (Carlos) ---
+✓ Link generated
+✅ Sent
+
+--- User 1853540313 (A) ---
+✓ Link generated
+✅ Sent
+
+--- User 2077767307 (brix_33) ---
+✓ Link generated
+✅ Sent
+
+--- User 2120179967 (Tat) ---
+✓ Link generated
+✅ Sent
+
+--- User 5034174384 (T) ---
+✓ Link generated
+✅ Sent
+
+--- User 521921359 (Max) ---
+✓ Link generated
+✅ Sent
+
+--- User 5272134668 (CKCK) ---
+✓ Link generated
+✅ Sent
+
+--- User 5346270416 (XXLatinBoy) ---
+✓ Link generated
+✅ Sent
+
+--- User 5373548942 (Naughty) ---
+✓ Link generated
+✅ Sent
+
+--- User 540482380 (Yuekiu) ---
+✓ Link generated
+✅ Sent
+
+--- User 5463213541 (José R) ---
+✓ Link generated
+✅ Sent
+
+--- User 5475643506 (Corey) ---
+✓ Link generated
+✅ Sent
+
+--- User 5519461158 (Shima) ---
+✓ Link generated
+✅ Sent
+
+--- User 5556393716 (stl) ---
+✓ Link generated
+✅ Sent
+
+--- User 5575449547 (C) ---
+✓ Link generated
+✅ Sent
+
+--- User 579971848 (Deku) ---
+✓ Link generated
+✅ Sent
+
+--- User 5830119032 (Je2786) ---
+✓ Link generated
+✅ Sent
+
+--- User 5836948764 (edward) ---
+✓ Link generated
+✅ Sent
+
+--- User 5849505145 (FireFX) ---
+✓ Link generated
+✅ Sent
+
+--- User 5869566424 (Tony) ---
+✓ Link generated
+✅ Sent
+
+--- User 5990112447 (12216) ---
+✓ Link generated
+✅ Sent
+
+--- User 6025431055 (aarolu10) ---
+✓ Link generated
+✅ Sent
+
+--- User 6091427813 (Raccone3) ---
+✓ Link generated
+✅ Sent
+
+--- User 6218516061 (brkfre) ---
+✓ Link generated
+✅ Sent
+
+--- User 6381844084 (mafercm) ---
+✓ Link generated
+✅ Sent
+
+--- User 6426453759 (Mr. R.) ---
+✓ Link generated
+✅ Sent
+
+--- User 6496516609 (PartyTime!) ---
+✓ Link generated
+✅ Sent
+
+--- User 6512908422 (Fratboy101) ---
+✓ Link generated
+✅ Sent
+
+--- User 6557776792 (José) ---
+✓ Link generated
+✅ Sent
+
+--- User 6785135243 (Cesar) ---
+✓ Link generated
+✅ Sent
+
+--- User 6798050167 (Simon) ---
+✓ Link generated
+✅ Sent
+
+--- User 6890340367 (Local) ---
+✓ Link generated
+✅ Sent
+
+--- User 6965613313 (Thesedarkhours) ---
+✓ Link generated
+✅ Sent
+
+--- User 6984257203 (Nico) ---
+✓ Link generated
+✅ Sent
+
+--- User 7004233882 (g) ---
+✓ Link generated
+✅ Sent
+
+--- User 7018573427 (Juicy Pork Bunz) ---
+✓ Link generated
+⚠️ Skipped (unavailable)
+
+--- User 7071683657 (lukel02) ---
+✓ Link generated
+✅ Sent
+
+--- User 7088487175 (Twink) ---
+✓ Link generated
+✅ Sent
+
+--- User 7105094968 (Spun⬇️Sub) ---
+✓ Link generated
+✅ Sent
+
+--- User 7166356500 (D) ---
+✓ Link generated
+✅ Sent
+
+--- User 7178374095 (German) ---
+✓ Link generated
+✅ Sent
+
+--- User 7216485226 (Lygnios) ---
+✓ Link generated
+✅ Sent
+
+--- User 7246621722 (PNP) ---
+✓ Link generated
+✅ Sent
+
+--- User 7373917106 (ShortyJ) ---
+✓ Link generated
+✅ Sent
+
+--- User 7409962596 (VSTRAY) ---
+✓ Link generated
+✅ Sent
+
+--- User 7432041476 (ANT) ---
+✓ Link generated
+✅ Sent
+
+--- User 7488115788 (D) ---
+✓ Link generated
+✅ Sent
+
+--- User 7501013439 (Aries) ---
+✓ Link generated
+✅ Sent
+
+--- User 7529460726 (Castor) ---
+✓ Link generated
+✅ Sent
+
+--- User 7535820309 (x_x) ---
+✓ Link generated
+✅ Sent
+
+--- User 7577911928 (Guo) ---
+✓ Link generated
+✅ Sent
+
+--- User 7616323085 (Alphonso) ---
+✓ Link generated
+✅ Sent
+
+--- User 7643943412 (Mauricio) ---
+✓ Link generated
+✅ Sent
+
+--- User 7664471211 (Mul) ---
+✓ Link generated
+✅ Sent
+
+--- User 7679106398 (Maks) ---
+✓ Link generated
+✅ Sent
+
+--- User 7857923659 (Max DK) ---
+✓ Link generated
+✅ Sent
+
+--- User 7888824789 (Donnie) ---
+✓ Link generated
+✅ Sent
+
+--- User 7927157390 (Boy) ---
+✓ Link generated
+✅ Sent
+
+--- User 8020802390 (D) ---
+✓ Link generated
+✅ Sent
+
+--- User 8081698947 (Bar) ---
+✓ Link generated
+⚠️ Skipped (unavailable)
+
+--- User 8109409476 (Angel) ---
+✓ Link generated
+✅ Sent
+
+--- User 8109691903 (ToGee*OrNotToGee) ---
+✓ Link generated
+✅ Sent
+
+--- User 8195464838 (Nick) ---
+✓ Link generated
+✅ Sent
+
+--- User 8247049923 (J) ---
+✓ Link generated
+✅ Sent
+
+--- User 8261515347 (Mafer) ---
+✓ Link generated
+✅ Sent
+
+--- User 8330392894 (M) ---
+✓ Link generated
+✅ Sent
+
+--- User 8365312597 (Admin) ---
+✓ Link generated
+✅ Sent
+
+--- User 8482272306 (dacis23) ---
+✓ Link generated
+⚠️ Skipped (unavailable)
+
+--- User 8493551723 (Jay) ---
+✓ Link generated
+✅ Sent
+
+--- User 8552451957 (Test P P) ---
+✓ Link generated
+✅ Sent
+
+--- User 8569798104 (Dina) ---
+✓ Link generated
+✅ Sent
+
+--- User 996678036 (Azrie) ---
+✓ Link generated
+✅ Sent
+
+--- User W1Jl2z3IhdXqeSRuvW51 (Anonymous) ---
+✓ Link generated
+⚠️ Skipped (unavailable)
+
+
+=== Complete ===
+
+Total: 82
+✅ Sent: 77
+⚠️ Skipped: 4
+❌ Failed: 1
+
+--- Errors ---
+1368640424 (Juan 🇨🇴): expireDate is not defined

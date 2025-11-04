@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNPtv Bot - User Guide</title>
+    <meta name="description" content="Complete guide to using PNPtv Bot - Premium TV streaming, video calls, and more!">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            color: white;
+        }
+
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.3em;
+            opacity: 0.95;
+        }
+
+        .bot-link {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 15px 40px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .bot-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 20px 0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .section {
+            margin: 40px 0;
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        h3 {
+            color: #764ba2;
+            font-size: 1.5em;
+            margin: 25px 0 15px 0;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .command-box {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-left: 4px solid #667eea;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .command {
+            color: #e83e8c;
+            font-weight: bold;
+        }
+
+        .tier-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .tier-table th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .tier-table td {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tier-table tr:hover {
+            background: #f5f7fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .badge-free {
+            background: #6c757d;
+            color: white;
+        }
+
+        .badge-premium {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .example {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #2196F3;
+        }
+
+        .warning {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+        }
+
+        .success {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: white;
+            margin-top: 40px;
+        }
+
+        .footer-links {
+            margin: 20px 0;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            opacity: 0.9;
+            transition: opacity 0.3s;
+        }
+
+        .footer-links a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .lang-switch {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .lang-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .lang-btn:hover, .lang-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .lang-content {
+            display: none;
+        }
+
+        .lang-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📺 PNPtv Bot</h1>
+            <p>Your Premium TV Streaming & Video Platform</p>
+            <a href="https://t.me/PNPtvBot" class="bot-link" target="_blank">
+                🚀 Open Bot
+            </a>
+
+            <div class="lang-switch">
+                <button class="lang-btn active" onclick="switchLang('en')">🇺🇸 English</button>
+                <button class="lang-btn" onclick="switchLang('es')">🇪🇸 Español</button>
+            </div>
+        </header>
+
+        <!-- ENGLISH CONTENT -->
+        <div id="content-en" class="lang-content active">
+            <div class="content">
+                <div class="section">
+                    <h2>🌟 Welcome to PNPtv Bot</h2>
+                    <p style="font-size: 1.1em; margin: 20px 0;">
+                        PNPtv Bot is your all-in-one platform for premium TV streaming, video calls, live events, and community features.
+                        Connect with other members, schedule video meetings, and enjoy exclusive content!
+                    </p>
+
+                    <div class="success">
+                        <strong>🎉 New Feature:</strong> Schedule Zoom video calls and live streams directly from the bot! Premium members can now host professional video meetings.
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>✨ Features</h2>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">📺</div>
+                            <div class="feature-title">Premium Streaming</div>
+                            <p>Access PNPtv! PRIME and enjoy Santino and his boys having fun in over 100 long-duration videos. PNPtv! Sexy Latinos smoking and slamming on Telegram.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📹</div>
+                            <div class="feature-title">Video Calls</div>
+                            <p>Schedule Zoom video calls with up to 100 participants. Perfect for meetings and events.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📡</div>
+                            <div class="feature-title">Live Streaming</div>
+                            <p>Host live streams and broadcast to your community using professional Zoom integration.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">💬</div>
+                            <div class="feature-title">AI Assistant</div>
+                            <p>Get instant help with our intelligent AI assistant powered by Mistral AI.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">👥</div>
+                            <div class="feature-title">Community</div>
+                            <p>Connect with nearby members and join the PNPtv community.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">💰</div>
+                            <div class="feature-title">Easy Payments</div>
+                            <p>Pay with credit card, crypto (USDC), or local payment methods.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>📖 Essential Commands</h2>
+
+                    <h3>🆓 Free User Commands</h3>
+                    <div class="command-box">
+                        <span class="command">/start</span> - Start the bot and see the main menu
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/help</span> - Get help and see available commands
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/profile</span> - View and edit your profile
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/plans</span> - View subscription plans and pricing
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/ai</span> - Chat with AI assistant (Mistral AI)
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/nearby</span> - Find nearby members (3 searches/week limit)
+                    </div>
+
+                    <h3>💎 Premium User Commands</h3>
+                    <div class="command-box">
+                        <span class="command">/schedulecall Title | Date & Time | Duration</span>
+                        <br><small>Schedule a Zoom video call</small>
+                        <div class="example">
+                            <strong>Example:</strong><br>
+                            /schedulecall Team Meeting | 2025-11-10 15:00 | 60
+                        </div>
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/schedulestream Title | Date & Time | Duration</span>
+                        <br><small>Schedule a Zoom live stream</small>
+                        <div class="example">
+                            <strong>Example:</strong><br>
+                            /schedulestream Music Show | 2025-11-10 20:00 | 120
+                        </div>
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/library</span> - Browse music library
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/upcoming</span> - View upcoming events
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>🎯 Membership Tiers</h2>
+                    <table class="tier-table">
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>Free</th>
+                                <th>Premium</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Basic Commands</strong></td>
+                                <td>✅</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>AI Assistant</strong></td>
+                                <td>✅ Limited</td>
+                                <td>✅ Unlimited</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Premium TV Channels</strong></td>
+                                <td>❌</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Video Calls (Zoom)</strong></td>
+                                <td>❌</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Live Streaming</strong></td>
+                                <td>❌</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Music Library</strong></td>
+                                <td>❌</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Find Nearby Members</strong></td>
+                                <td>3/week</td>
+                                <td>Unlimited</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Private Channel Access</strong></td>
+                                <td>❌</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Priority Support</strong></td>
+                                <td>❌</td>
+                                <td>✅</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <h2>💳 Payment Methods</h2>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">💳</div>
+                            <div class="feature-title">ePayco</div>
+                            <p>Credit/debit cards and Colombian payment methods (PSE, Efecty, etc.)</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🪙</div>
+                            <div class="feature-title">Daimo Pay</div>
+                            <p>Pay with USDC cryptocurrency. Fast and secure blockchain payments.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>🎥 How to Schedule Video Calls</h2>
+                    <div class="warning">
+                        <strong>⚠️ Premium Feature:</strong> Video calls and live streaming require a Premium subscription.
+                    </div>
+
+                    <h3>Step-by-step Guide:</h3>
+                    <ol style="margin: 20px 0; padding-left: 30px; line-height: 2;">
+                        <li>Make sure you have a Premium subscription (<span class="command">/plans</span>)</li>
+                        <li>Use the command: <span class="command">/schedulecall</span> or <span class="command">/schedulestream</span></li>
+                        <li>Follow the format: <code>Title | Date & Time | Duration</code></li>
+                        <li>The bot will create a real Zoom meeting and send you the join URL</li>
+                        <li>Share the URL with participants!</li>
+                    </ol>
+
+                    <div class="example">
+                        <strong>📅 Date Format:</strong> YYYY-MM-DD HH:MM<br>
+                        <strong>⏱️ Duration:</strong> In minutes (default 60 for calls, 120 for streams)<br><br>
+                        <strong>Example Commands:</strong><br>
+                        • <code>/schedulecall Weekly Standup | 2025-11-10 09:00 | 30</code><br>
+                        • <code>/schedulestream Friday DJ Set | 2025-11-15 20:00 | 180</code><br>
+                        • <code>/schedulecall Client Meeting | 2025-11-12 14:30 | 90</code>
+                    </div>
+
+                    <div class="success">
+                        <strong>✨ Features:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Up to 100 participants per meeting</li>
+                            <li>HD video and audio quality</li>
+                            <li>Screen sharing capabilities</li>
+                            <li>Password-protected meetings</li>
+                            <li>Works on all devices (mobile, desktop, web)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>❓ Frequently Asked Questions</h2>
+
+                    <h3>How do I upgrade to Premium?</h3>
+                    <p>Send <span class="command">/plans</span> to see available subscription plans. Choose your plan and follow the payment instructions.</p>
+
+                    <h3>What payment methods do you accept?</h3>
+                    <p>We accept credit/debit cards via ePayco, and cryptocurrency (USDC) via Daimo Pay.</p>
+
+                    <h3>Can I cancel my subscription?</h3>
+                    <p>Yes! Contact support using <span class="command">/ai</span> or message an admin for assistance.</p>
+
+                    <h3>Do video calls work on mobile?</h3>
+                    <p>Yes! Zoom meetings work on all devices. Participants can join via the Zoom app or web browser.</p>
+
+                    <h3>How many people can join my video call?</h3>
+                    <p>Up to 100 participants for standard meetings. For larger events, contact support.</p>
+
+                    <h3>Can I change my language?</h3>
+                    <p>Yes! Go to <span class="command">/profile</span> → Settings → Change Language to switch between English and Spanish.</p>
+                </div>
+
+                <div class="section">
+                    <h2>📞 Need Help?</h2>
+                    <div class="success">
+                        <strong>Get Support:</strong><br><br>
+                        🤖 AI Assistant: Use <span class="command">/ai</span> for instant help<br>
+                        👨‍💼 Contact Admin: Message @PNPtvAdmin<br>
+                        📧 Email: support@pnptv.app<br>
+                        💬 Community: Join our premium channel for updates
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SPANISH CONTENT -->
+        <div id="content-es" class="lang-content">
+            <div class="content">
+                <div class="section">
+                    <h2>🌟 Bienvenido a PNPtv Bot</h2>
+                    <p style="font-size: 1.1em; margin: 20px 0;">
+                        PNPtv Bot es tu plataforma todo-en-uno para streaming de TV premium, videollamadas, eventos en vivo y funciones de comunidad.
+                        ¡Conéctate con otros miembros, programa reuniones por video y disfruta contenido exclusivo!
+                    </p>
+
+                    <div class="success">
+                        <strong>🎉 Nueva Función:</strong> ¡Programa videollamadas de Zoom y transmisiones en vivo directamente desde el bot! Los miembros Premium ahora pueden organizar reuniones de video profesionales.
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>✨ Características</h2>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">📺</div>
+                            <div class="feature-title">Streaming Premium</div>
+                            <p>Accede a PNPtv! PRIME y disfruta de Santino y sus chicos divirtiéndose en más de 100 videos de larga duración. PNPtv! Latinos sexy fumando y slammeando en Telegram.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📹</div>
+                            <div class="feature-title">Videollamadas</div>
+                            <p>Programa videollamadas de Zoom con hasta 100 participantes. Perfecto para reuniones y eventos.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📡</div>
+                            <div class="feature-title">Transmisión en Vivo</div>
+                            <p>Organiza transmisiones en vivo y transmite a tu comunidad usando integración profesional de Zoom.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">💬</div>
+                            <div class="feature-title">Asistente IA</div>
+                            <p>Obtén ayuda instantánea con nuestro asistente IA inteligente powered by Mistral AI.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">👥</div>
+                            <div class="feature-title">Comunidad</div>
+                            <p>Conéctate con miembros cercanos y únete a la comunidad PNPtv.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">💰</div>
+                            <div class="feature-title">Pagos Fáciles</div>
+                            <p>Paga con tarjeta de crédito, crypto (USDC), o métodos de pago locales.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>📖 Comandos Esenciales</h2>
+
+                    <h3>🆓 Comandos de Usuario Gratis</h3>
+                    <div class="command-box">
+                        <span class="command">/start</span> - Inicia el bot y ve el menú principal
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/help</span> - Obtén ayuda y ve los comandos disponibles
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/profile</span> - Ve y edita tu perfil
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/plans</span> - Ve los planes de suscripción y precios
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/ai</span> - Chatea con el asistente IA (Mistral AI)
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/nearby</span> - Encuentra miembros cercanos (límite 3 búsquedas/semana)
+                    </div>
+
+                    <h3>💎 Comandos de Usuario Premium</h3>
+                    <div class="command-box">
+                        <span class="command">/schedulecall Título | Fecha y Hora | Duración</span>
+                        <br><small>Programa una videollamada de Zoom</small>
+                        <div class="example">
+                            <strong>Ejemplo:</strong><br>
+                            /schedulecall Reunión de Equipo | 2025-11-10 15:00 | 60
+                        </div>
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/schedulestream Título | Fecha y Hora | Duración</span>
+                        <br><small>Programa una transmisión en vivo de Zoom</small>
+                        <div class="example">
+                            <strong>Ejemplo:</strong><br>
+                            /schedulestream Show Musical | 2025-11-10 20:00 | 120
+                        </div>
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/library</span> - Navega la biblioteca de música
+                    </div>
+                    <div class="command-box">
+                        <span class="command">/upcoming</span> - Ve los próximos eventos
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>🎯 Niveles de Membresía</h2>
+                    <table class="tier-table">
+                        <thead>
+                            <tr>
+                                <th>Característica</th>
+                                <th>Gratis</th>
+                                <th>Premium</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Comandos Básicos</strong></td>
+                                <td>✅</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Asistente IA</strong></td>
+                                <td>✅ Limitado</td>
+                                <td>✅ Ilimitado</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Canales de TV Premium</strong></td>
+                                <td>❌</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Videollamadas (Zoom)</strong></td>
+                                <td>❌</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Transmisión en Vivo</strong></td>
+                                <td>❌</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Biblioteca de Música</strong></td>
+                                <td>❌</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Buscar Miembros Cercanos</strong></td>
+                                <td>3/semana</td>
+                                <td>Ilimitado</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Acceso a Canal Privado</strong></td>
+                                <td>❌</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Soporte Prioritario</strong></td>
+                                <td>❌</td>
+                                <td>✅</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <h2>💳 Métodos de Pago</h2>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">💳</div>
+                            <div class="feature-title">ePayco</div>
+                            <p>Tarjetas de crédito/débito y métodos de pago colombianos (PSE, Efecty, etc.)</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🪙</div>
+                            <div class="feature-title">Daimo Pay</div>
+                            <p>Paga con criptomoneda USDC. Pagos blockchain rápidos y seguros.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>🎥 Cómo Programar Videollamadas</h2>
+                    <div class="warning">
+                        <strong>⚠️ Función Premium:</strong> Las videollamadas y transmisiones en vivo requieren suscripción Premium.
+                    </div>
+
+                    <h3>Guía Paso a Paso:</h3>
+                    <ol style="margin: 20px 0; padding-left: 30px; line-height: 2;">
+                        <li>Asegúrate de tener una suscripción Premium (<span class="command">/plans</span>)</li>
+                        <li>Usa el comando: <span class="command">/schedulecall</span> o <span class="command">/schedulestream</span></li>
+                        <li>Sigue el formato: <code>Título | Fecha y Hora | Duración</code></li>
+                        <li>El bot creará una reunión real de Zoom y te enviará el URL de acceso</li>
+                        <li>¡Comparte el URL con los participantes!</li>
+                    </ol>
+
+                    <div class="example">
+                        <strong>📅 Formato de Fecha:</strong> AAAA-MM-DD HH:MM<br>
+                        <strong>⏱️ Duración:</strong> En minutos (predeterminado 60 para llamadas, 120 para streams)<br><br>
+                        <strong>Comandos de Ejemplo:</strong><br>
+                        • <code>/schedulecall Reunión Semanal | 2025-11-10 09:00 | 30</code><br>
+                        • <code>/schedulestream Set de DJ Viernes | 2025-11-15 20:00 | 180</code><br>
+                        • <code>/schedulecall Reunión con Cliente | 2025-11-12 14:30 | 90</code>
+                    </div>
+
+                    <div class="success">
+                        <strong>✨ Características:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>Hasta 100 participantes por reunión</li>
+                            <li>Video y audio en calidad HD</li>
+                            <li>Capacidades de compartir pantalla</li>
+                            <li>Reuniones protegidas con contraseña</li>
+                            <li>Funciona en todos los dispositivos (móvil, escritorio, web)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>❓ Preguntas Frecuentes</h2>
+
+                    <h3>¿Cómo actualizo a Premium?</h3>
+                    <p>Envía <span class="command">/plans</span> para ver los planes de suscripción disponibles. Elige tu plan y sigue las instrucciones de pago.</p>
+
+                    <h3>¿Qué métodos de pago aceptan?</h3>
+                    <p>Aceptamos tarjetas de crédito/débito vía ePayco, y criptomoneda (USDC) vía Daimo Pay.</p>
+
+                    <h3>¿Puedo cancelar mi suscripción?</h3>
+                    <p>¡Sí! Contacta soporte usando <span class="command">/ai</span> o envía un mensaje a un admin para asistencia.</p>
+
+                    <h3>¿Las videollamadas funcionan en móvil?</h3>
+                    <p>¡Sí! Las reuniones de Zoom funcionan en todos los dispositivos. Los participantes pueden unirse vía la app de Zoom o navegador web.</p>
+
+                    <h3>¿Cuántas personas pueden unirse a mi videollamada?</h3>
+                    <p>Hasta 100 participantes para reuniones estándar. Para eventos más grandes, contacta soporte.</p>
+
+                    <h3>¿Puedo cambiar mi idioma?</h3>
+                    <p>¡Sí! Ve a <span class="command">/profile</span> → Configuración → Cambiar Idioma para cambiar entre inglés y español.</p>
+                </div>
+
+                <div class="section">
+                    <h2>📞 ¿Necesitas Ayuda?</h2>
+                    <div class="success">
+                        <strong>Obtén Soporte:</strong><br><br>
+                        🤖 Asistente IA: Usa <span class="command">/ai</span> para ayuda instantánea<br>
+                        👨‍💼 Contactar Admin: Envía mensaje a @PNPtvAdmin<br>
+                        📧 Email: support@pnptv.app<br>
+                        💬 Comunidad: Únete a nuestro canal premium para actualizaciones
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2025 PNPtv. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="https://t.me/PNPtvBot">Bot</a>
+                <a href="/legal/privacy.html">Privacy Policy</a>
+                <a href="/legal/terms.html">Terms of Service</a>
+                <a href="mailto:support@pnptv.app">Support</a>
+            </div>
+            <p style="margin-top: 20px; opacity: 0.8;">
+                Powered by Zoom, Mistral AI, and Telegram
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        function switchLang(lang) {
+            // Hide all content
+            document.querySelectorAll('.lang-content').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Show selected content
+            document.getElementById('content-' + lang).classList.add('active');
+
+            // Update button states
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Save preference
+            localStorage.setItem('pnptv_lang', lang);
+        }
+
+        // Load saved language preference
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('pnptv_lang');
+            if (savedLang && savedLang === 'es') {
+                const esBtn = document.querySelectorAll('.lang-btn')[1];
+                esBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>

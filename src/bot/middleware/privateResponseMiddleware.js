@@ -68,8 +68,17 @@ function privateResponseMiddleware() {
           );
         }
       } catch (error) {
-        // If private message fails (user hasn't started bot), inform in group
-        if (error.description && error.description.includes("bot can't initiate conversation")) {
+        // Handle various private message failures
+        const errorDesc = error.description || '';
+        const isPrivateMessageFail = 
+          errorDesc.includes("bot can't initiate conversation") ||
+          errorDesc.includes("bots can't send messages to bots") ||
+          errorDesc.includes("Not Found") ||
+          error.code === 403 ||
+          error.code === 404;
+
+        if (isPrivateMessageFail) {
+          logger.warn(`Private message failed for user ${userId}: ${errorDesc}`);
           await originalReply(
             lang === "es"
               ? `⚠️ @${ctx.from.username || ctx.from.first_name}, necesitas iniciar una conversación conmigo primero.\n\n👆 Haz clic en mi nombre y presiona "Iniciar" para recibir respuestas privadas.`
@@ -82,7 +91,7 @@ function privateResponseMiddleware() {
                   [
                     {
                       text: lang === "es" ? "🤖 Iniciar Bot" : "🤖 Start Bot",
-                      url: `https://t.me/${ctx.botInfo.username}?start=group_redirect`
+                      url: `https://t.me/PNPtvbot?start=group_redirect`
                     }
                   ]
                 ]
@@ -90,7 +99,7 @@ function privateResponseMiddleware() {
             }
           );
         } else {
-          logger.error("Error sending private message:", error);
+          logger.error("Unexpected error sending private message:", error);
           // Fallback: send in group with warning
           await originalReply(
             `🔒 ${lang === "es" ? "Respuesta privada no disponible" : "Private response unavailable"}\n\n${text}`,
@@ -112,7 +121,16 @@ function privateResponseMiddleware() {
             lang === "es" ? "Respuesta enviada por privado" : "Response sent privately"
           );
         } catch (error) {
-          if (error.description && error.description.includes("bot can't initiate conversation")) {
+          const errorDesc = error.description || '';
+          const isPrivateMessageFail = 
+            errorDesc.includes("bot can't initiate conversation") ||
+            errorDesc.includes("bots can't send messages to bots") ||
+            errorDesc.includes("Not Found") ||
+            error.code === 403 ||
+            error.code === 404;
+
+          if (isPrivateMessageFail) {
+            logger.warn(`Private message failed for callback from user ${userId}: ${errorDesc}`);
             // User hasn't started bot - show inline button to start
             await originalAnswerCbQuery(
               lang === "es" 
@@ -121,7 +139,7 @@ function privateResponseMiddleware() {
               { show_alert: true }
             );
           } else {
-            logger.error("Error sending private message for callback:", error);
+            logger.error("Unexpected error sending private message for callback:", error);
             // Fallback to group response
             return originalEditMessageText(text, extra);
           }

@@ -1,9 +1,10 @@
 const { db } = require("../config/firebase");
 const logger = require("../utils/logger");
 const cron = require('node-cron');
+const zoomService = require('./zoomService');
 
 /**
- * Music & Community Service - Integrated from SantinoBot
+ * Music Music & Community Service - Integrated from SantinoBot Community Service
  * Manages music streaming, playlists, broadcasts, and community features
  */
 
@@ -13,22 +14,33 @@ const cron = require('node-cron');
 async function addTrack(groupId, trackData) {
   try {
     const trackId = `track_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    await db.collection('music').doc(trackId).set({
+
+    // Build track data object, only including defined fields
+    const track = {
       groupId,
       trackId,
       title: trackData.title,
       artist: trackData.artist,
       genre: trackData.genre || 'Other',
       duration: trackData.duration || 0, // in seconds
-      fileId: trackData.fileId, // Telegram file_id if uploaded
-      url: trackData.url, // External URL if streaming link
       type: trackData.type || 'music', // 'music' or 'podcast'
       addedBy: trackData.addedBy,
       addedAt: new Date(),
       playCount: 0,
       isActive: true
-    });
+    };
+
+    // Only add fileId if it exists
+    if (trackData.fileId) {
+      track.fileId = trackData.fileId;
+    }
+
+    // Only add url if it exists
+    if (trackData.url) {
+      track.url = trackData.url;
+    }
+
+    await db.collection('music').doc(trackId).set(track);
 
     logger.info(`Track added: ${trackId} - ${trackData.title}`);
     return { success: true, trackId };
@@ -256,27 +268,73 @@ async function getTopTracks(groupId, limit = 10) {
 async function getScheduledBroadcasts(groupId) {
   try {
     const now = new Date();
+    const allEvents = [];
     
-    const snapshot = await db.collection('scheduled_broadcasts')
+    // Get scheduled broadcasts
+    const broadcastSnapshot = await db.collection('scheduled_broadcasts')
       .where('groupId', '==', groupId)
       .where('status', '==', 'scheduled')
       .get();
     
-    const broadcasts = [];
-    snapshot.forEach(doc => {
+    broadcastSnapshot.forEach(doc => {
       const data = doc.data();
-      const scheduledTime = data.scheduledTime.toDate();
+      const scheduledTime = data.scheduledTime.toDate ? data.scheduledTime.toDate() : new Date(data.scheduledTime);
       
       // Filter for future broadcasts
       if (scheduledTime > now) {
-        broadcasts.push(data);
+        allEvents.push({
+          ...data,
+          type: data.type || 'broadcast',
+          eventType: 'broadcast',
+        });
+      }
+    });
+
+    // Get scheduled video calls (Zoom)
+    const callsSnapshot = await db.collection('scheduled_calls')
+      .where('isPublic', '==', true)
+      .get();
+    
+    callsSnapshot.forEach(doc => {
+      const data = doc.data();
+      const scheduledTime = data.scheduledTime.toDate ? data.scheduledTime.toDate() : new Date(data.scheduledTime);
+      
+      // Filter for future calls
+      if (scheduledTime > now && data.status === 'scheduled') {
+        allEvents.push({
+          ...data,
+          type: 'zoom_call',
+          eventType: 'video_call',
+        });
+      }
+    });
+
+    // Get scheduled streams
+    const streamsSnapshot = await db.collection('scheduled_streams')
+      .get();
+    
+    streamsSnapshot.forEach(doc => {
+      const data = doc.data();
+      const scheduledTime = data.scheduledTime.toDate ? data.scheduledTime.toDate() : new Date(data.scheduledTime);
+      
+      // Filter for future streams
+      if (scheduledTime > now && data.status === 'scheduled') {
+        allEvents.push({
+          ...data,
+          type: 'live_stream',
+          eventType: 'stream',
+        });
       }
     });
     
     // Sort by time
-    broadcasts.sort((a, b) => a.scheduledTime.toDate() - b.scheduledTime.toDate());
+    allEvents.sort((a, b) => {
+      const timeA = a.scheduledTime.toDate ? a.scheduledTime.toDate() : new Date(a.scheduledTime);
+      const timeB = b.scheduledTime.toDate ? b.scheduledTime.toDate() : new Date(b.scheduledTime);
+      return timeA - timeB;
+    });
     
-    return broadcasts;
+    return allEvents;
   } catch (error) {
     logger.error('Error getting scheduled broadcasts:', error);
     return [];
@@ -299,28 +357,59 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Schedule video call (premium feature)
+ * Schedule video call (premium feature) - Integrated with Zoom
  */
 async function scheduleVideoCall(userId, callData) {
   try {
     const callId = `call_${Date.now()}`;
-    
+    const scheduledTime = new Date(callData.scheduledTime);
+
+    // Create Zoom meeting
+    const zoomResult = await zoomService.createMeeting({
+      title: callData.title || 'PNPtv Video Call',
+      description: callData.description || '',
+      startTime: scheduledTime,
+      duration: callData.duration || 60, // Default 60 minutes
+      password: callData.password || null,
+    });
+
+    if (!zoomResult.success) {
+      logger.error(`Failed to create Zoom meeting: ${zoomResult.error}`);
+      return { success: false, error: zoomResult.error };
+    }
+
+    // Save to Firestore with Zoom details
     await db.collection('scheduled_calls').doc(callId).set({
       callId,
       hostId: userId,
       hostName: callData.hostName,
       title: callData.title || 'Video Call',
       description: callData.description || '',
-      scheduledTime: new Date(callData.scheduledTime),
-      maxParticipants: callData.maxParticipants || 10,
+      scheduledTime,
+      duration: callData.duration || 60,
+      maxParticipants: callData.maxParticipants || 100, // Zoom default
       isPublic: callData.isPublic !== false,
       status: 'scheduled',
       participants: [],
-      createdAt: new Date()
+      createdAt: new Date(),
+      // Zoom integration data
+      zoomMeetingId: zoomResult.meetingId,
+      zoomJoinUrl: zoomResult.joinUrl,
+      zoomStartUrl: zoomResult.startUrl,
+      zoomPassword: zoomResult.password,
+      provider: 'zoom',
     });
 
-    logger.info(`Video call scheduled: ${callId}`);
-    return { success: true, callId };
+    logger.info(`Video call scheduled with Zoom: ${callId} (Zoom ID: ${zoomResult.meetingId})`);
+
+    return {
+      success: true,
+      callId,
+      joinUrl: zoomResult.joinUrl,
+      startUrl: zoomResult.startUrl,
+      password: zoomResult.password,
+      meetingId: zoomResult.meetingId,
+    };
   } catch (error) {
     logger.error('Error scheduling video call:', error);
     return { success: false, error: error.message };
@@ -328,28 +417,58 @@ async function scheduleVideoCall(userId, callData) {
 }
 
 /**
- * Schedule live stream (premium feature)
+ * Schedule live stream (premium feature) - Integrated with Zoom
  */
 async function scheduleLiveStream(userId, streamData) {
   try {
     const streamId = `stream_${Date.now()}`;
-    
+    const scheduledTime = new Date(streamData.scheduledTime);
+
+    // Create Zoom meeting for live stream
+    const zoomResult = await zoomService.createMeeting({
+      title: streamData.title || 'PNPtv Live Stream',
+      description: streamData.description || '',
+      startTime: scheduledTime,
+      duration: streamData.duration || 120, // Default 2 hours for streams
+      password: streamData.password || null,
+    });
+
+    if (!zoomResult.success) {
+      logger.error(`Failed to create Zoom meeting for stream: ${zoomResult.error}`);
+      return { success: false, error: zoomResult.error };
+    }
+
     await db.collection('scheduled_streams').doc(streamId).set({
       streamId,
       hostId: userId,
       hostName: streamData.hostName,
       title: streamData.title,
       description: streamData.description || '',
-      scheduledTime: new Date(streamData.scheduledTime),
-      streamUrl: streamData.streamUrl || null,
+      scheduledTime,
+      duration: streamData.duration || 120,
+      streamUrl: zoomResult.joinUrl, // Use Zoom join URL as stream URL
       isLive: false,
       status: 'scheduled',
       viewerCount: 0,
-      createdAt: new Date()
+      createdAt: new Date(),
+      // Zoom integration data
+      zoomMeetingId: zoomResult.meetingId,
+      zoomJoinUrl: zoomResult.joinUrl,
+      zoomStartUrl: zoomResult.startUrl,
+      zoomPassword: zoomResult.password,
+      provider: 'zoom',
     });
 
-    logger.info(`Live stream scheduled: ${streamId}`);
-    return { success: true, streamId };
+    logger.info(`Live stream scheduled with Zoom: ${streamId} (Zoom ID: ${zoomResult.meetingId})`);
+
+    return {
+      success: true,
+      streamId,
+      joinUrl: zoomResult.joinUrl,
+      startUrl: zoomResult.startUrl,
+      password: zoomResult.password,
+      meetingId: zoomResult.meetingId,
+    };
   } catch (error) {
     logger.error('Error scheduling live stream:', error);
     return { success: false, error: error.message };

@@ -1,6 +1,7 @@
 const { db } = require("../config/firebase");
 const logger = require("./logger");
 const { batchUpdate } = require("./batchOperations");
+const admin = require("firebase-admin");
 
 /**
  * Calculate expiration date based on plan duration
@@ -116,27 +117,33 @@ function generateConfirmationMessage({
 }
 
 /**
- * Activate membership for a user
+ * Activate membership for a user and send notification message
  * @param {string} userId - User ID
- * @param {string} tier - Tier to activate (e.g. 'trial-week', 'pnp-member', 'crystal-member', 'diamond-member')
+ * @param {string} tier - Tier to activate ('Free', 'Basic', or 'Premium')
  * @param {string} activatedBy - Who activated it (admin, payment, system)
  * @param {number} durationDays - Optional custom duration in days (default: 30)
- * @param {Object} bot - Telegram bot instance for generating invite links
- * @returns {Promise<Object>} Updated user data with invite link
+ * @param {Object} bot - Telegram bot instance for generating invite links and sending notifications
+ * @param {Object} options - Additional options
+ * @param {string} options.paymentAmount - Payment amount (optional)
+ * @param {string} options.paymentCurrency - Payment currency (optional) 
+ * @param {string} options.paymentMethod - Payment method (optional)
+ * @param {string} options.reference - Payment reference (optional)
+ * @returns {Promise<Object>} Updated user data with invite link and notification status
  */
-async function activateMembership(userId, tier, activatedBy = "admin", durationDays = 30, bot = null) {
+async function activateMembership(userId, tier, activatedBy = "admin", durationDays = 30, bot = null, options = {}) {
   try {
     if (!userId || !tier) {
       throw new Error("userId and tier are required");
     }
 
     // Validate tier exists
-    const validTiers = ["Free", "Basic", "Premium", "VIP", "Creator"];
+    // New tier system: Free (default), Basic (premium channel access), Premium (crystal + diamond users)
+    const validTiers = ["Free", "Basic", "Premium"];
     if (!validTiers.includes(tier)) {
       throw new Error(`Invalid tier: ${tier}. Must be one of: ${validTiers.join(", ")}`);
     }
 
-    const now = new Date();
+    const now = admin.firestore.Timestamp.now();
     const expirationDate = calculateExpirationDate(durationDays);
     const isPremium = tier !== "Free" && expirationDate !== null;
 
@@ -150,12 +157,13 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
       previousTier,
       tierUpdatedAt: now,
       tierUpdatedBy: activatedBy,
-      membershipExpiresAt: expirationDate,
+      membershipExpiresAt: expirationDate ? admin.firestore.Timestamp.fromDate(expirationDate) : null,
       membershipIsPremium: isPremium,
       lastActive: now,
     };
 
-    await db.collection("users").doc(userId).update(updateData);
+    // Use set with merge to create user if doesn't exist
+    await db.collection("users").doc(userId).set(updateData, { merge: true });
 
     logger.info(
       `Membership activated for user ${userId}: ${tier} until ${expirationDate ? expirationDate.toISOString() : "never"}`,
@@ -167,6 +175,9 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
 
     // Generate unique invite link to channel if bot instance is provided
     let inviteLink = null;
+    let notificationSent = false;
+
+    // For premium tiers, generate invite link
     if (bot && isPremium && process.env.CHANNEL_ID) {
       try {
         const channelId = process.env.CHANNEL_ID;
@@ -187,11 +198,77 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
       }
     }
 
+    // For free tier downgrades, generate free channel invite
+    if (bot && tier === "Free" && process.env.FREE_CHANNEL_ID) {
+      try {
+        const freeChannelId = process.env.FREE_CHANNEL_ID;
+
+        // Create a unique invite link for free channel
+        const invite = await bot.telegram.createChatInviteLink(freeChannelId, {
+          member_limit: 1, // One-time use link
+          name: `Free - User ${userId}`,
+        });
+
+        inviteLink = invite.invite_link;
+        logger.info(`Generated free channel invite link for user ${userId}: ${inviteLink}`);
+      } catch (inviteError) {
+        logger.warn(`Failed to generate free channel invite link for user ${userId}:`, inviteError.message);
+      }
+    }
+
+    // Send notification message to user if bot instance is provided
+    if (bot) {
+      try {
+        // Get updated user data for generating message
+        const updatedUserDoc = await db.collection("users").doc(userId).get();
+        const updatedUserData = updatedUserDoc.data();
+        const userName = updatedUserData.firstName || updatedUserData.username || "User";
+        const userLanguage = updatedUserData.language || "en";
+
+        // Generate tier display name
+        const tierDisplayNames = {
+          "Free": userLanguage === "es" ? "Gratuito" : "Free",
+          "Basic": userLanguage === "es" ? "Básico" : "Basic", 
+          "Premium": userLanguage === "es" ? "Premium" : "Premium",
+          "VIP": userLanguage === "es" ? "VIP" : "VIP",
+          "Creator": userLanguage === "es" ? "Creador" : "Creator"
+        };
+        const planName = tierDisplayNames[tier] || tier;
+
+        // Generate confirmation message
+        const confirmationMessage = generateConfirmationMessage({
+          userName,
+          planName,
+          durationDays,
+          expiresAt: expirationDate,
+          paymentAmount: options.paymentAmount,
+          paymentCurrency: options.paymentCurrency,
+          paymentMethod: options.paymentMethod,
+          reference: options.reference,
+          inviteLink,
+          language: userLanguage
+        });
+
+        // Send notification message
+        await bot.telegram.sendMessage(userId, confirmationMessage, {
+          parse_mode: "Markdown"
+        });
+
+        notificationSent = true;
+        logger.info(`Membership notification sent to user ${userId} for tier ${tier}`);
+
+      } catch (notificationError) {
+        logger.warn(`Failed to send membership notification to user ${userId}:`, notificationError.message);
+        // Continue even if notification fails - don't fail the membership activation
+      }
+    }
+
     return {
       success: true,
       tier,
       expiresAt: expirationDate,
       inviteLink,
+      notificationSent,
     };
   } catch (error) {
     logger.error(`Error activating membership for user ${userId}:`, error);
@@ -206,7 +283,7 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
  */
 async function checkAndExpireMemberships() {
   try {
-    const now = new Date();
+    const now = admin.firestore.Timestamp.now();
     logger.info("Starting membership expiration check...");
 
     // Query users with premium tiers that have expired
@@ -281,7 +358,7 @@ async function getMembershipInfo(userId) {
 
     const userData = userDoc.data();
     const now = new Date();
-    const expiresAt = userData.membershipExpiresAt?.toDate();
+    const expiresAt = userData.membershipExpiresAt?.toDate ? userData.membershipExpiresAt.toDate() : userData.membershipExpiresAt;
 
     let status = "active";
     let daysRemaining = null;
@@ -320,32 +397,50 @@ async function getMembershipInfo(userId) {
  */
 async function getExpiringMemberships(daysThreshold = 7) {
   try {
-    const now = new Date();
-    const thresholdDate = new Date(now);
-    thresholdDate.setDate(thresholdDate.getDate() + daysThreshold);
+    const now = admin.firestore.Timestamp.now();
+    const thresholdDate = admin.firestore.Timestamp.fromDate(new Date(Date.now() + daysThreshold * 24 * 60 * 60 * 1000));
 
-    const expiringUsersSnapshot = await db
-      .collection("users")
-      .where("membershipExpiresAt", "<=", thresholdDate)
-      .where("membershipExpiresAt", ">", now)
-      .where("membershipIsPremium", "==", true)
-      .get();
+    let expiringUsersSnapshot;
+    
+    try {
+      // Try complex query with composite index
+      expiringUsersSnapshot = await db
+        .collection("users")
+        .where("membershipIsPremium", "==", true)
+        .where("membershipExpiresAt", "<=", thresholdDate)
+        .where("membershipExpiresAt", ">", now)
+        .get();
+    } catch (indexError) {
+      logger.warn("Complex query failed, using fallback approach:", indexError.message);
+      
+      // Fallback: Get all premium users and filter in memory
+      expiringUsersSnapshot = await db
+        .collection("users")
+        .where("membershipIsPremium", "==", true)
+        .get();
+    }
 
     const expiringUsers = [];
 
     expiringUsersSnapshot.forEach((doc) => {
       const userData = doc.data();
       const expiresAt = userData.membershipExpiresAt?.toDate();
+      
+      if (!expiresAt) return; // Skip users without expiration date
+      
       const diffTime = expiresAt.getTime() - now.getTime();
       const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      expiringUsers.push({
-        userId: doc.id,
-        username: userData.username,
-        tier: userData.tier,
-        expiresAt: expiresAt,
-        daysRemaining: daysRemaining,
-      });
+      // Filter in memory if using fallback approach
+      if (expiresAt > now && expiresAt <= thresholdDate) {
+        expiringUsers.push({
+          userId: doc.id,
+          username: userData.username,
+          tier: userData.tier,
+          expiresAt: expiresAt,
+          daysRemaining: daysRemaining,
+        });
+      }
     });
 
     return expiringUsers;

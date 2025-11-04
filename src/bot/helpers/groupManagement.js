@@ -1,8 +1,10 @@
 const logger = require("../../utils/logger");
 const { db } = require("../../config/firebase");
+const { t } = require("../../utils/i18n");
+const { generateWelcomeMessage } = require("./welcomeMessageHelper");
 
 /**
- * Group Management Functions - Integrated from SantinoBot
+ * Group Management Functions
  * Handles group permissions, media restrictions, and member management
  */
 
@@ -135,7 +137,8 @@ async function handleNewMember(ctx) {
       const userId = member.id.toString();
       
       // Get user permissions and subscription info
-      const { tier } = await getUserPermissions(userId);
+      const { tier, userData } = await getUserPermissions(userId);
+      const userLanguage = userData?.language || 'en';
 
       // Apply permissions
       await applyUserPermissions(ctx, member.id, tier);
@@ -148,13 +151,7 @@ async function handleNewMember(ctx) {
         }
         
         const welcomeMsg = await ctx.reply(
-          `👋 Welcome @${member.username || member.first_name}!\n\n` +
-          `🎉 Welcome to PNPtv Community!\n\n` +
-          `${tier === 'Free' 
-            ? '🆓 **Free Member**\n• Text messages only\n• Access to free content\n\n💎 Upgrade to premium for photos, videos, and exclusive content!'
-            : `💎 **${tier} Member**\n• Full media access\n• Premium content\n• Exclusive features\n• Status: Active ✅`
-          }\n\n` +
-          `📱 Use /help to see available commands!`,
+          generateWelcomeMessage(member, tier, userLanguage),
           { parse_mode: 'Markdown' }
         );
         

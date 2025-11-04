@@ -96,6 +96,15 @@ app.set('bot', bot);
 // Serve static assets for payment page
 app.use("/assets", express.static(path.join(__dirname, "../../public/payment/assets")));
 
+// Serve public directory for static files (guide, etc.)
+app.use(express.static(path.join(__dirname, "../../public")));
+
+// Guide/Instructions page
+app.get("/guide", (req, res) => {
+  const guidePath = path.join(__dirname, "../../public/guide.html");
+  res.sendFile(guidePath);
+});
+
 // Legal pages - Terms of Service, Privacy Policy, Refund Policy
 app.get("/terms-en", (req, res) => {
   const termsPath = path.join(__dirname, "../../public/legal/terms-en.html");

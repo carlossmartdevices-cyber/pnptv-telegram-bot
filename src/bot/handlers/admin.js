@@ -14,6 +14,54 @@ const {
   updateScheduledBroadcast,
   MAX_SCHEDULED_BROADCASTS,
 } = require("../../services/scheduledBroadcastService");
+const {
+  getSegmentedUsers,
+  getSegmentPresets,
+  getSegmentStats,
+  getAllSegmentStats
+} = require("../../services/broadcastSegmentation");
+const { 
+  recordBroadcastAnalytics, 
+  getBroadcastAnalytics, 
+  getTopPerformingSegments 
+} = require("../../services/broadcastAnalytics");
+
+/**
+ * Get comprehensive formatting help text for broadcasts
+ */
+function getFormattingHelp(lang = "en") {
+  if (lang === "es") {
+    return "✨ **Opciones de formato disponibles:**\n\n" +
+           "📝 **Texto básico:**\n" +
+           "**negrita** *cursiva* __subrayado__ ~tachado~\n\n" +
+           "💻 **Código:**\n" +
+           "`código en línea`\n" +
+           "```\nbloque de código\nmúltiples líneas\n```\n\n" +
+           "🔗 **Enlaces:**\n" +
+           "[texto del enlace](https://ejemplo.com)\n\n" +
+           "🚫 **Spoilers:**\n" +
+           "||texto oculto||\n\n" +
+           "🎯 **Combinaciones:**\n" +
+           "**_negrita y cursiva_**\n" +
+           "__*subrayado y cursiva*__\n\n" +
+           "💡 **Tip:** Usa emojis para hacer tu mensaje más atractivo! 🚀✨🎉";
+  } else {
+    return "✨ **Available formatting options:**\n\n" +
+           "📝 **Basic text:**\n" +
+           "**bold** *italic* __underline__ ~strikethrough~\n\n" +
+           "💻 **Code:**\n" +
+           "`inline code`\n" +
+           "```\ncode block\nmultiple lines\n```\n\n" +
+           "🔗 **Links:**\n" +
+           "[link text](https://example.com)\n\n" +
+           "🚫 **Spoilers:**\n" +
+           "||hidden text||\n\n" +
+           "🎯 **Combinations:**\n" +
+           "**_bold and italic_**\n" +
+           "__*underline and italic*__\n\n" +
+           "💡 **Tip:** Use emojis to make your message more engaging! 🚀✨🎉";
+  }
+}
 
 /**
  * Admin panel main handler
@@ -584,37 +632,10 @@ async function setUserTier(ctx, userId, tier, durationDays = 30) {
   try {
     const lang = ctx.session.language || "en";
 
-    // Use membership manager to activate with expiration
-    const result = await activateMembership(userId, tier, "admin", durationDays);
-
-    // Get user data for notification
-    const userDoc = await db.collection("users").doc(userId).get();
-    const userData = userDoc.data();
-    const userLang = userData.language || "en";
-
-    // Notify user
-    try {
-      let message = userLang === "es"
-        ? `🎉 ¡Felicitaciones!\n\nTu tier ha sido actualizado a: **${tier}**\n\n`
-        : `🎉 Congratulations!\n\nYour tier has been upgraded to: **${tier}**\n\n`;
-
-      if (result.expiresAt) {
-        const expiresDate = result.expiresAt.toLocaleDateString();
-        message += userLang === "es"
-          ? `⏰ Vence el: ${expiresDate} (${durationDays} días)\n\n`
-          : `⏰ Expires on: ${expiresDate} (${durationDays} days)\n\n`;
-      }
-
-      message += userLang === "es"
-        ? "Disfruta tus nuevas características."
-        : "Enjoy your new features!";
-
-      await ctx.telegram.sendMessage(userId, message, {
-        parse_mode: "Markdown",
-      });
-    } catch (e) {
-      logger.warn(`Could not notify user ${userId} about tier change:`, e.message);
-    }
+    // Use membership manager to activate with expiration and send notification
+    const result = await activateMembership(userId, tier, "admin", durationDays, ctx.telegram);
+    
+    // Note: activateMembership now automatically sends notification with invite link
 
     const confirmMsg = tier === "Free"
       ? (lang === "es" ? `✅ Usuario cambiado a Free` : `✅ User changed to Free`)
@@ -642,67 +663,294 @@ async function broadcastMessage(ctx) {
   try {
     const lang = ctx.session.language || "en";
 
-    // Initialize broadcast wizard session with enhanced features
-    ctx.session.broadcastWizard = {
-      step: 1,
-      targetLanguage: null,
-      targetStatus: null,
-      targetTiers: [], // Enhanced: Support multiple tier selection
+    // Initialize broadcast session
+    ctx.session.broadcast = {
       media: null,
       text: null,
-      buttons: null,
-      testMode: false, // Enhanced: Test mode sends to admin only
-      scheduledTime: null // Enhanced: Schedule for later
+      textEN: null,
+      textES: null,
+      multiLanguage: false,
+      targetSegment: 'all_users',
+      step: 'audience_choice'
     };
 
     const message = lang === "es"
-      ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 1 de 5:** Selecciona el idioma de los usuarios:\n\n💡 _Puedes probar mensajes antes de enviar_"
-      : "📢 **Broadcast Wizard**\n\n**Step 1 of 5:** Select target user language:\n\n💡 _You can test messages before sending_";
+      ? "📢 **Enviar Mensaje Masivo**\n\n**Paso 1:** ¿A quién quieres enviar el mensaje?\n\n� **Audiencia Específica:** Enviar solo a un grupo específico (Free, Premium, etc.)\n🌍 **Todos los Usuarios:** Enviar a toda la base de usuarios"
+      : "📢 **Send Broadcast Message**\n\n**Step 1:** Who do you want to send the message to?\n\n� **Targeted Audience:** Send only to a specific group (Free, Premium, etc.)\n🌍 **All Users:** Send to entire user base";
 
-    const keyboard = {
-      inline_keyboard: [
-        [
-          {
-            text: lang === "es" ? "🌍 Todos los idiomas" : "🌍 All Languages",
-            callback_data: "bcast_lang_all"
-          }
-        ],
-        [
-          {
-            text: lang === "es" ? "🇺🇸 Solo inglés" : "🇺🇸 English only",
-            callback_data: "bcast_lang_en"
-          },
-          {
-            text: lang === "es" ? "🇪🇸 Solo español" : "🇪🇸 Spanish only",
-            callback_data: "bcast_lang_es"
-          }
-        ],
-        [
-          {
-            text: lang === "es" ? "« Cancelar" : "« Cancel",
-            callback_data: "admin_back"
-          }
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "� Audiencia Específica" : "� Targeted Audience",
+              callback_data: "broadcast_select_segment"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "� Mensaje único" : "� Single message",
+              callback_data: "broadcast_all_users"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "« Cancelar" : "« Cancel",
+              callback_data: "admin_back"
+            }
+          ]
         ]
-      ]
-    };
+      }
+    });
 
-    // Try to edit the message first, fall back to new message if that fails
-    try {
-      await ctx.editMessageText(message, {
-        parse_mode: "Markdown",
-        reply_markup: keyboard
-      });
-    } catch (editError) {
-      // If edit fails, send new message
-      await ctx.reply(message, {
-        parse_mode: "Markdown",
-        reply_markup: keyboard
-      });
-    }
-
-    logger.info(`Admin ${ctx.from.id} initiated enhanced broadcast wizard`);
+    logger.info(`Admin ${ctx.from.id} initiated broadcast with audience targeting options`);
   } catch (error) {
     logger.error("Error in broadcast:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Show segment selection menu for targeted broadcasts
+ */
+async function showSegmentSelection(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    const presets = getSegmentPresets();
+    const segmentKeys = Object.keys(presets);
+    
+    // Get stats for key segments to show user counts
+    const keySegments = ['all_users', 'free_users', 'premium_users', 'new_users', 'returning_customers', 'expiring_soon'];
+    
+    const message = lang === "es"
+      ? "🎯 **Selecciona Audiencia**\n\n**Paso 2:** Elige a qué grupo de usuarios quieres enviar el mensaje:\n\n_Cargando estadísticas..._"
+      : "🎯 **Select Target Audience**\n\n**Step 2:** Choose which group of users to send the message to:\n\n_Loading statistics..._";
+
+    const sentMessage = await ctx.editMessageText(message, { parse_mode: "Markdown" });
+    
+    // Get segment stats in parallel
+    const segmentStats = {};
+    await Promise.all(keySegments.map(async (key) => {
+      try {
+        const stats = await getSegmentStats(key);
+        segmentStats[key] = stats.userCount;
+      } catch (error) {
+        logger.warn(`Failed to get stats for segment ${key}:`, error.message);
+        segmentStats[key] = 0;
+      }
+    }));
+    
+    // Create keyboard with segment options
+    const keyboard = [];
+    
+    // Row 1: All Users
+    keyboard.push([{
+      text: lang === "es" 
+        ? `🌍 Todos los Usuarios (${segmentStats.all_users || '?'})` 
+        : `🌍 All Users (${segmentStats.all_users || '?'})`,
+      callback_data: "broadcast_segment_all_users"
+    }]);
+    
+    // Row 2: Free vs Premium
+    keyboard.push([
+      {
+        text: lang === "es" 
+          ? `🆓 Usuarios Free (${segmentStats.free_users || '?'})` 
+          : `🆓 Free Users (${segmentStats.free_users || '?'})`,
+        callback_data: "broadcast_segment_free_users"
+      },
+      {
+        text: lang === "es" 
+          ? `💎 Usuarios Premium (${segmentStats.premium_users || '?'})` 
+          : `💎 Premium Users (${segmentStats.premium_users || '?'})`,
+        callback_data: "broadcast_segment_premium_users"
+      }
+    ]);
+    
+    // Row 3: New Users and Returning
+    keyboard.push([
+      {
+        text: lang === "es" 
+          ? `🆕 Nuevos Usuarios (${segmentStats.new_users || '?'})` 
+          : `🆕 New Users (${segmentStats.new_users || '?'})`,
+        callback_data: "broadcast_segment_new_users"
+      },
+      {
+        text: lang === "es" 
+          ? `🔄 Ex-Clientes (${segmentStats.returning_customers || '?'})` 
+          : `🔄 Previous Customers (${segmentStats.returning_customers || '?'})`,
+        callback_data: "broadcast_segment_returning_customers"
+      }
+    ]);
+    
+    // Row 4: Expiring Soon
+    if (segmentStats.expiring_soon > 0) {
+      keyboard.push([{
+        text: lang === "es" 
+          ? `⏰ Expiran Pronto (${segmentStats.expiring_soon})` 
+          : `⏰ Expiring Soon (${segmentStats.expiring_soon})`,
+        callback_data: "broadcast_segment_expiring_soon"
+      }]);
+    }
+    
+    // Row 5: More Options
+    keyboard.push([{
+      text: lang === "es" ? "📊 Más Opciones" : "📊 More Options",
+      callback_data: "broadcast_segment_more"
+    }]);
+    
+    // Row 6: Back and Cancel
+    keyboard.push([
+      {
+        text: lang === "es" ? "« Atrás" : "« Back",
+        callback_data: "broadcast_back_to_start"
+      },
+      {
+        text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
+        callback_data: "admin_back"
+      }
+    ]);
+
+    const finalMessage = lang === "es"
+      ? "🎯 **Selecciona Audiencia**\n\n**Paso 2:** Elige a qué grupo de usuarios quieres enviar el mensaje:"
+      : "🎯 **Select Target Audience**\n\n**Step 2:** Choose which group of users to send the message to:";
+
+    await ctx.editMessageText(finalMessage, {
+      parse_mode: "Markdown",
+      reply_markup: { inline_keyboard: keyboard }
+    });
+
+    logger.info(`Admin ${ctx.from.id} viewing segment selection with stats`);
+  } catch (error) {
+    logger.error("Error showing segment selection:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Show more segment options
+ */
+async function showMoreSegmentOptions(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    const message = lang === "es"
+      ? "📊 **Más Opciones de Audiencia**\n\n**Segmentación Avanzada:**"
+      : "📊 **More Audience Options**\n\n**Advanced Segmentation:**";
+
+    const keyboard = [
+      [
+        {
+          text: lang === "es" ? "👀 Nunca Pagaron" : "👀 Never Paid",
+          callback_data: "broadcast_segment_never_paid"
+        },
+        {
+          text: lang === "es" ? "⚠️ Expirados" : "⚠️ Expired Users",
+          callback_data: "broadcast_segment_expired_users"
+        }
+      ],
+      [
+        {
+          text: lang === "es" ? "🎯 Nuevos Prospectos" : "🎯 New Prospects",
+          callback_data: "broadcast_segment_new_free_users"
+        },
+        {
+          text: lang === "es" ? "⭐ Clientes Leales" : "⭐ Loyal Customers", 
+          callback_data: "broadcast_segment_loyal_customers"
+        }
+      ],
+      [
+        {
+          text: lang === "es" ? "« Atrás" : "« Back",
+          callback_data: "broadcast_select_segment"
+        },
+        {
+          text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
+          callback_data: "admin_back"
+        }
+      ]
+    ];
+
+    await ctx.editMessageText(message, {
+      parse_mode: "Markdown",
+      reply_markup: { inline_keyboard: keyboard }
+    });
+
+    logger.info(`Admin ${ctx.from.id} viewing advanced segment options`);
+  } catch (error) {
+    logger.error("Error showing more segment options:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle segment selection and proceed to language choice
+ */
+async function handleSegmentSelection(ctx, segmentKey) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    // Save selected segment
+    ctx.session.broadcast.targetSegment = segmentKey;
+    ctx.session.broadcast.step = 'language_choice';
+    
+    // Get segment info
+    const presets = getSegmentPresets();
+    const segmentInfo = presets[segmentKey];
+    const stats = await getSegmentStats(segmentKey);
+    
+    const segmentName = lang === "es" 
+      ? segmentInfo.name.replace(/🌍 All Users/, "🌍 Todos los Usuarios")
+        .replace(/🆓 Free Users/, "🆓 Usuarios Free")
+        .replace(/💎 Premium Users/, "💎 Usuarios Premium")
+        .replace(/🆕 New Users/, "🆕 Nuevos Usuarios")
+        .replace(/🔄 Previous Customers/, "🔄 Ex-Clientes")
+        .replace(/⏰ Expiring Soon/, "⏰ Expiran Pronto")
+        .replace(/👀 Never Paid/, "👀 Nunca Pagaron")
+        .replace(/⚠️ Expired Users/, "⚠️ Usuarios Expirados")
+        .replace(/🎯 New Prospects/, "🎯 Nuevos Prospectos")
+        .replace(/⭐ Loyal Customers/, "⭐ Clientes Leales")
+      : segmentInfo.name;
+    
+    const message = lang === "es"
+      ? `📢 **Configurar Mensaje**\n\n**Audiencia Seleccionada:** ${segmentName}\n**Usuarios objetivo:** ${stats.userCount}\n\n**Paso 3:** ¿Cómo quieres configurar el mensaje?\n\n🌐 **Por idioma:** Diferentes mensajes para inglés y español\n📝 **Mensaje único:** Mismo mensaje para todos los usuarios`
+      : `📢 **Configure Message**\n\n**Selected Audience:** ${segmentName}\n**Target users:** ${stats.userCount}\n\n**Step 3:** How do you want to configure the message?\n\n🌐 **By language:** Different messages for English and Spanish\n📝 **Single message:** Same message for all users`;
+
+    await ctx.editMessageText(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "🌐 Mensajes por idioma" : "🌐 Messages by language",
+              callback_data: "broadcast_multi_language"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "📝 Mensaje único" : "📝 Single message",
+              callback_data: "broadcast_single_message"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "« Cambiar Audiencia" : "« Change Audience",
+              callback_data: "broadcast_select_segment"
+            },
+            {
+              text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
+              callback_data: "admin_back"
+            }
+          ]
+        ]
+      }
+    });
+
+    logger.info(`Admin ${ctx.from.id} selected segment ${segmentKey} with ${stats.userCount} users`);
+  } catch (error) {
+    logger.error("Error handling segment selection:", error);
     await ctx.reply(t("error", ctx.session.language || "en"));
   }
 }
@@ -729,10 +977,14 @@ async function handleBroadcastWizard(ctx, action) {
 
     // Step 1: Language selection
     if (action.startsWith("bcast_lang_")) {
-      console.log(">>> PROCESSING LANGUAGE SELECTION:", action);
+      logger.info("Processing broadcast language selection:", action);
+      logger.info("Current wizard state:", wizard);
+      await ctx.answerCbQuery("Language selected ✅");
+      
       const langChoice = action.replace("bcast_lang_", "");
       wizard.targetLanguage = langChoice;
       wizard.step = 2;
+      logger.info("Updated wizard to step 2, language:", langChoice);
 
       const message = lang === "es"
         ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 2 de 5:** Selecciona el estado de los usuarios:"
@@ -781,10 +1033,12 @@ async function handleBroadcastWizard(ctx, action) {
         parse_mode: "Markdown",
         reply_markup: keyboard
       });
-      await ctx.answerCbQuery();
     }
     // Step 2: Status selection
     else if (action.startsWith("bcast_status_")) {
+      logger.info("Processing broadcast status selection:", action);
+      await ctx.answerCbQuery();
+      
       const statusChoice = action.replace("bcast_status_", "");
       wizard.targetStatus = statusChoice;
       wizard.step = 3;
@@ -818,13 +1072,15 @@ async function handleBroadcastWizard(ctx, action) {
         parse_mode: "Markdown",
         reply_markup: keyboard
       });
-      await ctx.answerCbQuery();
 
       // Set waiting for media upload
       ctx.session.waitingFor = "broadcast_media";
     }
     // Step 3: Skip media
     else if (action === "bcast_media_skip") {
+      logger.info("Processing broadcast media skip");
+      await ctx.answerCbQuery();
+      
       wizard.media = null;
       wizard.step = 4;
       ctx.session.waitingFor = "broadcast_text";
@@ -834,20 +1090,24 @@ async function handleBroadcastWizard(ctx, action) {
         : "📢 **Broadcast Wizard**\n\n**Step 4 of 5:** Type the text message you want to send:";
 
       await ctx.editMessageText(message, { parse_mode: "Markdown" });
-      await ctx.answerCbQuery();
     }
     // Step 4: Skip buttons (after text)
-    else if (action === "bcast_buttons_skip") {
+    else if (action === "bcast_buttons_skip" || action === "bcast_send_no_buttons") {
+      logger.info("Processing broadcast buttons skip");
+      await ctx.answerCbQuery();
+      
       wizard.buttons = null;
       await showBroadcastConfirmation(ctx);
     }
     // Step 5: Confirm send
     else if (action === "bcast_confirm_send") {
+      logger.info("Processing broadcast confirm send");
       await ctx.answerCbQuery();
       await executeBroadcast(ctx);
     }
     // Step 5: Test send (to admin only)
     else if (action === "bcast_test_send") {
+      logger.info("Processing broadcast test send");
       await ctx.answerCbQuery();
       wizard.testMode = true;
       await executeBroadcast(ctx, true);
@@ -885,17 +1145,24 @@ async function handleBroadcastWizard(ctx, action) {
     }
     // Step 5: Edit broadcast
     else if (action === "bcast_edit") {
+      logger.info("Processing broadcast edit");
       await ctx.answerCbQuery();
+      
       wizard.step = 1;
       await broadcastMessage(ctx);
     }
     // Back navigation
     else if (action === "bcast_back_to_lang") {
+      logger.info("Processing broadcast back to language");
+      await ctx.answerCbQuery();
+      
       wizard.step = 1;
       await broadcastMessage(ctx);
-      await ctx.answerCbQuery();
     }
     else if (action === "bcast_back_to_status") {
+      logger.info("Processing broadcast back to status");
+      await ctx.answerCbQuery();
+      
       wizard.step = 2;
       await handleBroadcastWizard(ctx, `bcast_lang_${wizard.targetLanguage}`);
     }
@@ -913,6 +1180,12 @@ async function showBroadcastConfirmation(ctx) {
   try {
     const lang = ctx.session.language || "en";
     const wizard = ctx.session.broadcastWizard;
+
+    if (!wizard || !wizard.text) {
+      logger.error("Broadcast wizard missing data:", { wizard });
+      await ctx.reply(lang === "es" ? "Error: Datos incompletos" : "Error: Incomplete data");
+      return;
+    }
 
     // Count target users
     const usersSnapshot = await db.collection("users").get();
@@ -948,8 +1221,8 @@ async function showBroadcastConfirmation(ctx) {
       : `~${estimatedSeconds} ${lang === "es" ? "segundos" : "seconds"}`;
 
     const message = lang === "es"
-      ? `📢 **Confirmación de Mensaje Masivo**\n\n**Configuración:**\n🌐 Idioma: ${langLabel}\n👥 Estado: ${statusLabel}\n📎 Multimedia: ${mediaLabel}\n🔘 Botones: ${buttonsLabel}\n\n**Vista previa del mensaje:**\n━━━━━━━━━━━━━━\n${wizard.text}\n━━━━━━━━━━━━━━\n\n**📊 Estadísticas:**\n👥 Usuarios objetivo: ${filteredUsers.length}\n⏱️ Tiempo estimado: ${estimatedTime}\n\n¿Listo para enviar?`
-      : `📢 **Broadcast Confirmation**\n\n**Configuration:**\n🌐 Language: ${langLabel}\n👥 Status: ${statusLabel}\n📎 Media: ${mediaLabel}\n🔘 Buttons: ${buttonsLabel}\n\n**Message preview:**\n━━━━━━━━━━━━━━\n${wizard.text}\n━━━━━━━━━━━━━━\n\n**📊 Statistics:**\n👥 Target users: ${filteredUsers.length}\n⏱️ Estimated time: ${estimatedTime}\n\n Ready to send?`;
+      ? `📢 **Confirmación de Mensaje Masivo**\n\n**Configuración:**\n🌐 Idioma: ${langLabel}\n👥 Estado: ${statusLabel}\n📎 Multimedia: ${mediaLabel}\n🔘 Botones: ${buttonsLabel}\n\n**Vista previa del mensaje:**\n━━━━━━━━━━━━━━\n${wizard.text.substring(0, 500)}${wizard.text.length > 500 ? '...' : ''}\n━━━━━━━━━━━━━━\n\n**📊 Estadísticas:**\n👥 Usuarios objetivo: ${filteredUsers.length}\n⏱️ Tiempo estimado: ${estimatedTime}`
+      : `📢 **Broadcast Confirmation**\n\n**Configuration:**\n🌐 Language: ${langLabel}\n👥 Status: ${statusLabel}\n📎 Media: ${mediaLabel}\n🔘 Buttons: ${buttonsLabel}\n\n**Message preview:**\n━━━━━━━━━━━━━━\n${wizard.text.substring(0, 500)}${wizard.text.length > 500 ? '...' : ''}\n━━━━━━━━━━━━━━\n\n**📊 Statistics:**\n👥 Target users: ${filteredUsers.length}\n⏱️ Estimated time: ${estimatedTime}`;
 
     const keyboard = {
       inline_keyboard: [
@@ -1225,45 +1498,782 @@ async function sendBroadcast(ctx, message) {
   // This is called from the text handler when waitingFor === "broadcast_message"
   try {
     const lang = ctx.session.language || "en";
-    const wizard = ctx.session.broadcastWizard;
 
-    if (!wizard) {
-      await ctx.reply(lang === "es" ? "Error: Sesión expirada" : "Error: Session expired");
-      return;
+    // Debug: Check what's in the session before processing
+    logger.info(`sendBroadcast debug - session before processing:`, {
+      hasBroadcast: !!ctx.session.broadcast,
+      broadcastData: ctx.session.broadcast,
+      waitingFor: ctx.session.waitingFor,
+      messageText: message.substring(0, 50) + '...'
+    });
+
+    // Clear the waiting state
+    ctx.session.waitingFor = null;
+
+    // Initialize broadcast session if it doesn't exist (shouldn't happen)
+    if (!ctx.session.broadcast) {
+      ctx.session.broadcast = {};
     }
 
-    wizard.text = message;
-    wizard.step = 5;
-    ctx.session.waitingFor = "broadcast_buttons";
+    // Store the text message
+    ctx.session.broadcast.text = message;
 
-    const msg = lang === "es"
-      ? "📢 **Asistente de Mensaje Masivo**\n\n**Paso 5 de 5:** ¿Quieres agregar botones al mensaje?\n\nEnvía los botones en formato:\n```\nTexto | URL\nTexto | URL\n```\n\nEjemplo:\n```\nVisitar sitio | https://ejemplo.com\nMás info | https://ejemplo.com/info\n```\n\nO presiona 'Omitir' para continuar sin botones."
-      : "📢 **Broadcast Wizard**\n\n**Step 5 of 5:** Do you want to add buttons to the message?\n\nSend buttons in format:\n```\nText | URL\nText | URL\n```\n\nExample:\n```\nVisit site | https://example.com\nMore info | https://example.com/info\n```\n\nOr press 'Skip' to continue without buttons.";
+    // Create confirmation message
+    let confirmMsg = lang === "es" ? "📢 **Confirmar Envío**\n\n" : "📢 **Confirm Broadcast**\n\n";
+    
+    // Show media info if present
+    if (ctx.session.broadcast.media) {
+      const mediaType = ctx.session.broadcast.media.type;
+      const mediaIcon = {
+        photo: "📸",
+        video: "🎥", 
+        document: "📄",
+        audio: "🎵",
+        voice: "🎤",
+        video_note: "📹",
+        animation: "🎭",
+        sticker: "🎨"
+      };
+      
+      confirmMsg += lang === "es" 
+        ? `${mediaIcon[mediaType] || "📎"} **Archivo:** ${mediaType}\n\n`
+        : `${mediaIcon[mediaType] || "📎"} **Media:** ${mediaType}\n\n`;
+    }
 
-    const keyboard = {
-      inline_keyboard: [
-        [
-          {
-            text: lang === "es" ? "⏭️ Omitir (sin botones)" : "⏭️ Skip (no buttons)",
-            callback_data: "bcast_buttons_skip"
-          }
-        ],
-        [
-          {
-            text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
-            callback_data: "admin_back"
-          }
-        ]
-      ]
-    };
+    // Show text message
+    confirmMsg += lang === "es" 
+      ? `**Mensaje:**\n${message}\n\n**⚠️ Esta acción no se puede deshacer**`
+      : `**Message:**\n${message}\n\n**⚠️ This action cannot be undone**`;
 
-    await ctx.reply(msg, {
+    await ctx.reply(confirmMsg, {
       parse_mode: "Markdown",
-      reply_markup: keyboard
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "✅ Sí, enviar" : "✅ Yes, send",
+              callback_data: "simple_broadcast_confirm"
+            },
+            {
+              text: lang === "es" ? "❌ Cancelar" : "❌ Cancel",
+              callback_data: "admin_back"
+            }
+          ]
+        ]
+      }
     });
+
+    logger.info(`Admin ${ctx.from.id} prepared broadcast with ${ctx.session.broadcast.media ? 'media + ' : ''}text: ${message.substring(0, 50)}...`);
   } catch (error) {
     logger.error("Error in sendBroadcast:", error);
     await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle adding media to broadcast
+ */
+async function handleBroadcastAddMedia(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    ctx.session.waitingFor = "broadcast_media";
+    ctx.session.broadcast.step = 'waiting_media';
+
+    const message = lang === "es"
+      ? "📸 **Agregar Archivos**\n\n**Paso 2:** Envía el archivo multimedia que quieres incluir:\n\n✅ Fotos (.jpg, .png, .gif)\n✅ Videos (.mp4, .mov)\n✅ Documentos (.pdf, .doc, etc.)\n✅ Audio (.mp3, .wav, etc.)\n\n📝 Después podrás agregar texto como descripción."
+      : "📸 **Add Media Files**\n\n**Step 2:** Send the media file you want to include:\n\n✅ Photos (.jpg, .png, .gif)\n✅ Videos (.mp4, .mov)\n✅ Documents (.pdf, .doc, etc.)\n✅ Audio (.mp3, .wav, etc.)\n\n📝 You can add text as description afterwards.";
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "« Volver" : "« Back",
+              callback_data: "admin_broadcast"
+            }
+          ]
+        ]
+      }
+    });
+
+    logger.info(`Admin ${ctx.from.id} chose to add media to broadcast`);
+  } catch (error) {
+    logger.error("Error in handleBroadcastAddMedia:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle text-only broadcast
+ */
+async function handleBroadcastTextOnly(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    ctx.session.waitingFor = "broadcast_message";
+    ctx.session.broadcast.step = 'waiting_text';
+
+    const message = lang === "es"
+      ? "💬 **Mensaje de Texto**\n\n**Paso 2:** Escribe el mensaje que quieres enviar a todos los usuarios:\n\n✨ **Opciones de formato disponibles:**\n**negrita** *cursiva* __subrayado__ ~tachado~\n`código` ```bloque de código```\n||spoiler|| [enlace](https://ejemplo.com)\n\n📝 Usa estos formatos para hacer tu mensaje más atractivo."
+      : "💬 **Text Message**\n\n**Step 2:** Write the message you want to send to all users:\n\n✨ **Available formatting options:**\n**bold** *italic* __underline__ ~strikethrough~\n`code` ```code block```\n||spoiler|| [link](https://example.com)\n\n📝 Use these formats to make your message more engaging.";
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "📖 Guía de Formato" : "📖 Formatting Guide",
+              callback_data: "broadcast_formatting_help"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "« Volver" : "« Back",
+              callback_data: "admin_broadcast"
+            }
+          ]
+        ]
+      }
+    });
+
+    logger.info(`Admin ${ctx.from.id} chose text-only broadcast`);
+  } catch (error) {
+    logger.error("Error in handleBroadcastTextOnly:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle multi-language broadcast setup
+ */
+async function handleBroadcastMultiLanguage(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    ctx.session.broadcast.multiLanguage = true;
+    ctx.session.broadcast.step = 'media_choice_multi';
+
+    const message = lang === "es"
+      ? "🌐 **Mensaje Segmentado por Idioma**\n\n**Paso 2:** ¿Quieres incluir archivos multimedia?\n\n📸 Puedes enviar: fotos, videos, documentos, audio, GIFs\n\n💡 El mismo archivo se enviará a ambos idiomas, pero podrás escribir textos diferentes."
+      : "🌐 **Multi-Language Broadcast**\n\n**Step 2:** Do you want to include media files?\n\n📸 You can send: photos, videos, documents, audio, GIFs\n\n💡 The same file will be sent to both languages, but you can write different texts.";
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "📸 Sí, agregar archivos" : "📸 Yes, add media",
+              callback_data: "broadcast_add_media"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "💬 Solo texto" : "💬 Text only",
+              callback_data: "broadcast_multi_text_only"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "« Volver" : "« Back",
+              callback_data: "admin_broadcast"
+            }
+          ]
+        ]
+      }
+    });
+
+    logger.info(`Admin ${ctx.from.id} chose multi-language broadcast`);
+  } catch (error) {
+    logger.error("Error in handleBroadcastMultiLanguage:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle single message broadcast setup
+ */
+async function handleBroadcastSingleMessage(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    ctx.session.broadcast.multiLanguage = false;
+    ctx.session.broadcast.step = 'media_choice_single';
+
+    const message = lang === "es"
+      ? "📝 **Mensaje Único**\n\n**Paso 2:** ¿Quieres incluir archivos multimedia?\n\n📸 Puedes enviar: fotos, videos, documentos, audio, GIFs\n\n📤 El mismo mensaje se enviará a todos los usuarios."
+      : "📝 **Single Message Broadcast**\n\n**Step 2:** Do you want to include media files?\n\n📸 You can send: photos, videos, documents, audio, GIFs\n\n📤 The same message will be sent to all users.";
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "📸 Sí, agregar archivos" : "📸 Yes, add media",
+              callback_data: "broadcast_add_media"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "💬 Solo texto" : "💬 Text only",
+              callback_data: "broadcast_text_only"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "« Volver" : "« Back",
+              callback_data: "admin_broadcast"
+            }
+          ]
+        ]
+      }
+    });
+
+    logger.info(`Admin ${ctx.from.id} chose single message broadcast`);
+  } catch (error) {
+    logger.error("Error in handleBroadcastSingleMessage:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle multi-language text-only broadcast
+ */
+async function handleBroadcastMultiTextOnly(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    ctx.session.waitingFor = "broadcast_message_en";
+    ctx.session.broadcast.step = 'waiting_text_en';
+
+    const message = lang === "es"
+      ? "🌐💬 **Mensajes por Idioma - Solo Texto**\n\n**Paso 3a:** Primero escribe el mensaje en **INGLÉS**:\n\n✨ **Opciones de formato:**\n**negrita** *cursiva* __subrayado__ ~tachado~\n`código` ```bloque``` ||spoiler|| [enlace](url)\n\n🔄 Después te pediremos el mensaje en español."
+      : "🌐💬 **Multi-Language Messages - Text Only**\n\n**Step 3a:** First write the message in **ENGLISH**:\n\n✨ **Formatting options:**\n**bold** *italic* __underline__ ~strikethrough~\n`code` ```block``` ||spoiler|| [link](url)\n\n🔄 Then we'll ask for the Spanish message.";
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "« Volver" : "« Back",
+              callback_data: "admin_broadcast"
+            }
+          ]
+        ]
+      }
+    });
+
+    logger.info(`Admin ${ctx.from.id} chose multi-language text-only broadcast`);
+  } catch (error) {
+    logger.error("Error in handleBroadcastMultiTextOnly:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle English message input for multi-language broadcast
+ */
+async function handleBroadcastEnglishMessage(ctx, messageText) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    // Store English text
+    ctx.session.broadcast.textEN = messageText;
+    
+    // Move to Spanish text input
+    ctx.session.waitingFor = "broadcast_message_es";
+    ctx.session.broadcast.step = 'waiting_text_es';
+
+    const message = lang === "es"
+      ? `✅ **Mensaje en inglés guardado**\n\n**Paso 3b:** Ahora escribe el mensaje en **ESPAÑOL**:\n\n✨ **Opciones de formato:**\n**negrita** *cursiva* __subrayado__ ~tachado~\n\`código\` \`\`\`bloque\`\`\` ||spoiler|| [enlace](url)\n\n🔄 Mensaje EN: "${messageText.substring(0, 80)}${messageText.length > 80 ? '...' : ''}"`
+      : `✅ **English message saved**\n\n**Step 3b:** Now write the message in **SPANISH**:\n\n✨ **Formatting options:**\n**bold** *italic* __underline__ ~strikethrough~\n\`code\` \`\`\`block\`\`\` ||spoiler|| [link](url)\n\n🔄 EN saved: "${messageText.substring(0, 80)}${messageText.length > 80 ? '...' : ''}`;
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "« Volver" : "« Back",
+              callback_data: "admin_broadcast"
+            }
+          ]
+        ]
+      }
+    });
+
+    logger.info(`Admin ${ctx.from.id} entered English text for multi-language broadcast`);
+  } catch (error) {
+    logger.error("Error in handleBroadcastEnglishMessage:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle Spanish message input for multi-language broadcast
+ */
+async function handleBroadcastSpanishMessage(ctx, messageText) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    // Store Spanish text
+    ctx.session.broadcast.textES = messageText;
+    
+    // Clear waiting state
+    ctx.session.waitingFor = null;
+    ctx.session.broadcast.step = 'ready_to_send';
+
+    const message = lang === "es"
+      ? `✅ **Mensajes Listos para Enviar**\n\n📤 **Mensaje Segmentado:**\n🇺🇸 **Inglés:** "${ctx.session.broadcast.textEN.substring(0, 80)}${ctx.session.broadcast.textEN.length > 80 ? '...' : ''}"\n🇪🇸 **Español:** "${messageText.substring(0, 80)}${messageText.length > 80 ? '...' : ''}"\n\n${ctx.session.broadcast.media ? `📎 **Archivo:** ${ctx.session.broadcast.media.type}\n\n` : ''}👥 Se enviará a usuarios según su idioma configurado.`
+      : `✅ **Messages Ready to Send**\n\n📤 **Segmented Message:**\n🇺🇸 **English:** "${ctx.session.broadcast.textEN.substring(0, 80)}${ctx.session.broadcast.textEN.length > 80 ? '...' : ''}"\n🇪🇸 **Spanish:** "${messageText.substring(0, 80)}${messageText.length > 80 ? '...' : ''}"\n\n${ctx.session.broadcast.media ? `📎 **Media:** ${ctx.session.broadcast.media.type}\n\n` : ''}👥 Will be sent to users based on their language preference.`;
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "📤 Enviar Ahora" : "📤 Send Now",
+              callback_data: "simple_broadcast_confirm"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "« Volver" : "« Back",
+              callback_data: "admin_broadcast"
+            }
+          ]
+        ]
+      }
+    });
+
+    logger.info(`Admin ${ctx.from.id} completed multi-language broadcast setup`);
+  } catch (error) {
+    logger.error("Error in handleBroadcastSpanishMessage:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Show detailed formatting help for broadcasts
+ */
+async function showBroadcastFormattingHelp(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    const helpText = getFormattingHelp(lang);
+    
+    const title = lang === "es" 
+      ? "📖 **Guía Completa de Formato**\n\n" 
+      : "📖 **Complete Formatting Guide**\n\n";
+
+    await ctx.reply(title + helpText, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "« Volver al Broadcast" : "« Back to Broadcast",
+              callback_data: "admin_broadcast"
+            }
+          ]
+        ]
+      }
+    });
+
+    logger.info(`Admin ${ctx.from.id} viewed formatting help`);
+  } catch (error) {
+    logger.error("Error showing formatting help:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle broadcast media upload
+ */
+async function handleBroadcastMedia(ctx, mediaType) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    // Get the file_id based on media type
+    let fileId;
+    switch (mediaType) {
+      case 'photo':
+        fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+        break;
+      case 'video':
+        fileId = ctx.message.video.file_id;
+        break;
+      case 'document':
+        fileId = ctx.message.document.file_id;
+        break;
+      case 'audio':
+        fileId = ctx.message.audio.file_id;
+        break;
+      case 'voice':
+        fileId = ctx.message.voice.file_id;
+        break;
+      case 'video_note':
+        fileId = ctx.message.video_note.file_id;
+        break;
+      case 'animation':
+        fileId = ctx.message.animation.file_id;
+        break;
+      case 'sticker':
+        fileId = ctx.message.sticker.file_id;
+        break;
+      default:
+        throw new Error(`Unsupported media type: ${mediaType}`);
+    }
+
+    // Ensure broadcast object exists
+    if (!ctx.session.broadcast) {
+      ctx.session.broadcast = {};
+    }
+
+    // Store media in session
+    ctx.session.broadcast.media = {
+      type: mediaType,
+      file_id: fileId
+    };
+
+    logger.info(`Broadcast media uploaded: ${mediaType}`, {
+      mediaType,
+      fileId,
+      hasWizard: !!ctx.session.broadcastWizard
+    });
+
+    // Check if we're in wizard mode or legacy broadcast mode
+    if (ctx.session.broadcastWizard) {
+      // Wizard mode - advance to next step
+      const wizard = ctx.session.broadcastWizard;
+      wizard.media = {
+        type: mediaType,
+        file_id: fileId
+      };
+      wizard.step = 4;
+      ctx.session.waitingFor = "broadcast_text";
+
+      const message = lang === "es"
+        ? `✅ **Archivo recibido**\n\n📁 Tipo: ${mediaType}\n\n**Paso 4 de 5:** Ahora escribe el texto que acompañará al archivo:\n\n✨ **Formato disponible:**\n**negrita** *cursiva* __subrayado__ ~tachado~\n\`código\` ||spoiler|| [enlace](url)\n\n📝 Este texto aparecerá como descripción del archivo multimedia.`
+        : `✅ **Media received**\n\n📁 Type: ${mediaType}\n\n**Step 4 of 5:** Now write the text to accompany the file:\n\n✨ **Formatting available:**\n**bold** *italic* __underline__ ~strikethrough~\n\`code\` ||spoiler|| [link](url)\n\n📝 This text will appear as the media caption.`;
+
+      await ctx.reply(message, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "« Volver" : "« Back",
+                callback_data: "bcast_back_to_status"
+              },
+              {
+                text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
+                callback_data: "admin_back"
+              }
+            ]
+          ]
+        }
+      });
+    } else if (ctx.session.broadcast.multiLanguage) {
+      // Legacy multi-language mode: ask for English text first
+      ctx.session.waitingFor = "broadcast_message_en";
+      ctx.session.broadcast.step = 'waiting_text_en';
+
+      const message = lang === "es"
+        ? `✅ **Archivo recibido**\n\n🌐 **Mensajes por Idioma + Multimedia**\n\n📁 Tipo: ${mediaType}\n\n**Paso 3a:** Ahora escribe el texto en **INGLÉS** que acompañará al archivo:\n\n✨ **Formato disponible:**\n**negrita** *cursiva* __subrayado__ ~tachado~\n\`código\` ||spoiler|| [enlace](url)\n\n🔄 Después te pediremos el texto en español.`
+        : `✅ **Media received**\n\n🌐 **Multi-Language + Media**\n\n📁 Type: ${mediaType}\n\n**Step 3a:** Now write the **ENGLISH** text to accompany the file:\n\n✨ **Formatting available:**\n**bold** *italic* __underline__ ~strikethrough~\n\`code\` ||spoiler|| [link](url)\n\n🔄 Then we'll ask for the Spanish text.`;
+
+      await ctx.reply(message, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "« Volver" : "« Back",
+                callback_data: "admin_broadcast"
+              }
+            ]
+          ]
+        }
+      });
+    } else {
+      // Legacy single message mode: ask for text normally
+      ctx.session.waitingFor = "broadcast_message";
+      ctx.session.broadcast.step = 'waiting_text';
+
+      const message = lang === "es"
+        ? `✅ **Archivo recibido**\n\n📁 Tipo: ${mediaType}\n\n**Paso 3:** Ahora escribe el texto que acompañará al archivo:\n\n✨ **Formato disponible:**\n**negrita** *cursiva* __subrayado__ ~tachado~\n\`código\` ||spoiler|| [enlace](url)\n\n📝 Este texto aparecerá como descripción del archivo multimedia.`
+        : `✅ **Media received**\n\n📁 Type: ${mediaType}\n\n**Step 3:** Now write the text to accompany the file:\n\n✨ **Formatting available:**\n**bold** *italic* __underline__ ~strikethrough~\n\`code\` ||spoiler|| [link](url)\n\n📝 This text will appear as the media caption.`;
+
+      await ctx.reply(message, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "« Volver" : "« Back",
+                callback_data: "admin_broadcast"
+              }
+            ]
+          ]
+        }
+      });
+    }
+
+    logger.info(`Admin ${ctx.from.id} uploaded ${mediaType} for broadcast`);
+  } catch (error) {
+    logger.error("Error handling broadcast media:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle broadcast wizard text input at step 4
+ */
+async function handleBroadcastWizardText(ctx, messageText) {
+  try {
+    const lang = ctx.session.language || "en";
+    const wizard = ctx.session.broadcastWizard;
+
+    if (!wizard) {
+      logger.error("Broadcast wizard not initialized");
+      await ctx.reply(t("errors.generic", lang));
+      return;
+    }
+
+    // Store the text message
+    wizard.text = messageText;
+    wizard.step = 5;
+    ctx.session.waitingFor = "broadcast_buttons";
+
+    // Ask about buttons
+    const message = lang === "es"
+      ? `📢 **Asistente de Mensaje Masivo**\n\n**Paso 5 de 5:** ¿Quieres agregar botones al mensaje?\n\nPuedes agregar botones con enlaces o acciones específicas, o presiona 'Enviar' para enviar el mensaje sin botones.`
+      : `📢 **Broadcast Wizard**\n\n**Step 5 of 5:** Do you want to add buttons to the message?\n\nYou can add buttons with links or specific actions, or press 'Send' to send the message without buttons.`;
+
+    await ctx.reply(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "✉️ Enviar sin botones" : "✉️ Send without buttons",
+              callback_data: "bcast_send_no_buttons"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "« Atrás" : "« Back",
+              callback_data: "bcast_back_to_status"
+            },
+            {
+              text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
+              callback_data: "admin_back"
+            }
+          ]
+        ]
+      }
+    });
+
+    logger.info(`Admin ${ctx.from.id} entered broadcast text in wizard`);
+  } catch (error) {
+    logger.error("Error handling broadcast wizard text:", error);
+    await ctx.reply(t("errors.generic", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Execute the simple broadcast to all users
+ */
+async function executeBroadcast(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    // Check if we're in wizard mode
+    const isWizardMode = !!ctx.session.broadcastWizard;
+    const broadcastData = isWizardMode ? ctx.session.broadcastWizard : ctx.session.broadcast;
+
+    if (!broadcastData || !broadcastData.text) {
+      await ctx.reply(lang === "es" ? "Error: No hay mensaje pendiente" : "Error: No pending message");
+      return;
+    }
+
+    // Extract data from wizard
+    const media = broadcastData.media;
+    const text = broadcastData.text;
+    const targetLanguage = broadcastData.targetLanguage;
+    const targetStatus = broadcastData.targetStatus;
+    
+    // Get all users
+    const usersSnapshot = await db.collection("users").get();
+    let users = usersSnapshot.docs.map(doc => ({ 
+      userId: doc.id,
+      id: doc.id, 
+      ...doc.data()
+    }));
+
+    // Filter by language if in wizard mode
+    if (isWizardMode && targetLanguage !== 'all') {
+      users = users.filter(u => (u.language || 'en') === targetLanguage);
+    }
+
+    // Filter by status if in wizard mode
+    if (isWizardMode && targetStatus) {
+      users = users.filter(u => {
+        switch(targetStatus) {
+          case 'subscribers':
+            return u.tier && u.tier !== 'Free' && u.membershipExpiresAt && new Date(u.membershipExpiresAt) > new Date();
+          case 'free':
+            return !u.tier || u.tier === 'Free';
+          case 'churned':
+            return u.tier && u.tier !== 'Free' && (!u.membershipExpiresAt || new Date(u.membershipExpiresAt) <= new Date());
+          case 'all':
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Generate segment name for confirmation
+    let segmentName = lang === "es" ? "Audiencia seleccionada" : "Selected audience";
+    if (isWizardMode) {
+      const langLabels = {
+        all: lang === "es" ? "Todos" : "All",
+        en: "English",
+        es: "Español"
+      };
+      const statusLabels = {
+        all: lang === "es" ? "Todos" : "All",
+        subscribers: lang === "es" ? "Activos" : "Active",
+        free: lang === "es" ? "Nivel Gratuito" : "Free",
+        churned: lang === "es" ? "Expirados" : "Expired"
+      };
+      
+      const langName = langLabels[targetLanguage] || "All";
+      const statusName = statusLabels[targetStatus] || "All";
+      segmentName = `${langName} / ${statusName}`;
+    }
+    
+    // Clear the broadcast session
+    if (isWizardMode) {
+      ctx.session.broadcastWizard = null;
+    } else {
+      ctx.session.broadcast = null;
+    }
+
+    const broadcastType = media ? 'media + text' : 'text';
+    logger.info(`Admin ${ctx.from.id} starting ${broadcastType} broadcast to ${users.length} users`);
+
+    // Send status message
+    const statusMsg = await ctx.reply(lang === "es" 
+      ? `📢 **Enviando mensaje...**\n\n🎯 **Audiencia:** ${segmentName}\n👥 **Total usuarios:** ${users.length}\n📤 Enviando...`
+      : `📢 **Sending broadcast...**\n\n🎯 **Target Audience:** ${segmentName}\n👥 **Total users:** ${users.length}\n📤 Sending...`
+    );
+
+    let sent = 0;
+    let failed = 0;
+
+    // Send to all users with rate limiting
+    for (const user of users) {
+      try {
+        const messageText = text;
+
+        if (media) {
+          // Send media with caption
+          const sendMethod = {
+            photo: 'sendPhoto',
+            video: 'sendVideo',
+            document: 'sendDocument',
+            audio: 'sendAudio',
+            voice: 'sendVoice',
+            video_note: 'sendVideoNote',
+            animation: 'sendAnimation',
+            sticker: 'sendSticker'
+          };
+
+          const method = sendMethod[media.type];
+          if (method) {
+            await ctx.telegram[method](user.id, media.file_id, {
+              caption: messageText,
+              parse_mode: "Markdown"
+            });
+          } else {
+            // Fallback: send as document
+            await ctx.telegram.sendDocument(user.id, media.file_id, {
+              caption: messageText,
+              parse_mode: "Markdown"
+            });
+          }
+        } else {
+          // Send text only
+          await ctx.telegram.sendMessage(user.id, messageText, { parse_mode: "Markdown" });
+        }
+        
+        sent++;
+        
+        // Rate limiting - wait 100ms between sends
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        failed++;
+        logger.warn(`Failed to send broadcast to user ${user.id}:`, error.message);
+      }
+    }
+
+    // Update status message with results
+    const finalMsg = lang === "es"
+      ? `✅ **Mensaje enviado**\n\n🎯 **Audiencia:** ${segmentName}\n👥 **Total usuarios:** ${users.length}\n📤 **Enviados:** ${sent}\n❌ **Fallidos:** ${failed}`
+      : `✅ **Broadcast completed**\n\n🎯 **Target Audience:** ${segmentName}\n👥 **Total users:** ${users.length}\n📤 **Sent:** ${sent}\n❌ **Failed:** ${failed}`;
+
+    await ctx.telegram.editMessageText(ctx.chat.id, statusMsg.message_id, null, finalMsg, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "« Volver al Panel" : "« Back to Panel",
+              callback_data: "admin_back"
+            }
+          ]
+        ]
+      }
+    });
+
+    // Record broadcast analytics
+    try {
+      const presets = getSegmentPresets();
+      const segmentInfo = presets[targetSegment];
+      
+      await recordBroadcastAnalytics({
+        adminId: ctx.from.id.toString(),
+        segment: targetSegment,
+        segmentName: segmentName,
+        targetCount: users.length,
+        sentCount: sent,
+        failedCount: failed,
+        type: broadcastType,
+        hasMedia: !!media,
+        segmentCriteria: segmentInfo?.criteria || {},
+        messageLength: (text || textEN || textES || '').length
+      });
+    } catch (analyticsError) {
+      logger.warn('Failed to record broadcast analytics:', analyticsError);
+    }
+
+    logger.info(`Broadcast completed by admin ${ctx.from.id}: ${sent} sent, ${failed} failed`);
+    
+    // Clear wizard state after successful broadcast
+    ctx.session.broadcastWizard = null;
+  } catch (error) {
+    logger.error("Error executing broadcast:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+    // Clear wizard on error as well
+    ctx.session.broadcastWizard = null;
   }
 }
 
@@ -1914,48 +2924,13 @@ async function executeQuickActivation(ctx, userId, tier, durationDays) {
     // Get bot instance for invite link generation
     const bot = require('../index');
     
-    // Activate membership with bot instance for invite link generation
-    const result = await activateMembership(userId, tier, "admin", durationDays, bot);
-
-    const userData = userDoc.data();
-    const userLang = userData.language || "en";
-
-    // Get plan name for display
-    let planName = tier;
-    try {
-      const planService = require('../../services/planService');
-      const plan = await planService.getPlanByTier?.(tier) || await planService.getPlanById?.(tier);
-      if (plan) {
-        planName = plan.displayName || plan.name || tier;
-      }
-    } catch (planError) {
-      // Use tier as fallback if plan service fails
-      logger.warn('Could not get plan details for confirmation message:', planError.message);
-    }
-
-    // Generate standardized confirmation message
-    const { generateConfirmationMessage } = require('../../utils/membershipManager');
-    const userName = userData.username || userData.firstName || 'User';
-    
-    const confirmationMessage = generateConfirmationMessage({
-      userName,
-      planName,
-      durationDays,
-      expiresAt: result.expiresAt,
-      paymentMethod: userLang === 'es' ? 'Activación Manual' : 'Manual Activation',
-      reference: `admin_${Date.now()}`,
-      inviteLink: result.inviteLink,
-      language: userLang
+    // Activate membership with bot instance for invite link generation and notification
+    const result = await activateMembership(userId, tier, "admin", durationDays, bot, {
+      paymentMethod: userDoc.data().language === 'es' ? 'Activación Manual' : 'Manual Activation',
+      reference: `admin_${Date.now()}`
     });
-
-    // Notify user with standardized message
-    try {
-      await ctx.telegram.sendMessage(userId, confirmationMessage, {
-        parse_mode: "Markdown",
-      });
-    } catch (e) {
-      logger.warn(`Could not notify user ${userId} about activation:`, e.message);
-    }
+    
+    // Note: activateMembership now automatically sends notification with invite link
 
     // Confirm to admin
     const isLifetime = !result.expiresAt;
@@ -3175,11 +4150,6 @@ async function viewMenuDetails(ctx, menuName) {
             }],
           [
             {
-              text: lang === "es" ? "🔍 Test Menu" : "🔍 Test Menu",
-              callback_data: `admin_menu_test_${menuName}`,
-            }],
-          [
-            {
               text: lang === "es" ? "« Volver a Menús" : "« Back to Menus",
               callback_data: "admin_menus",
             }]],
@@ -3286,11 +4256,6 @@ async function analyzeMenuStructure(ctx, menuName) {
         inline_keyboard: [
           [
             {
-              text: lang === "es" ? "🔍 Test Menu" : "🔍 Test Menu",
-              callback_data: `admin_menu_test_${menuName}`,
-            }],
-          [
-            {
               text: lang === "es" ? "« Volver" : "« Back",
               callback_data: `admin_menu_view_${menuName}`,
             }]],
@@ -3300,55 +4265,6 @@ async function analyzeMenuStructure(ctx, menuName) {
     logger.info(`Admin ${ctx.from.id} analyzed ${menuName} menu structure`);
   } catch (error) {
     logger.error("Error analyzing menu structure:", error);
-    await ctx.reply(t("error", ctx.session.language || "en"));
-  }
-}
-
-/**
- * Test menu display
- */
-async function testMenu(ctx, menuName) {
-  try {
-    const lang = ctx.session.language || "en";
-
-    delete require.cache[require.resolve("../../config/menus")];
-    const { getMenu } = require("../../config/menus");
-
-    const message = lang === "es"
-      ? `🔍 **Test: ${menuName.charAt(0).toUpperCase() + menuName.slice(1)} Menu**\n\nMenú de prueba mostrado abajo:`
-      : `🔍 **Test: ${menuName.charAt(0).toUpperCase() + menuName.slice(1)} Menu**\n\nTest menu displayed below:`;
-
-    const menu = getMenu(menuName, lang);
-
-    if (!menu) {
-      await ctx.answerCbQuery(lang === "es" ? "Menú no encontrado" : "Menu not found");
-      return;
-    }
-
-    await ctx.reply(message, {
-      parse_mode: "Markdown",
-      reply_markup: menu,
-    });
-
-    await ctx.reply(
-      lang === "es"
-        ? "✅ Menú de prueba enviado. Verifica que todos los botones se muestren correctamente.\n\nNota: Los callbacks pueden no funcionar en modo de prueba."
-        : "✅ Test menu sent. Verify that all buttons display correctly.\n\nNote: Callbacks may not work in test mode.",
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: lang === "es" ? "« Volver a Menús" : "« Back to Menus",
-                callback_data: "admin_menus",
-              }]],
-        },
-      }
-    );
-
-    logger.info(`Admin ${ctx.from.id} tested ${menuName} menu`);
-  } catch (error) {
-    logger.error("Error testing menu:", error);
     await ctx.reply(t("error", ctx.session.language || "en"));
   }
 }
@@ -3396,7 +4312,7 @@ async function reloadMenus(ctx) {
 /**
  * Handle broadcast media upload (Step 3)
  */
-async function handleBroadcastMedia(ctx, mediaType) {
+async function handleBroadcastMediaOld(ctx, mediaType) {
   try {
     const lang = ctx.session.language || "en";
     const wizard = ctx.session.broadcastWizard;
@@ -3495,42 +4411,92 @@ async function handleAdminCallback(ctx) {
   const lang = ctx.session.language || "en";
 
   try {
-    // Don't answer callback query yet for broadcast wizard - it handles it internally
-    if (!action.startsWith("bcast_")) {
-      await ctx.answerCbQuery();
-    }
+    logger.info(`Admin callback received: ${action}`, { adminId: ctx.from.id });
+    logger.info(`Callback data analysis: startsWith bcast_=${action.startsWith("bcast_")}`);
 
     if (action === "admin_stats") {
+      await ctx.answerCbQuery();
       await showStats(ctx);
     } else if (action === "admin_broadcast") {
+      await ctx.answerCbQuery();
       await broadcastMessage(ctx);
+    } else if (action === "simple_broadcast_confirm") {
+      await ctx.answerCbQuery();
+      await executeBroadcast(ctx);
+    } else if (action === "broadcast_add_media") {
+      await ctx.answerCbQuery();
+      await handleBroadcastAddMedia(ctx);
+    } else if (action === "broadcast_text_only") {
+      await ctx.answerCbQuery();
+      await handleBroadcastTextOnly(ctx);
+    } else if (action === "broadcast_multi_language") {
+      await ctx.answerCbQuery();
+      await handleBroadcastMultiLanguage(ctx);
+    } else if (action === "broadcast_single_message") {
+      await ctx.answerCbQuery();
+      await handleBroadcastSingleMessage(ctx);
+    } else if (action === "broadcast_multi_text_only") {
+      await ctx.answerCbQuery();
+      await handleBroadcastMultiTextOnly(ctx);
+    } else if (action === "broadcast_formatting_help") {
+      await ctx.answerCbQuery();
+      await showBroadcastFormattingHelp(ctx);
+    } else if (action === "broadcast_select_segment") {
+      await ctx.answerCbQuery();
+      await showSegmentSelection(ctx);
+    } else if (action === "broadcast_all_users") {
+      await ctx.answerCbQuery();
+      await handleSegmentSelection(ctx, 'all_users');
+    } else if (action === "broadcast_segment_more") {
+      await ctx.answerCbQuery();
+      await showMoreSegmentOptions(ctx);
+    } else if (action === "broadcast_back_to_start") {
+      await ctx.answerCbQuery();
+      await broadcastMessage(ctx);
+    } else if (action.startsWith("broadcast_segment_")) {
+      const segmentKey = action.replace("broadcast_segment_", "");
+      await ctx.answerCbQuery();
+      await handleSegmentSelection(ctx, segmentKey);
+      await handleSegmentSelection(ctx, segmentKey);
     } else if (action.startsWith("bcast_")) {
       // Handle all broadcast wizard actions
+      logger.info(`Processing broadcast wizard action: ${action}`);
+      logger.info(`Session broadcastWizard state:`, ctx.session.broadcastWizard);
+      
       if (action === "bcast_save_scheduled") {
+        await ctx.answerCbQuery();
         await saveScheduledBroadcast(ctx);
       } else if (action.startsWith("bcast_confirm_")) {
+        // answerCbQuery is handled inside handleBroadcastWizard for these
         await handleBroadcastWizard(ctx, action);
       } else if (ctx.session.broadcastWizard && ctx.session.broadcastWizard.scheduledForLater) {
         // For scheduled broadcasts, show scheduled confirmation instead of executing
         if (action === "bcast_confirm_send" || action === "bcast_buttons_skip") {
+          await ctx.answerCbQuery();
           await showScheduledBroadcastConfirmation(ctx);
         } else {
+          // answerCbQuery is handled inside handleBroadcastWizard 
           await handleBroadcastWizard(ctx, action);
         }
       } else {
-        // Regular broadcast
+        // Regular broadcast - answerCbQuery is handled inside handleBroadcastWizard
         await handleBroadcastWizard(ctx, action);
       }
     } else if (action === "admin_users") {
+      await ctx.answerCbQuery();
       await listUsers(ctx);
     } else if (action === "admin_list_all") {
+      await ctx.answerCbQuery();
       await listAllUsers(ctx, 1);
     } else if (action.startsWith("admin_list_page_")) {
+      await ctx.answerCbQuery();
       const page = parseInt(action.split("_").pop());
       await listAllUsers(ctx, page);
     } else if (action === "admin_search_user") {
+      await ctx.answerCbQuery();
       await searchUser(ctx);
     } else if (action === "admin_back") {
+      await ctx.answerCbQuery();
       await adminPanel(ctx);
     } else if (action.startsWith("admin_edit_tier_")) {
       const userId = action.replace("admin_edit_tier_", "");
@@ -3641,9 +4607,6 @@ async function handleAdminCallback(ctx) {
     } else if (action.startsWith("admin_menu_analyze_")) {
       const menuName = action.replace("admin_menu_analyze_", "");
       await analyzeMenuStructure(ctx, menuName);
-    } else if (action.startsWith("admin_menu_test_")) {
-      const menuName = action.replace("admin_menu_test_", "");
-      await testMenu(ctx, menuName);
     } else if (action === "admin_menu_reload") {
       await reloadMenus(ctx);
     } else if (action === "admin_scheduled_broadcasts") {
@@ -3653,6 +4616,12 @@ async function handleAdminCallback(ctx) {
     } else if (action.startsWith("admin_cancel_broadcast_")) {
       const broadcastId = action.replace("admin_cancel_broadcast_", "");
       await executeCancelBroadcast(ctx, broadcastId);
+    } else if (action === "admin_broadcast_analytics") {
+      await ctx.answerCbQuery();
+      await showBroadcastAnalytics(ctx);
+    } else if (action === "admin_analytics_segments") {
+      await ctx.answerCbQuery();
+      await showAnalyticsBySegment(ctx);
     }
   } catch (error) {
     logger.error("Error handling admin callback:", error);
@@ -4028,6 +4997,33 @@ async function saveScheduledBroadcast(ctx) {
         }
       );
 
+      // Notify all groups about the new scheduled event
+      try {
+        const groupsSnapshot = await db.collection('groups').get();
+        
+        const eventAnnouncement = lang === "es"
+          ? `📅 *Evento Programado*\n\n🎯 ${wizard.text.substring(0, 100)}${wizard.text.length > 100 ? '...' : ''}\n\n🕐 Hora: ${wizard.scheduledTime.toLocaleString('es-CO')}\n\n💡 Usa /upcoming para ver todos los eventos programados.`
+          : `📅 *Scheduled Event*\n\n🎯 ${wizard.text.substring(0, 100)}${wizard.text.length > 100 ? '...' : ''}\n\n🕐 Time: ${wizard.scheduledTime.toLocaleString('en-US')}\n\n💡 Use /upcoming to see all scheduled events.`;
+
+        for (const groupDoc of groupsSnapshot.docs) {
+          try {
+            const groupData = groupDoc.data();
+            const groupId = groupData.telegramGroupId || groupDoc.id;
+            
+            if (groupId) {
+              await ctx.telegram.sendMessage(groupId, eventAnnouncement, { parse_mode: 'Markdown' });
+            }
+          } catch (error) {
+            logger.warn(`Failed to send event notification to group:`, error.message);
+          }
+        }
+        
+        logger.info(`Event notification sent to ${groupsSnapshot.size} groups`);
+      } catch (error) {
+        logger.error('Error sending group event notifications:', error);
+        // Don't fail the operation if notifications fail
+      }
+
       logger.info(`Admin ${ctx.from.id} scheduled broadcast: ${broadcastId}`);
     } else {
       await ctx.reply(
@@ -4090,6 +5086,146 @@ async function executeCancelBroadcast(ctx, broadcastId) {
   }
 }
 
+/**
+ * Show broadcast analytics dashboard
+ */
+async function showBroadcastAnalytics(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    const loadingMsg = lang === "es" 
+      ? "📈 **Analíticas de Broadcasts**\n\n_Cargando datos..._"
+      : "📈 **Broadcast Analytics**\n\n_Loading data..._";
+    
+    const sentMessage = await ctx.editMessageText(loadingMsg, { parse_mode: "Markdown" });
+    
+    // Get analytics data for last 30 days
+    const analytics = await getBroadcastAnalytics(30);
+    const topSegments = await getTopPerformingSegments(5, 30);
+    
+    let message = lang === "es" 
+      ? "📈 **Analíticas de Broadcasts** (últimos 30 días)\n\n"
+      : "📈 **Broadcast Analytics** (last 30 days)\n\n";
+    
+    // Overall stats
+    message += lang === "es"
+      ? `📊 **Resumen General:**\n• Total broadcasts: ${analytics.totalBroadcasts}\n• Mensajes enviados: ${analytics.totalMessagesSent.toLocaleString()}\n• Usuarios objetivo: ${analytics.totalTargeted.toLocaleString()}\n• Tasa de éxito: ${analytics.overallSuccessRate.toFixed(1)}%\n\n`
+      : `📊 **Overall Summary:**\n• Total broadcasts: ${analytics.totalBroadcasts}\n• Messages sent: ${analytics.totalMessagesSent.toLocaleString()}\n• Users targeted: ${analytics.totalTargeted.toLocaleString()}\n• Success rate: ${analytics.overallSuccessRate.toFixed(1)}%\n\n`;
+    
+    // Top performing segments
+    if (topSegments.length > 0) {
+      message += lang === "es" ? `🎯 **Mejores Segmentos:**\n` : `🎯 **Top Performing Segments:**\n`;
+      
+      topSegments.forEach((segment, index) => {
+        const emoji = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "🏅";
+        message += `${emoji} ${segment.name}: ${segment.successRate.toFixed(1)}% (${segment.broadcastCount} broadcasts)\n`;
+      });
+      message += "\n";
+    }
+    
+    // Recent broadcasts
+    if (analytics.recentBroadcasts.length > 0) {
+      message += lang === "es" ? `📋 **Broadcasts Recientes:**\n` : `📋 **Recent Broadcasts:**\n`;
+      
+      analytics.recentBroadcasts.slice(0, 5).forEach(broadcast => {
+        const date = broadcast.createdAt.toLocaleDateString();
+        const mediaIcon = broadcast.hasMedia ? "📸" : "📝";
+        message += `${mediaIcon} ${date}: ${broadcast.segment} (${broadcast.sent}/${broadcast.targeted} - ${broadcast.successRate.toFixed(1)}%)\n`;
+      });
+    }
+    
+    if (analytics.totalBroadcasts === 0) {
+      message += lang === "es" 
+        ? "_No hay datos de broadcasts disponibles._"
+        : "_No broadcast data available._";
+    }
+    
+    const keyboard = [
+      [
+        {
+          text: lang === "es" ? "📊 Ver por Segmento" : "📊 View by Segment",
+          callback_data: "admin_analytics_segments"
+        }
+      ],
+      [
+        {
+          text: lang === "es" ? "🔄 Actualizar" : "🔄 Refresh",
+          callback_data: "admin_broadcast_analytics"
+        }
+      ],
+      [
+        {
+          text: lang === "es" ? "« Volver al Panel" : "« Back to Panel",
+          callback_data: "admin_back"
+        }
+      ]
+    ];
+    
+    await ctx.editMessageText(message, {
+      parse_mode: "Markdown",
+      reply_markup: { inline_keyboard: keyboard }
+    });
+
+    logger.info(`Admin ${ctx.from.id} viewed broadcast analytics dashboard`);
+  } catch (error) {
+    logger.error("Error showing broadcast analytics:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Show analytics by segment
+ */
+async function showAnalyticsBySegment(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    const analytics = await getBroadcastAnalytics(30);
+    
+    let message = lang === "es" 
+      ? "📊 **Analíticas por Segmento** (últimos 30 días)\n\n"
+      : "📊 **Analytics by Segment** (last 30 days)\n\n";
+    
+    const segments = Object.entries(analytics.segmentBreakdown)
+      .sort((a, b) => b[1].averageSuccessRate - a[1].averageSuccessRate);
+    
+    if (segments.length === 0) {
+      message += lang === "es" 
+        ? "_No hay datos de segmentos disponibles._"
+        : "_No segment data available._";
+    } else {
+      segments.forEach(([key, data]) => {
+        const successIcon = data.averageSuccessRate >= 90 ? "🟢" : 
+                           data.averageSuccessRate >= 80 ? "🟡" : "🔴";
+        
+        message += `${successIcon} **${data.name}**\n`;
+        message += lang === "es"
+          ? `   • Broadcasts: ${data.count}\n   • Enviados: ${data.totalSent.toLocaleString()}\n   • Tasa de éxito: ${data.averageSuccessRate.toFixed(1)}%\n\n`
+          : `   • Broadcasts: ${data.count}\n   • Sent: ${data.totalSent.toLocaleString()}\n   • Success rate: ${data.averageSuccessRate.toFixed(1)}%\n\n`;
+      });
+    }
+    
+    const keyboard = [
+      [
+        {
+          text: lang === "es" ? "« Volver a Analíticas" : "« Back to Analytics",
+          callback_data: "admin_broadcast_analytics"
+        }
+      ]
+    ];
+    
+    await ctx.editMessageText(message, {
+      parse_mode: "Markdown",
+      reply_markup: { inline_keyboard: keyboard }
+    });
+
+    logger.info(`Admin ${ctx.from.id} viewed analytics by segment`);
+  } catch (error) {
+    logger.error("Error showing analytics by segment:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
 module.exports = {
   adminPanel,
   showStats,
@@ -4097,6 +5233,7 @@ module.exports = {
   broadcastMessage,
   sendBroadcast,
   handleBroadcastMedia,
+  handleBroadcastWizardText,
   handleBroadcastButtons,
   handleAdminCallback,
   executeSearch,
@@ -4130,12 +5267,16 @@ module.exports = {
   showPlanStats,
   viewMenuDetails,
   analyzeMenuStructure,
-  testMenu,
-  reloadMenus,
   showScheduledBroadcasts,
   startScheduleBroadcast,
   handleScheduleBroadcastDate,
   showScheduledBroadcastConfirmation,
   saveScheduledBroadcast,
   executeCancelBroadcast,
+  handleBroadcastEnglishMessage,
+  handleBroadcastSpanishMessage,
+  showBroadcastFormattingHelp,
+  showSegmentSelection,
+  showMoreSegmentOptions,
+  handleSegmentSelection,
 };

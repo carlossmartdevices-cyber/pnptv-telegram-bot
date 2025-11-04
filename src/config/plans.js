@@ -2,23 +2,12 @@
 // Prefer using Firestore for plan management. This file provides a
 // safe, centralized fallback for legacy code paths and for local dev.
 // Keep values minimal and accurate to the current production plans.
+//
+// NEW TIER SYSTEM:
+// - Free: Default tier, no paid features
+// - Basic: Premium channel access (trial-week and pnp-member plans)
+// - Premium: All features (crystal-member and diamond-member plans)
 const plans = {
-	// New canonical plans
-	TEST_PLAN: {
-		id: 'test-1usd',
-		name: 'Test Plan',
-		displayName: 'Test Plan ($1)',
-		price: 1.00,
-		priceInCOP: 1.00 * 4000,
-		currency: 'USD',
-		duration: 1,
-		durationDays: 1,
-		tier: 'trial-week',
-		description: 'Test plan for $1 USD - 1 day access',
-		features: ['Test access', 'Payment testing', '1 day duration'],
-		active: true,
-		isTest: true,
-	},
 	TRIAL_WEEK: {
 		id: 'trial-week',
 		name: 'Trial Week',
@@ -28,9 +17,9 @@ const plans = {
 		currency: 'USD',
 		duration: 7,
 		durationDays: 7,
-		tier: 'trial-week',
-		description: 'One week trial to explore premium features',
-		features: ['Trial access', 'Limited premium features'],
+		tier: 'Basic',
+		description: 'One week trial to explore premium channel',
+		features: ['Premium channel access', 'HD streaming'],
 		active: true,
 	},
 	PNP_MEMBER: {
@@ -42,9 +31,9 @@ const plans = {
 		currency: 'USD',
 		duration: 30,
 		durationDays: 30,
-		tier: 'pnp-member',
-		description: 'Monthly membership with full access',
-		features: ['Full access', '1080p streaming', 'Priority support'],
+		tier: 'Basic',
+		description: 'Monthly membership with premium channel access',
+		features: ['Premium channel access', 'HD streaming', 'Basic support'],
 		active: true,
 	},
 	PNP_CRYSTAL: {
@@ -56,9 +45,9 @@ const plans = {
 		currency: 'USD',
 		duration: 120,
 		durationDays: 120,
-		tier: 'crystal-member',
-		description: '4-month package with premium perks',
-		features: ['Premium access', '4K streaming', 'Early access'],
+		tier: 'Premium',
+		description: '4-month package with all premium features',
+		features: ['All premium features', 'Video calls', 'Live streaming', '4K streaming', 'Priority support'],
 		active: true,
 	},
 	PNP_DIAMOND: {
@@ -70,9 +59,9 @@ const plans = {
 		currency: 'USD',
 		duration: 365,
 		durationDays: 365,
-		tier: 'diamond-member',
+		tier: 'Premium',
 		description: 'Annual VIP membership with exclusive benefits',
-		features: ['VIP access', 'Priority support', 'Exclusive content'],
+		features: ['All premium features', 'Video calls', 'Live streaming', 'VIP access', 'Priority support', 'Exclusive content'],
 		active: true,
 	},
 
@@ -87,9 +76,9 @@ const plans = {
 		currency: 'USD',
 		duration: 30,
 		durationDays: 30,
-		tier: 'pnp-member',
+		tier: 'Basic',
 		description: 'Deprecated alias for PNP Member',
-		features: ['Full access'],
+		features: ['Premium channel access'],
 		active: true,
 		deprecated: true,
 	},
@@ -103,9 +92,9 @@ const plans = {
 		currency: 'USD',
 		duration: 120,
 		durationDays: 120,
-		tier: 'crystal-member',
+		tier: 'Premium',
 		description: 'Deprecated alias for PNP Crystal Member',
-		features: ['Premium access'],
+		features: ['All premium features'],
 		active: true,
 		deprecated: true,
 	},
