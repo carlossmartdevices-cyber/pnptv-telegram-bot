@@ -68,7 +68,9 @@ const {
   handleDeleteTrack,
   handleDeleteEvent,
   handlePlayTrack,
-  handleBackToLibrary
+  handleBackToLibrary,
+  handleSetTimezone,
+  handleTimezoneCallback
 } = require("./handlers/community");
 const { handleNewMember, handleMediaMessage } = require("./helpers/groupManagement");
 const {
@@ -158,6 +160,7 @@ bot.command("playlist", handlePlaylist);
 bot.command("addtrack", handleAddTrack);
 bot.command("deletetrack", handleDeleteTrack);
 bot.command("deleteevent", handleDeleteEvent);
+bot.command("settimezone", handleSetTimezone);
 
 // ===== ONBOARDING FLOW =====
 // Handle both language callback formats: lang_xx and language_xx
@@ -298,6 +301,9 @@ bot.action("settings_back", viewProfile);
 // ===== MUSIC LIBRARY CALLBACKS =====
 bot.action(/^play_track:/, handlePlayTrack);
 bot.action("back_to_library", handleBackToLibrary);
+
+// ===== TIMEZONE CALLBACKS =====
+bot.action(/^set_tz:/, handleTimezoneCallback);
 
 // ===== ADMIN CALLBACKS =====
 

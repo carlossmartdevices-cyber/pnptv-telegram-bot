@@ -16,7 +16,7 @@ function privateResponseMiddleware() {
     }
 
     // Commands/actions that should remain in group (group management functions)
-    const groupOnlyCommands = ['/status', '/refresh', '/info', '/library', '/toptracks', '/addtrack'];
+    const groupOnlyCommands = ['/status', '/refresh', '/info', '/library', '/toptracks', '/addtrack', '/deletetrack'];
     const commandText = ctx.message?.text || ctx.callbackQuery?.data || '';
     
     // Allow group management functions to work normally

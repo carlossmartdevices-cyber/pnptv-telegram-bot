@@ -3,6 +3,7 @@ const { getNearbyUsers, trackNearbySearch, getTracks, getTopTracks, trackPlay, s
 const { cancelEventReminders } = require("../../services/eventReminderService");
 const logger = require("../../utils/logger");
 const { t } = require("../../utils/i18n");
+const { getUserTimezone, parseDateInTimezone, formatDateInTimezone, getTimezoneName } = require("../../utils/timezoneHelper");
 
 /**
  * Community Features
@@ -87,6 +88,11 @@ async function handleNearby(ctx) {
  */
 async function handleLibrary(ctx) {
   try {
+    // Explicitly allow group responses for library command
+    if (ctx.allowGroupResponse) {
+      ctx.allowGroupResponse();
+    }
+    
     const userId = ctx.from.id.toString();
     // Use 'community-library' as the fixed groupId for all users
     // This ensures all premium members can see the same library
@@ -319,46 +325,48 @@ async function handleScheduleCall(ctx) {
     const [title, dateTimeStr, durationStr] = parts;
     const duration = parseInt(durationStr) || 60;
 
-    // Parse date/time - assume Colombia timezone (America/Bogota)
+    // Get user's timezone
+    const userTimezone = await getUserTimezone(userId, ctx.from);
+    const timezoneName = getTimezoneName(userTimezone);
+
+    // Parse date/time in user's timezone
     let scheduledTime;
     try {
-      // Parse the date string and interpret it as Colombia time
+      // Parse the date string and interpret it as user's local time
       // Format: YYYY-MM-DD HH:MM
-      const dateMatch = dateTimeStr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+      scheduledTime = parseDateInTimezone(dateTimeStr, userTimezone);
 
-      if (!dateMatch) {
+      if (!scheduledTime) {
         await ctx.reply(
           `❌ *Invalid Date Format*\n\n` +
           `Please use format: YYYY-MM-DD HH:MM\n` +
-          `Example: 2025-11-10 22:00`,
+          `Example: 2025-11-10 22:00\n\n` +
+          `⏰ Your timezone: ${timezoneName}`,
           { parse_mode: 'Markdown' }
         );
         return;
       }
-
-      const [, year, month, day, hour, minute] = dateMatch;
-
-      // Create date string in ISO format with Colombia timezone offset (UTC-5)
-      // Colombia doesn't observe DST, so it's always UTC-5
-      const colombiaDateStr = `${year}-${month}-${day}T${hour}:${minute}:00-05:00`;
-      scheduledTime = new Date(colombiaDateStr);
 
       // Check if date is valid and in the future
       if (isNaN(scheduledTime.getTime()) || scheduledTime < new Date()) {
         await ctx.reply(
           `❌ *Invalid Date/Time*\n\n` +
-          `Please provide a future date and time in Colombia timezone.\n\n` +
+          `Please provide a future date and time.\n\n` +
           `Format: YYYY-MM-DD HH:MM\n` +
-          `Example: 2025-11-10 22:00 (Colombia time)`,
+          `Example: 2025-11-10 22:00\n\n` +
+          `⏰ Your timezone: ${timezoneName}\n` +
+          `💡 Use /settimezone to change your timezone`,
           { parse_mode: 'Markdown' }
         );
         return;
       }
     } catch (error) {
+      logger.error('Error parsing date for schedulecall:', error);
       await ctx.reply(
         `❌ *Invalid Date Format*\n\n` +
         `Please use format: YYYY-MM-DD HH:MM\n` +
-        `Example: 2025-11-10 22:00 (Colombia time)`,
+        `Example: 2025-11-10 22:00\n\n` +
+        `⏰ Your timezone: ${timezoneName}`,
         { parse_mode: 'Markdown' }
       );
       return;
@@ -382,10 +390,14 @@ async function handleScheduleCall(ctx) {
     });
 
     if (result.success) {
+      // Format time in user's timezone
+      const formattedTime = formatDateInTimezone(scheduledTime, userTimezone);
+
       const message =
         `✅ *Video Call Scheduled Successfully!*\n\n` +
         `📹 *${title}*\n` +
-        `🕒 ${scheduledTime.toLocaleString('en-US', { timeZone: 'America/Bogota' })}\n` +
+        `🕒 ${formattedTime}\n` +
+        `⏰ Your timezone: ${timezoneName}\n` +
         `⏱️ Duration: ${duration} minutes\n` +
         `👤 Host: ${ctx.from.first_name}\n\n` +
         `🔗 *Join URL:*\n${result.joinUrl}\n\n` +
@@ -491,46 +503,48 @@ async function handleScheduleStream(ctx) {
     const [title, dateTimeStr, durationStr] = parts;
     const duration = parseInt(durationStr) || 120; // Default 2 hours for streams
 
-    // Parse date/time - assume Colombia timezone (America/Bogota)
+    // Get user's timezone
+    const userTimezone = await getUserTimezone(userId, ctx.from);
+    const timezoneName = getTimezoneName(userTimezone);
+
+    // Parse date/time in user's timezone
     let scheduledTime;
     try {
-      // Parse the date string and interpret it as Colombia time
+      // Parse the date string and interpret it as user's local time
       // Format: YYYY-MM-DD HH:MM
-      const dateMatch = dateTimeStr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+      scheduledTime = parseDateInTimezone(dateTimeStr, userTimezone);
 
-      if (!dateMatch) {
+      if (!scheduledTime) {
         await ctx.reply(
           `❌ *Invalid Date Format*\n\n` +
           `Please use format: YYYY-MM-DD HH:MM\n` +
-          `Example: 2025-11-10 22:00`,
+          `Example: 2025-11-10 22:00\n\n` +
+          `⏰ Your timezone: ${timezoneName}`,
           { parse_mode: 'Markdown' }
         );
         return;
       }
-
-      const [, year, month, day, hour, minute] = dateMatch;
-
-      // Create date string in ISO format with Colombia timezone offset (UTC-5)
-      // Colombia doesn't observe DST, so it's always UTC-5
-      const colombiaDateStr = `${year}-${month}-${day}T${hour}:${minute}:00-05:00`;
-      scheduledTime = new Date(colombiaDateStr);
 
       // Check if date is valid and in the future
       if (isNaN(scheduledTime.getTime()) || scheduledTime < new Date()) {
         await ctx.reply(
           `❌ *Invalid Date/Time*\n\n` +
-          `Please provide a future date and time in Colombia timezone.\n\n` +
+          `Please provide a future date and time.\n\n` +
           `Format: YYYY-MM-DD HH:MM\n` +
-          `Example: 2025-11-10 22:00 (Colombia time)`,
+          `Example: 2025-11-10 22:00\n\n` +
+          `⏰ Your timezone: ${timezoneName}\n` +
+          `💡 Use /settimezone to change your timezone`,
           { parse_mode: 'Markdown' }
         );
         return;
       }
     } catch (error) {
+      logger.error('Error parsing date for schedulestream:', error);
       await ctx.reply(
         `❌ *Invalid Date Format*\n\n` +
         `Please use format: YYYY-MM-DD HH:MM\n` +
-        `Example: 2025-11-10 22:00 (Colombia time)`,
+        `Example: 2025-11-10 22:00\n\n` +
+        `⏰ Your timezone: ${timezoneName}`,
         { parse_mode: 'Markdown' }
       );
       return;
@@ -553,10 +567,14 @@ async function handleScheduleStream(ctx) {
     });
 
     if (result.success) {
+      // Format time in user's timezone
+      const formattedTime = formatDateInTimezone(scheduledTime, userTimezone);
+
       const message =
         `✅ *Live Stream Scheduled Successfully!*\n\n` +
         `📺 *${title}*\n` +
-        `🕒 ${scheduledTime.toLocaleString('en-US', { timeZone: 'America/Bogota' })}\n` +
+        `🕒 ${formattedTime}\n` +
+        `⏰ Your timezone: ${timezoneName}\n` +
         `⏱️ Duration: ${duration} minutes\n` +
         `👤 Host: ${ctx.from.first_name}\n\n` +
         `🔗 *Stream URL:*\n${result.joinUrl}\n\n` +
@@ -1222,6 +1240,95 @@ async function handleBackToLibrary(ctx) {
   }
 }
 
+/**
+ * Handle /settimezone command - Set user's timezone preference
+ */
+async function handleSetTimezone(ctx) {
+  try {
+    const userId = ctx.from.id.toString();
+
+    // Get current timezone
+    const currentTimezone = await getUserTimezone(userId, ctx.from);
+    const currentTimezoneName = getTimezoneName(currentTimezone);
+
+    // Get list of common timezones
+    const { getCommonTimezones } = require("../../utils/timezoneHelper");
+    const timezones = getCommonTimezones();
+
+    // Create inline keyboard with timezone options (split into multiple rows)
+    const keyboard = [];
+    for (let i = 0; i < timezones.length; i += 2) {
+      const row = [];
+      row.push({
+        text: `${timezones[i].label} (${timezones[i].offset})`,
+        callback_data: `set_tz:${timezones[i].value}`
+      });
+      if (timezones[i + 1]) {
+        row.push({
+          text: `${timezones[i + 1].label} (${timezones[i + 1].offset})`,
+          callback_data: `set_tz:${timezones[i + 1].value}`
+        });
+      }
+      keyboard.push(row);
+    }
+
+    await ctx.reply(
+      `⏰ *Timezone Settings*\n\n` +
+      `Your current timezone: *${currentTimezoneName}*\n` +
+      `(${currentTimezone})\n\n` +
+      `Select your timezone from the options below:`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: keyboard
+        }
+      }
+    );
+
+    logger.info(`User ${userId} opened timezone settings`);
+  } catch (error) {
+    logger.error('Error in handleSetTimezone:', error);
+    await ctx.reply('❌ Error accessing timezone settings. Please try again.');
+  }
+}
+
+/**
+ * Handle timezone selection callback
+ */
+async function handleTimezoneCallback(ctx) {
+  try {
+    const callbackData = ctx.callbackQuery.data;
+    const timezone = callbackData.replace('set_tz:', '');
+    const userId = ctx.from.id.toString();
+
+    // Set the timezone
+    const { setUserTimezone } = require("../../utils/timezoneHelper");
+    const success = await setUserTimezone(userId, timezone);
+
+    if (success) {
+      const timezoneName = getTimezoneName(timezone);
+      await ctx.editMessageText(
+        `✅ *Timezone Updated!*\n\n` +
+        `Your timezone is now set to:\n` +
+        `*${timezoneName}*\n` +
+        `(${timezone})\n\n` +
+        `💡 When you schedule events, times will be interpreted in your timezone.\n\n` +
+        `Use /settimezone anytime to change it again.`,
+        { parse_mode: 'Markdown' }
+      );
+
+      await ctx.answerCbQuery(`✅ Timezone set to ${timezoneName}`);
+      logger.info(`User ${userId} set timezone to ${timezone}`);
+    } else {
+      await ctx.answerCbQuery('❌ Error setting timezone');
+      await ctx.reply('❌ There was an error updating your timezone. Please try again.');
+    }
+  } catch (error) {
+    logger.error('Error in handleTimezoneCallback:', error);
+    await ctx.answerCbQuery('❌ Error');
+  }
+}
+
 module.exports = {
   handleNearby,
   handleLibrary,
@@ -1234,5 +1341,7 @@ module.exports = {
   handleDeleteTrack,
   handleDeleteEvent,
   handlePlayTrack,
-  handleBackToLibrary
+  handleBackToLibrary,
+  handleSetTimezone,
+  handleTimezoneCallback
 };
