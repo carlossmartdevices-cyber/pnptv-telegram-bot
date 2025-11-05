@@ -1,5 +1,6 @@
 const { db } = require("../config/firebase");
 const logger = require("../utils/logger");
+const { isAdmin } = require("../config/admin");
 
 /**
  * Personality Service
@@ -8,14 +9,27 @@ const logger = require("../utils/logger");
 
 /**
  * Get available personality choices
+ * @param {string} userId - Optional user ID to include admin-only choices
  */
-function getPersonalityChoices() {
-  return [
+function getPersonalityChoices(userId = null) {
+  const baseChoices = [
     { emoji: '🔥', name: 'Slam Slut', description: 'Party lover' },
     { emoji: '🧠', name: 'Meth Alpha', description: 'Brainy type' },
     { emoji: '🐚', name: 'Chem Mermaid', description: 'Aquatic vibes' },
     { emoji: '👑', name: 'Spun Royal', description: 'Elite member' }
   ];
+
+  // Add admin-exclusive personality for admin users
+  if (userId && isAdmin(userId)) {
+    baseChoices.push({
+      emoji: '💀',
+      name: 'The Meth Daddy',
+      description: 'Supreme Leader - Admin Only',
+      isAdminOnly: true
+    });
+  }
+
+  return baseChoices;
 }
 
 /**
@@ -108,7 +122,8 @@ async function setUserPersonality(userId, choice) {
       updatedAt: new Date()
     };
     
-    await db.collection('users').doc(userId).update(personalityData);
+    // Use set with merge to create document if it doesn't exist
+    await db.collection('users').doc(userId).set(personalityData, { merge: true });
     
     logger.info(`Set personality for user ${userId}: ${choice.name} ${choice.emoji}`);
     return true;
@@ -168,5 +183,6 @@ module.exports = {
   getPersonalityBadge,
   hasPersonality,
   setUserPersonality,
-  getPersonalityStats
+  getPersonalityStats,
+  isAdmin
 };

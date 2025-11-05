@@ -5,7 +5,6 @@ const { t } = require("../utils/i18n");
 const logger = require("../utils/logger");
 const { ensureOnboarding } = require("../utils/guards");
 const { isAdmin, adminMiddleware } = require("../config/admin");
-const { getMenu } = require("../config/menus");
 const { prepareTextLocationUpdate } = require("../services/profileService");
 const { captureException, setUser } = require("../config/sentry");
 
@@ -52,6 +51,8 @@ const {
   toggleAdsOptOut,
   showLanguageSelection,
   setLanguage,
+  showPersonalitySelection,
+  handlePersonalitySelection,
 } = require("./handlers/profile");
 const subscribeHandler = require("./handlers/subscribe");
 
@@ -296,6 +297,11 @@ bot.action("settings_toggle_ads", toggleAdsOptOut);
 bot.action("settings_change_language", showLanguageSelection);
 bot.action("settings_set_lang_en", (ctx) => setLanguage(ctx, "en"));
 bot.action("settings_set_lang_es", (ctx) => setLanguage(ctx, "es"));
+bot.action("settings_choose_personality", showPersonalitySelection);
+bot.action(/^personality_select_(.+)$/, (ctx) => {
+  const personalityName = ctx.match[1];
+  return handlePersonalitySelection(ctx, personalityName);
+});
 bot.action("settings_back", viewProfile);
 
 // ===== MUSIC LIBRARY CALLBACKS =====
@@ -565,12 +571,6 @@ bot.on("text", async (ctx) => {
 
       await ctx.reply(t("bioUpdated", lang), { parse_mode: "Markdown" });
 
-      // Show main menu
-      const mainMenu = getMenu("main", lang);
-      await ctx.reply(t("mainMenuIntro", lang), {
-        reply_markup: mainMenu,
-      });
-
       logger.info(`User ${userId} updated bio`);
     } else if (ctx.session.waitingFor === "location_text") {
       const location = sanitizeInput(ctx.message.text);
@@ -592,12 +592,6 @@ bot.on("text", async (ctx) => {
       ctx.session.waitingFor = null;
 
       await ctx.reply(t("locationUpdated", lang), { parse_mode: "Markdown" });
-
-      // Show main menu
-      const mainMenu = getMenu("main", lang);
-      await ctx.reply(t("mainMenuIntro", lang), {
-        reply_markup: mainMenu,
-      });
 
       logger.info(`User ${userId} updated location (text)`);
     } else if (ctx.session.waitingFor === "broadcast_message") {

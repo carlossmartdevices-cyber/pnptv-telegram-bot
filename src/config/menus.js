@@ -1,27 +1,11 @@
 /**
  * Menu Configuration
  * Centralized menu definitions for easy customization
+ * NOTE: Only inline keyboards are used - no fixed bottom keyboards
  */
 
 const menus = {
-  main: {
-    en: {
-      keyboard: [
-        ["👤 My Profile", "💎 Subscription Plans"],
-        ["🌐 Nearby Members", "🤖 Customer Support"],
-        ["🤖 PNPtv! Support"],
-      ],
-      resize_keyboard: true,
-    },
-    es: {
-      keyboard: [
-        ["👤 Mi Perfil", "💎 Planes de Suscripción"],
-        ["🌐 Miembros en el Área", "🤖 Soporte al Cliente"],
-        ["🤖 PNPtv! Soporte"],
-      ],
-      resize_keyboard: true,
-    },
-  },
+  // Main menu removed - bot uses inline keyboards only
 
   profile: {
     inline_keyboard: [

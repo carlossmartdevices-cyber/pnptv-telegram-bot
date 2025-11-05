@@ -2,6 +2,7 @@ const { db } = require("../../config/firebase");
 const { t } = require("../../utils/i18n");
 const logger = require("../../utils/logger");
 const { getLocationDisplay } = require("../../services/profileService");
+const personalityService = require("../../services/personalityService");
 
 /**
  * Get personality badge display text
@@ -35,8 +36,9 @@ async function viewProfile(ctx) {
   const userId = ctx.from.id.toString();
   const lang = ctx.session.language || "en";
 
-  // Check onboarding
-  if (!ctx.session?.onboardingComplete) {
+  // Check onboarding (bypass for admin users)
+  const { isAdmin } = require("../../config/admin");
+  if (!ctx.session?.onboardingComplete && !isAdmin(userId)) {
     await ctx.reply(t("pleaseCompleteOnboarding", lang));
     return;
   }
@@ -115,6 +117,15 @@ async function viewProfile(ctx) {
 
     // Get personality badge if available
     const personalityBadge = await getPersonalityBadgeDisplay(userData, lang);
+    
+    // Debug logging for admin user
+    if (isAdmin(userId)) {
+      logger.info(`Admin profile debug for ${userId}:`, {
+        hasPersonalityChoice: !!userData.personalityChoice,
+        personalityBadge: personalityBadge,
+        userData: JSON.stringify(userData.personalityChoice || userData.badge || 'none')
+      });
+    }
 
     // Build profile text
     const profileText = t("profileInfo", lang, {
@@ -395,9 +406,17 @@ async function showSettings(ctx) {
     const currentLanguage = userData.language || lang || "en";
     const languageDisplay = currentLanguage === "es" ? "🇪🇸 Español" : "🇺🇸 English";
 
+    // Check personality status
+    const hasPersonality = await personalityService.hasPersonality(userId);
+    const personalityBadge = hasPersonality ? await personalityService.getPersonalityBadge(userId) : null;
+    
+    const personalityDisplay = hasPersonality
+      ? (lang === "es" ? `🎭 Personalidad: ${personalityBadge}` : `🎭 Personality: ${personalityBadge}`)
+      : (lang === "es" ? "🎭 Personalidad: No seleccionada" : "🎭 Personality: Not selected");
+
     const message = lang === "es"
-      ? `⚙️ **Configuración**\n\n🌐 Idioma: ${languageDisplay}\n\n📢 Mensajes publicitarios: ${adsOptOut ? "❌ Desactivados" : "✅ Activados"}\n\n${adsOptOut ? "No recibirás mensajes de difusión del administrador." : "Recibirás mensajes de difusión del administrador."}`
-      : `⚙️ **Settings**\n\n🌐 Language: ${languageDisplay}\n\n📢 Advertisement messages: ${adsOptOut ? "❌ Disabled" : "✅ Enabled"}\n\n${adsOptOut ? "You will not receive broadcast messages from admins." : "You will receive broadcast messages from admins."}`;
+      ? `⚙️ **Configuración**\n\n🌐 Idioma: ${languageDisplay}\n\n${personalityDisplay}\n\n📢 Mensajes publicitarios: ${adsOptOut ? "❌ Desactivados" : "✅ Activados"}\n\n${adsOptOut ? "No recibirás mensajes de difusión del administrador." : "Recibirás mensajes de difusión del administrador."}`
+      : `⚙️ **Settings**\n\n🌐 Language: ${languageDisplay}\n\n${personalityDisplay}\n\n📢 Advertisement messages: ${adsOptOut ? "❌ Disabled" : "✅ Enabled"}\n\n${adsOptOut ? "You will not receive broadcast messages from admins." : "You will receive broadcast messages from admins."}`;
 
     await ctx.editMessageText(message, {
       parse_mode: "Markdown",
@@ -407,6 +426,14 @@ async function showSettings(ctx) {
             {
               text: lang === "es" ? "🌐 Cambiar idioma" : "🌐 Change language",
               callback_data: "settings_change_language",
+            },
+          ],
+          [
+            {
+              text: hasPersonality
+                ? (lang === "es" ? "🎭 Cambiar personalidad" : "🎭 Change personality")
+                : (lang === "es" ? "🎭 Elegir personalidad" : "🎭 Choose personality"),
+              callback_data: "settings_choose_personality",
             },
           ],
           [
@@ -548,6 +575,137 @@ async function setLanguage(ctx, newLang) {
   }
 }
 
+/**
+ * Show personality selection menu
+ */
+async function showPersonalitySelection(ctx) {
+  const userId = ctx.from.id.toString();
+  const lang = ctx.session.language || "en";
+
+  try {
+    const hasPersonality = await personalityService.hasPersonality(userId);
+    const currentPersonality = hasPersonality ? await personalityService.getPersonalityBadge(userId) : null;
+    
+    const choices = personalityService.getPersonalityChoices(userId); // Pass userId for admin check
+    
+    const message = lang === "es"
+      ? `🎭 **Elegir Personalidad**\n\n${hasPersonality ? `Personalidad actual: ${currentPersonality}\n\n` : ''}Selecciona tu personalidad en la comunidad PNPtv:\n\n${choices.map(c => `${c.emoji} **${c.name}** - ${c.description}`).join('\n')}`
+      : `🎭 **Choose Personality**\n\n${hasPersonality ? `Current personality: ${currentPersonality}\n\n` : ''}Select your personality in the PNPtv community:\n\n${choices.map(c => `${c.emoji} **${c.name}** - ${c.description}`).join('\n')}`;
+
+    // Build personality selection keyboard - dynamic layout based on number of choices
+    let keyboard;
+    if (choices.length === 5) {
+      // Admin user gets 2x2 + 1 layout
+      keyboard = [
+        [
+          { text: `${choices[0].emoji} ${choices[0].name}`, callback_data: `personality_select_${choices[0].name.replace(/\s+/g, '_')}` },
+          { text: `${choices[1].emoji} ${choices[1].name}`, callback_data: `personality_select_${choices[1].name.replace(/\s+/g, '_')}` }
+        ],
+        [
+          { text: `${choices[2].emoji} ${choices[2].name}`, callback_data: `personality_select_${choices[2].name.replace(/\s+/g, '_')}` },
+          { text: `${choices[3].emoji} ${choices[3].name}`, callback_data: `personality_select_${choices[3].name.replace(/\s+/g, '_')}` }
+        ],
+        [
+          { text: `${choices[4].emoji} ${choices[4].name}`, callback_data: `personality_select_${choices[4].name.replace(/\s+/g, '_')}` }
+        ],
+        [
+          {
+            text: lang === "es" ? "« Volver" : "« Back",
+            callback_data: "profile_settings",
+          },
+        ]
+      ];
+    } else {
+      // Regular user gets 2x2 layout
+      keyboard = [
+        [
+          { text: `${choices[0].emoji} ${choices[0].name}`, callback_data: `personality_select_${choices[0].name.replace(/\s+/g, '_')}` },
+          { text: `${choices[1].emoji} ${choices[1].name}`, callback_data: `personality_select_${choices[1].name.replace(/\s+/g, '_')}` }
+        ],
+        [
+          { text: `${choices[2].emoji} ${choices[2].name}`, callback_data: `personality_select_${choices[2].name.replace(/\s+/g, '_')}` },
+          { text: `${choices[3].emoji} ${choices[3].name}`, callback_data: `personality_select_${choices[3].name.replace(/\s+/g, '_')}` }
+        ],
+        [
+          {
+            text: lang === "es" ? "« Volver" : "« Back",
+            callback_data: "profile_settings",
+          },
+        ]
+      ];
+    }
+
+    await ctx.editMessageText(message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: keyboard
+      },
+    });
+
+    logger.info(`User ${userId} opened personality selection`);
+  } catch (error) {
+    logger.error("Error showing personality selection:", error);
+    await ctx.reply(t("error", lang));
+  }
+}
+
+/**
+ * Handle personality selection
+ */
+async function handlePersonalitySelection(ctx, personalityName) {
+  const userId = ctx.from.id.toString();
+  const lang = ctx.session.language || "en";
+
+  try {
+    const choices = personalityService.getPersonalityChoices(userId); // Pass userId for admin check
+    const selectedChoice = choices.find(c => c.name.replace(/\s+/g, '_') === personalityName);
+    
+    if (!selectedChoice) {
+      await ctx.answerCbQuery(
+        lang === "es" ? "❌ Opción inválida" : "❌ Invalid choice",
+        { show_alert: true }
+      );
+      return;
+    }
+
+    // Additional check for admin-only personalities
+    if (selectedChoice.isAdminOnly && !personalityService.isAdmin(userId)) {
+      await ctx.answerCbQuery(
+        lang === "es" ? "❌ Personalidad exclusiva de administrador" : "❌ Admin-only personality",
+        { show_alert: true }
+      );
+      return;
+    }
+
+    // Save the personality choice
+    const success = await personalityService.setUserPersonality(userId, selectedChoice);
+    
+    if (success) {
+      await ctx.answerCbQuery(
+        lang === "es" 
+          ? `✅ ¡Ahora eres ${selectedChoice.emoji} ${selectedChoice.name}!`
+          : `✅ You are now ${selectedChoice.emoji} ${selectedChoice.name}!`
+      );
+
+      // Refresh settings view to show the new personality
+      await showSettings(ctx);
+      
+      logger.info(`User ${userId} selected personality: ${selectedChoice.name} ${selectedChoice.emoji}`);
+    } else {
+      await ctx.answerCbQuery(
+        lang === "es" ? "❌ Error guardando elección" : "❌ Error saving choice",
+        { show_alert: true }
+      );
+    }
+  } catch (error) {
+    logger.error("Error handling personality selection:", error);
+    await ctx.answerCbQuery(
+      lang === "es" ? "❌ Error procesando elección" : "❌ Error processing choice",
+      { show_alert: true }
+    );
+  }
+}
+
 module.exports = {
   viewProfile,
   handleEditPhoto,
@@ -558,4 +716,6 @@ module.exports = {
   showLanguageSelection,
   setLanguage,
   getPersonalityBadgeDisplay,
+  showPersonalitySelection,
+  handlePersonalitySelection,
 };
