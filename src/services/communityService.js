@@ -2,6 +2,7 @@ const { db } = require("../config/firebase");
 const logger = require("../utils/logger");
 const cron = require('node-cron');
 const zoomService = require('./zoomService');
+const { scheduleEventReminders, generateEventAnnouncementMessage } = require('./eventReminderService');
 
 /**
  * Music Music & Community Service - Integrated from SantinoBot Community Service
@@ -46,6 +47,39 @@ async function addTrack(groupId, trackData) {
     return { success: true, trackId };
   } catch (error) {
     logger.error('Error adding track:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Delete music track from library
+ */
+async function deleteTrack(trackId) {
+  try {
+    // Check if track exists
+    const trackDoc = await db.collection('music').doc(trackId).get();
+    
+    if (!trackDoc.exists) {
+      return { success: false, error: 'Track not found' };
+    }
+    
+    const trackData = trackDoc.data();
+    
+    // Delete the track
+    await db.collection('music').doc(trackId).delete();
+    
+    logger.info(`Track deleted: ${trackId} - ${trackData.title}`);
+    return { 
+      success: true, 
+      trackId,
+      deletedTrack: {
+        title: trackData.title,
+        artist: trackData.artist,
+        genre: trackData.genre
+      }
+    };
+  } catch (error) {
+    logger.error('Error deleting track:', error);
     return { success: false, error: error.message };
   }
 }
@@ -263,6 +297,32 @@ async function getTopTracks(groupId, limit = 10) {
 }
 
 /**
+ * Increment play count for track
+ */
+async function trackPlay(trackId) {
+  try {
+    const trackRef = db.collection('music').doc(trackId);
+    const doc = await trackRef.get();
+    
+    if (doc.exists) {
+      const currentCount = doc.data().playCount || 0;
+      await trackRef.update({
+        playCount: currentCount + 1,
+        lastPlayed: new Date()
+      });
+      logger.info(`Play count updated for track ${trackId}: ${currentCount + 1}`);
+      return { success: true, newCount: currentCount + 1 };
+    } else {
+      logger.warn(`Track not found for play tracking: ${trackId}`);
+      return { success: false, error: 'Track not found' };
+    }
+  } catch (error) {
+    logger.error('Error tracking play:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Get scheduled broadcasts
  */
 async function getScheduledBroadcasts(groupId) {
@@ -402,6 +462,20 @@ async function scheduleVideoCall(userId, callData) {
 
     logger.info(`Video call scheduled with Zoom: ${callId} (Zoom ID: ${zoomResult.meetingId})`);
 
+    // Schedule reminders for the event (if group chat ID is provided)
+    const reminderData = {
+      title: callData.title || 'Video Call',
+      hostName: callData.hostName,
+      description: callData.description,
+      joinUrl: zoomResult.joinUrl,
+      password: zoomResult.password
+    };
+
+    // Only schedule reminders if we have a group chat ID
+    if (callData.groupChatId) {
+      await scheduleEventReminders(callId, 'video_call', scheduledTime, reminderData, callData.groupChatId);
+    }
+
     return {
       success: true,
       callId,
@@ -409,6 +483,8 @@ async function scheduleVideoCall(userId, callData) {
       startUrl: zoomResult.startUrl,
       password: zoomResult.password,
       meetingId: zoomResult.meetingId,
+      // Include announcement message for the handler to send
+      announcementMessage: generateEventAnnouncementMessage(reminderData, scheduledTime, 'video_call')
     };
   } catch (error) {
     logger.error('Error scheduling video call:', error);
@@ -461,6 +537,20 @@ async function scheduleLiveStream(userId, streamData) {
 
     logger.info(`Live stream scheduled with Zoom: ${streamId} (Zoom ID: ${zoomResult.meetingId})`);
 
+    // Schedule reminders for the live stream (if group chat ID is provided)
+    const reminderData = {
+      title: streamData.title || 'Live Stream',
+      hostName: streamData.hostName,
+      description: streamData.description,
+      joinUrl: zoomResult.joinUrl,
+      password: zoomResult.password
+    };
+
+    // Only schedule reminders if we have a group chat ID
+    if (streamData.groupChatId) {
+      await scheduleEventReminders(streamId, 'live_stream', scheduledTime, reminderData, streamData.groupChatId);
+    }
+
     return {
       success: true,
       streamId,
@@ -468,6 +558,8 @@ async function scheduleLiveStream(userId, streamData) {
       startUrl: zoomResult.startUrl,
       password: zoomResult.password,
       meetingId: zoomResult.meetingId,
+      // Include announcement message for the handler to send
+      announcementMessage: generateEventAnnouncementMessage(reminderData, scheduledTime, 'live_stream')
     };
   } catch (error) {
     logger.error('Error scheduling live stream:', error);
@@ -477,12 +569,13 @@ async function scheduleLiveStream(userId, streamData) {
 
 module.exports = {
   addTrack,
+  deleteTrack,
   createPlaylist,
-  scheduleBroadcast,
   getNearbyUsers,
   trackNearbySearch,
   getTracks,
   getTopTracks,
+  trackPlay,
   getScheduledBroadcasts,
   calculateDistance,
   scheduleVideoCall,

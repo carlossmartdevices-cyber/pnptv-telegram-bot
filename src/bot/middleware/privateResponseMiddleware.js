@@ -16,12 +16,13 @@ function privateResponseMiddleware() {
     }
 
     // Commands/actions that should remain in group (group management functions)
-    const groupOnlyCommands = ['/status', '/refresh', '/info'];
+    const groupOnlyCommands = ['/status', '/refresh', '/info', '/library', '/toptracks', '/addtrack'];
     const commandText = ctx.message?.text || ctx.callbackQuery?.data || '';
     
     // Allow group management functions to work normally
-    if (groupOnlyCommands.some(cmd => commandText.startsWith(cmd))) {
-      logger.info(`Group-only command ${commandText} executed in group ${ctx.chat.id}`);
+    if (groupOnlyCommands.some(cmd => commandText.startsWith(cmd)) || 
+        commandText.startsWith('play_track:')) {
+      logger.info(`Group-only command/action ${commandText} executed in group ${ctx.chat.id}`);
       return next();
     }
 
@@ -36,7 +37,7 @@ function privateResponseMiddleware() {
       ctx._allowGroupResponse = true;
     };
 
-    // Store original methods
+    // Store original methods (after auto-delete middleware has modified them)
     const originalReply = ctx.reply.bind(ctx);
     const originalEditMessageText = ctx.editMessageText.bind(ctx);
     const originalAnswerCbQuery = ctx.answerCbQuery.bind(ctx);
@@ -57,7 +58,9 @@ function privateResponseMiddleware() {
         
         // Send a brief notification in the group (only for commands, not automatic responses)
         if (ctx.message?.text?.startsWith('/') || ctx.callbackQuery) {
-          await originalReply(
+          // Use ctx.telegram.sendMessage to ensure auto-delete middleware handles it
+          await ctx.telegram.sendMessage(
+            ctx.chat.id,
             lang === "es" 
               ? "✉️ Te he enviado la respuesta por mensaje privado." 
               : "✉️ I've sent you the response via private message.",
@@ -79,7 +82,8 @@ function privateResponseMiddleware() {
 
         if (isPrivateMessageFail) {
           logger.warn(`Private message failed for user ${userId}: ${errorDesc}`);
-          await originalReply(
+          await ctx.telegram.sendMessage(
+            ctx.chat.id,
             lang === "es"
               ? `⚠️ @${ctx.from.username || ctx.from.first_name}, necesitas iniciar una conversación conmigo primero.\n\n👆 Haz clic en mi nombre y presiona "Iniciar" para recibir respuestas privadas.`
               : `⚠️ @${ctx.from.username || ctx.from.first_name}, you need to start a conversation with me first.\n\n👆 Click on my name and press "Start" to receive private responses.`,
@@ -100,8 +104,9 @@ function privateResponseMiddleware() {
           );
         } else {
           logger.error("Unexpected error sending private message:", error);
-          // Fallback: send in group with warning
-          await originalReply(
+          // Fallback: send in group with warning (using ctx.telegram.sendMessage for auto-delete)
+          await ctx.telegram.sendMessage(
+            ctx.chat.id,
             `🔒 ${lang === "es" ? "Respuesta privada no disponible" : "Private response unavailable"}\n\n${text}`,
             extra
           );

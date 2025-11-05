@@ -27,6 +27,7 @@ const rateLimitMiddleware = require("./middleware/rateLimit");
 const errorHandler = require("./middleware/errorHandler");
 const privateResponseMiddleware = require("./middleware/privateResponseMiddleware");
 const autoDeleteMiddleware = require("./middleware/autoDeleteMiddleware");
+const deleteUserCommandsMiddleware = require("./middleware/deleteUserCommandsMiddleware");
 
 // Start session cleanup service
 const { sessionCleanup } = require("../utils/sessionCleanup");
@@ -64,7 +65,10 @@ const {
   handleUpcoming,
   handlePlaylist,
   handleAddTrack,
-  handleDeleteEvent
+  handleDeleteTrack,
+  handleDeleteEvent,
+  handlePlayTrack,
+  handleBackToLibrary
 } = require("./handlers/community");
 const { handleNewMember, handleMediaMessage } = require("./helpers/groupManagement");
 const {
@@ -98,6 +102,7 @@ bot.use(session); // Firestore session middleware
 
 // Apply middleware
 bot.use(rateLimitMiddleware());
+bot.use(deleteUserCommandsMiddleware()); // Delete user command messages from groups after 10 seconds
 bot.use(autoDeleteMiddleware()); // Auto-delete bot messages in groups after 5 minutes
 bot.use(privateResponseMiddleware()); // Redirect group responses to private chat
 
@@ -151,6 +156,7 @@ bot.command("schedulestream", handleScheduleStream);
 bot.command("upcoming", handleUpcoming);
 bot.command("playlist", handlePlaylist);
 bot.command("addtrack", handleAddTrack);
+bot.command("deletetrack", handleDeleteTrack);
 bot.command("deleteevent", handleDeleteEvent);
 
 // ===== ONBOARDING FLOW =====
@@ -288,6 +294,10 @@ bot.action("settings_change_language", showLanguageSelection);
 bot.action("settings_set_lang_en", (ctx) => setLanguage(ctx, "en"));
 bot.action("settings_set_lang_es", (ctx) => setLanguage(ctx, "es"));
 bot.action("settings_back", viewProfile);
+
+// ===== MUSIC LIBRARY CALLBACKS =====
+bot.action(/^play_track:/, handlePlayTrack);
+bot.action("back_to_library", handleBackToLibrary);
 
 // ===== ADMIN CALLBACKS =====
 

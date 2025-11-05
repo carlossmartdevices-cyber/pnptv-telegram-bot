@@ -1,5 +1,6 @@
 const { getUserPermissions } = require("../helpers/groupManagement");
-const { getNearbyUsers, trackNearbySearch, getTracks, getTopTracks, scheduleVideoCall, scheduleLiveStream, addTrack, createPlaylist, getScheduledBroadcasts } = require("../../services/communityService");
+const { getNearbyUsers, trackNearbySearch, getTracks, getTopTracks, trackPlay, scheduleVideoCall, scheduleLiveStream, addTrack, deleteTrack, createPlaylist, getScheduledBroadcasts } = require("../../services/communityService");
+const { cancelEventReminders } = require("../../services/eventReminderService");
 const logger = require("../../utils/logger");
 const { t } = require("../../utils/i18n");
 
@@ -96,16 +97,43 @@ async function handleLibrary(ctx) {
 
     // Library requires at least Basic tier
     if (tier === 'Free') {
-      await ctx.reply(
-        `🎵 *Music Library*\n\n` +
-        `This feature is available for paid members.\n\n` +
-        `📀 With a subscription you can:\n` +
-        `• Browse music library\n` +
-        `• View playlists\n` +
-        `• Access exclusive content\n\n` +
-        `Send /plans to upgrade!`,
-        { parse_mode: 'Markdown' }
-      );
+      // Check if user is not in database (userData is null)
+      const { userData } = await getUserPermissions(userId);
+      
+      if (!userData) {
+        // User not in database - needs to start the bot first
+        await ctx.reply(
+          `🎵 *Music Library*\n\n` +
+          `Welcome! To access the music library, please start the bot first.\n\n` +
+          `👆 Click on my name and press "Start" to set up your account.\n\n` +
+          `After that, you can use /plans to see subscription options for premium features!`,
+          { 
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: '🤖 Start Bot',
+                    url: `https://t.me/PNPtvbot?start=library_access`
+                  }
+                ]
+              ]
+            }
+          }
+        );
+      } else {
+        // User is in database but has Free tier
+        await ctx.reply(
+          `🎵 *Music Library*\n\n` +
+          `This feature is available for paid members.\n\n` +
+          `📀 With a subscription you can:\n` +
+          `• Browse music library\n` +
+          `• View playlists\n` +
+          `• Access exclusive content\n\n` +
+          `Send /plans to upgrade!`,
+          { parse_mode: 'Markdown' }
+        );
+      }
       return;
     }
 
@@ -131,7 +159,8 @@ async function handleLibrary(ctx) {
     // Send each track with interactive buttons
     const tracksToShow = tracks.slice(0, 10);
 
-    for (const track of tracksToShow) {
+    for (let i = 0; i < tracksToShow.length; i++) {
+      const track = tracksToShow[i];
       const typeEmoji = track.type === 'podcast' ? '🎙️' : '🎶';
 
       let message = `${typeEmoji} *${track.title}*\n`;
@@ -147,17 +176,27 @@ async function handleLibrary(ctx) {
       // Add Play button if URL exists
       if (track.url) {
         keyboard.inline_keyboard.push([
-          { text: '▶️ Play Track', url: track.url }
+          { text: '▶️ Play Track', callback_data: `play_track:${track.trackId}` }
         ]);
       } else {
         // If no URL, show a disabled-looking button or skip
         message += `\n\n⚠️ _No playback URL available_`;
       }
 
-      await ctx.reply(message, {
-        parse_mode: 'Markdown',
-        reply_markup: keyboard
-      });
+      try {
+        await ctx.reply(message, {
+          parse_mode: 'Markdown',
+          reply_markup: keyboard
+        });
+        
+        // Add small delay between messages to prevent rate limiting
+        if (i < tracksToShow.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      } catch (trackError) {
+        logger.error(`Error sending track ${track.trackId}:`, trackError);
+        // Continue with next track instead of failing completely
+      }
     }
 
     if (tracks.length > 10) {
@@ -170,7 +209,11 @@ async function handleLibrary(ctx) {
 
   } catch (error) {
     logger.error('Error in handleLibrary:', error);
-    await ctx.reply('❌ Error accessing music library. Please try again.');
+    try {
+      await ctx.reply('❌ Error accessing music library. Please try again.');
+    } catch (replyError) {
+      logger.error('Error sending error message:', replyError);
+    }
   }
 }
 
@@ -276,19 +319,37 @@ async function handleScheduleCall(ctx) {
     const [title, dateTimeStr, durationStr] = parts;
     const duration = parseInt(durationStr) || 60;
 
-    // Parse date/time (simple parsing - you may want to use a library like moment.js)
+    // Parse date/time - assume Colombia timezone (America/Bogota)
     let scheduledTime;
     try {
-      // Try to parse ISO format or simple date format
-      scheduledTime = new Date(dateTimeStr);
+      // Parse the date string and interpret it as Colombia time
+      // Format: YYYY-MM-DD HH:MM
+      const dateMatch = dateTimeStr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+
+      if (!dateMatch) {
+        await ctx.reply(
+          `❌ *Invalid Date Format*\n\n` +
+          `Please use format: YYYY-MM-DD HH:MM\n` +
+          `Example: 2025-11-10 22:00`,
+          { parse_mode: 'Markdown' }
+        );
+        return;
+      }
+
+      const [, year, month, day, hour, minute] = dateMatch;
+
+      // Create date string in ISO format with Colombia timezone offset (UTC-5)
+      // Colombia doesn't observe DST, so it's always UTC-5
+      const colombiaDateStr = `${year}-${month}-${day}T${hour}:${minute}:00-05:00`;
+      scheduledTime = new Date(colombiaDateStr);
 
       // Check if date is valid and in the future
       if (isNaN(scheduledTime.getTime()) || scheduledTime < new Date()) {
         await ctx.reply(
           `❌ *Invalid Date/Time*\n\n` +
-          `Please provide a future date and time.\n\n` +
+          `Please provide a future date and time in Colombia timezone.\n\n` +
           `Format: YYYY-MM-DD HH:MM\n` +
-          `Example: 2025-11-10 15:00`,
+          `Example: 2025-11-10 22:00 (Colombia time)`,
           { parse_mode: 'Markdown' }
         );
         return;
@@ -297,7 +358,7 @@ async function handleScheduleCall(ctx) {
       await ctx.reply(
         `❌ *Invalid Date Format*\n\n` +
         `Please use format: YYYY-MM-DD HH:MM\n` +
-        `Example: 2025-11-10 15:00`,
+        `Example: 2025-11-10 22:00 (Colombia time)`,
         { parse_mode: 'Markdown' }
       );
       return;
@@ -306,12 +367,18 @@ async function handleScheduleCall(ctx) {
     // Schedule the video call with Zoom
     await ctx.reply('⏳ Creating Zoom meeting...');
 
+    // Get the group chat ID (if command is run in a group)
+    const groupChatId = (ctx.chat?.type === 'group' || ctx.chat?.type === 'supergroup')
+      ? ctx.chat.id.toString()
+      : null;
+
     const result = await scheduleVideoCall(userId, {
       title: title || 'PNPtv Video Call',
       hostName: ctx.from.first_name || 'Unknown',
       scheduledTime,
       duration,
       isPublic: true,
+      groupChatId, // Pass the group chat ID for reminders
     });
 
     if (result.success) {
@@ -329,25 +396,20 @@ async function handleScheduleCall(ctx) {
 
       await ctx.reply(message, { parse_mode: 'Markdown' });
 
-      // Notify the group about the scheduled event
-      if (ctx.chat?.id && ctx.chat.type === 'group') {
+      // Send event announcement to the group (with reminders scheduled)
+      if (groupChatId && result.announcementMessage) {
         try {
-          const groupAnnouncement = 
-            `📹 *New Video Call Scheduled!*\n\n` +
-            `🎯 *${title}*\n` +
-            `👤 Host: ${ctx.from.first_name}\n` +
-            `🕒 Time: ${scheduledTime.toLocaleString('en-US', { timeZone: 'America/Bogota' })}\n` +
-            `⏱️ Duration: ${duration} minutes\n\n` +
-            `🔗 [Join Video Call](${result.joinUrl})\n\n` +
-            (result.password ? `🔒 Password: \`${result.password}\`\n\n` : '') +
-            `📋 Meeting ID: \`${result.meetingId}\`\n\n` +
-            `💡 Click the link above to join!`;
-          
-          await ctx.telegram.sendMessage(ctx.chat.id, groupAnnouncement, { parse_mode: 'Markdown' });
-          logger.info(`Group notification sent for video call: ${title}`);
+          // Use the announcement message from the service (includes reminder schedule)
+          await ctx.telegram.sendMessage(groupChatId, result.announcementMessage, {
+            parse_mode: 'Markdown',
+            __eventNotification: true // Mark as event notification to skip auto-delete
+          });
+          logger.info(`Event announcement sent to group ${groupChatId} for video call: ${title} (with reminders scheduled)`);
         } catch (error) {
-          logger.error('Error sending group notification for video call:', error);
+          logger.error('Error sending event announcement for video call:', error);
         }
+      } else if (!groupChatId) {
+        logger.info(`Video call scheduled from DM - no group announcement sent`);
       }
 
       logger.info(`User ${userId} scheduled video call: ${title} at ${scheduledTime}`);
@@ -429,18 +491,37 @@ async function handleScheduleStream(ctx) {
     const [title, dateTimeStr, durationStr] = parts;
     const duration = parseInt(durationStr) || 120; // Default 2 hours for streams
 
-    // Parse date/time
+    // Parse date/time - assume Colombia timezone (America/Bogota)
     let scheduledTime;
     try {
-      scheduledTime = new Date(dateTimeStr);
+      // Parse the date string and interpret it as Colombia time
+      // Format: YYYY-MM-DD HH:MM
+      const dateMatch = dateTimeStr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+
+      if (!dateMatch) {
+        await ctx.reply(
+          `❌ *Invalid Date Format*\n\n` +
+          `Please use format: YYYY-MM-DD HH:MM\n` +
+          `Example: 2025-11-10 22:00`,
+          { parse_mode: 'Markdown' }
+        );
+        return;
+      }
+
+      const [, year, month, day, hour, minute] = dateMatch;
+
+      // Create date string in ISO format with Colombia timezone offset (UTC-5)
+      // Colombia doesn't observe DST, so it's always UTC-5
+      const colombiaDateStr = `${year}-${month}-${day}T${hour}:${minute}:00-05:00`;
+      scheduledTime = new Date(colombiaDateStr);
 
       // Check if date is valid and in the future
       if (isNaN(scheduledTime.getTime()) || scheduledTime < new Date()) {
         await ctx.reply(
           `❌ *Invalid Date/Time*\n\n` +
-          `Please provide a future date and time.\n\n` +
+          `Please provide a future date and time in Colombia timezone.\n\n` +
           `Format: YYYY-MM-DD HH:MM\n` +
-          `Example: 2025-11-10 20:00`,
+          `Example: 2025-11-10 22:00 (Colombia time)`,
           { parse_mode: 'Markdown' }
         );
         return;
@@ -449,7 +530,7 @@ async function handleScheduleStream(ctx) {
       await ctx.reply(
         `❌ *Invalid Date Format*\n\n` +
         `Please use format: YYYY-MM-DD HH:MM\n` +
-        `Example: 2025-11-10 20:00`,
+        `Example: 2025-11-10 22:00 (Colombia time)`,
         { parse_mode: 'Markdown' }
       );
       return;
@@ -458,11 +539,17 @@ async function handleScheduleStream(ctx) {
     // Schedule the live stream with Zoom
     await ctx.reply('⏳ Creating Zoom stream...');
 
+    // Get the group chat ID (if command is run in a group)
+    const groupChatId = (ctx.chat?.type === 'group' || ctx.chat?.type === 'supergroup')
+      ? ctx.chat.id.toString()
+      : null;
+
     const result = await scheduleLiveStream(userId, {
       title: title || 'PNPtv Live Stream',
       hostName: ctx.from.first_name || 'Unknown',
       scheduledTime,
       duration,
+      groupChatId, // Pass the group chat ID for reminders
     });
 
     if (result.success) {
@@ -480,25 +567,20 @@ async function handleScheduleStream(ctx) {
 
       await ctx.reply(message, { parse_mode: 'Markdown' });
 
-      // Notify the group about the scheduled event
-      if (ctx.chat?.id && ctx.chat.type === 'group') {
+      // Send event announcement to the group (with reminders scheduled)
+      if (groupChatId && result.announcementMessage) {
         try {
-          const groupAnnouncement = 
-            `📺 *New Live Stream Scheduled!*\n\n` +
-            `🎯 *${title}*\n` +
-            `👤 Host: ${ctx.from.first_name}\n` +
-            `🕒 Time: ${scheduledTime.toLocaleString('en-US', { timeZone: 'America/Bogota' })}\n` +
-            `⏱️ Duration: ${duration} minutes\n\n` +
-            `🔗 [Watch Live Stream](${result.joinUrl})\n\n` +
-            (result.password ? `🔒 Password: \`${result.password}\`\n\n` : '') +
-            `📋 Meeting ID: \`${result.meetingId}\`\n\n` +
-            `💡 Click the link above to watch!`;
-          
-          await ctx.telegram.sendMessage(ctx.chat.id, groupAnnouncement, { parse_mode: 'Markdown' });
-          logger.info(`Group notification sent for live stream: ${title}`);
+          // Use the announcement message from the service (includes reminder schedule)
+          await ctx.telegram.sendMessage(groupChatId, result.announcementMessage, {
+            parse_mode: 'Markdown',
+            __eventNotification: true // Mark as event notification to skip auto-delete
+          });
+          logger.info(`Event announcement sent to group ${groupChatId} for live stream: ${title} (with reminders scheduled)`);
         } catch (error) {
-          logger.error('Error sending group notification for live stream:', error);
+          logger.error('Error sending event announcement for live stream:', error);
         }
+      } else if (!groupChatId) {
+        logger.info(`Live stream scheduled from DM - no group announcement sent`);
       }
 
       logger.info(`User ${userId} scheduled live stream: ${title} at ${scheduledTime}`);
@@ -870,6 +952,91 @@ async function handleAddTrack(ctx) {
 }
 
 /**
+ * Handle /deletetrack command - Delete track from music library (Admin only)
+ */
+async function handleDeleteTrack(ctx) {
+  try {
+    const userId = ctx.from.id.toString();
+    const { isAdmin } = require("../../config/admin");
+
+    // Check if user is admin
+    if (!isAdmin(userId)) {
+      await ctx.reply(
+        `🔒 *Permission Denied*\n\n` +
+        `Only administrators can delete tracks from the music library.\n\n` +
+        `This is an admin-only feature.`,
+        { parse_mode: 'Markdown' }
+      );
+      return;
+    }
+
+    // Parse command arguments
+    // Format: /deletetrack <track_id>
+    const commandText = ctx.message.text;
+    const args = commandText.replace('/deletetrack', '').trim();
+
+    if (!args) {
+      await ctx.reply(
+        `🗑️ *Delete Music Track*\n\n` +
+        `*Usage:*\n` +
+        `/deletetrack <track_id>\n\n` +
+        `*Example:*\n` +
+        `/deletetrack track_1762225554066_8g0gls1g2\n\n` +
+        `💡 Use /library to find track IDs`,
+        { parse_mode: 'Markdown' }
+      );
+      return;
+    }
+
+    const trackId = args.trim();
+
+    // Validate track ID format
+    if (!trackId.startsWith('track_')) {
+      await ctx.reply(
+        `❌ *Invalid Track ID*\n\n` +
+        `Track ID must start with "track_"\n\n` +
+        `Example: track_1762225554066_8g0gls1g2\n\n` +
+        `Use /library to find the correct track ID.`,
+        { parse_mode: 'Markdown' }
+      );
+      return;
+    }
+
+    // Delete track from library
+    const result = await deleteTrack(trackId);
+
+    if (result.success) {
+      await ctx.reply(
+        `✅ *Track Deleted Successfully!*\n\n` +
+        `🎵 *${result.deletedTrack.title}*\n` +
+        `👤 Artist: ${result.deletedTrack.artist}\n` +
+        `🎯 Genre: ${result.deletedTrack.genre}\n\n` +
+        `Track ID: ${trackId}\n\n` +
+        `The track has been permanently removed from the music library.`,
+        { parse_mode: 'Markdown' }
+      );
+
+      logger.info(`User ${userId} deleted track: ${result.deletedTrack.title} (${trackId})`);
+    } else {
+      await ctx.reply(
+        `❌ *Error Deleting Track*\n\n` +
+        `${result.error}\n\n` +
+        `Please check the track ID and try again.\n` +
+        `Use /library to find the correct track ID.`,
+        { parse_mode: 'Markdown' }
+      );
+    }
+
+  } catch (error) {
+    logger.error('Error in handleDeleteTrack:', error);
+    await ctx.reply(
+      t(ctx, 'errors.generic') ||
+      '❌ Error deleting track from library. Please try again.'
+    );
+  }
+}
+
+/**
  * Handle /deleteevent command - Delete scheduled event (Admin only)
  */
 async function handleDeleteEvent(ctx) {
@@ -916,6 +1083,8 @@ async function handleDeleteEvent(ctx) {
     const callDoc = await db.collection('scheduled_calls').doc(eventId).get();
     if (callDoc.exists) {
       await db.collection('scheduled_calls').doc(eventId).delete();
+      // Cancel all reminders for this event
+      await cancelEventReminders(eventId);
       deleted = true;
       eventType = 'Video Call';
     }
@@ -925,6 +1094,8 @@ async function handleDeleteEvent(ctx) {
       const streamDoc = await db.collection('scheduled_streams').doc(eventId).get();
       if (streamDoc.exists) {
         await db.collection('scheduled_streams').doc(eventId).delete();
+        // Cancel all reminders for this event
+        await cancelEventReminders(eventId);
         deleted = true;
         eventType = 'Live Stream';
       }
@@ -935,6 +1106,8 @@ async function handleDeleteEvent(ctx) {
       const broadcastDoc = await db.collection('scheduled_broadcasts').doc(eventId).get();
       if (broadcastDoc.exists) {
         await db.collection('scheduled_broadcasts').doc(eventId).delete();
+        // Cancel all reminders for this event
+        await cancelEventReminders(eventId);
         deleted = true;
         eventType = 'Broadcast';
       }
@@ -967,6 +1140,88 @@ async function handleDeleteEvent(ctx) {
   }
 }
 
+/**
+ * Handle play track callback - Track play count and redirect to URL
+ */
+async function handlePlayTrack(ctx) {
+  try {
+    const callbackData = ctx.callbackQuery.data;
+    const trackId = callbackData.split(':')[1];
+
+    if (!trackId) {
+      await ctx.answerCbQuery('❌ Invalid track ID');
+      return;
+    }
+
+    // Get track details
+    const { db } = require("../../config/firebase");
+    const trackDoc = await db.collection('music').doc(trackId).get();
+
+    if (!trackDoc.exists) {
+      await ctx.answerCbQuery('❌ Track not found');
+      return;
+    }
+
+    const track = trackDoc.data();
+
+    if (!track.url) {
+      await ctx.answerCbQuery('❌ No playback URL available');
+      return;
+    }
+
+    // Track the play
+    const playResult = await trackPlay(trackId);
+
+    if (playResult.success) {
+      // Send play link and updated count to user
+      const playMessage = 
+        `🎵 *Now Playing*\n\n` +
+        `**${track.title}** by ${track.artist}\n` +
+        `🔥 Play count: ${playResult.newCount}\n\n` +
+        `[🎧 Listen Now](${track.url})`;
+
+      await ctx.editMessageText(playMessage, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '🎧 Open in App', url: track.url }
+            ],
+            [
+              { text: '🔙 Back to Library', callback_data: 'back_to_library' }
+            ]
+          ]
+        }
+      });
+
+      await ctx.answerCbQuery(`🎵 Playing ${track.title} (${playResult.newCount} plays)`);
+    } else {
+      await ctx.answerCbQuery('❌ Error tracking play count');
+    }
+
+  } catch (error) {
+    logger.error('Error in handlePlayTrack:', error);
+    await ctx.answerCbQuery('❌ Error playing track');
+  }
+}
+
+/**
+ * Handle back to library callback
+ */
+async function handleBackToLibrary(ctx) {
+  try {
+    // Just acknowledge the callback and let user use /library again
+    await ctx.answerCbQuery('Use /library to browse tracks again');
+    await ctx.editMessageText(
+      '🎵 *Music Library*\n\nUse `/library` command to browse tracks again.',
+      { parse_mode: 'Markdown' }
+    );
+  } catch (error) {
+    logger.error('Error in handleBackToLibrary:', error);
+    await ctx.answerCbQuery('❌ Error');
+  }
+}
+
 module.exports = {
   handleNearby,
   handleLibrary,
@@ -976,5 +1231,8 @@ module.exports = {
   handleUpcoming,
   handlePlaylist,
   handleAddTrack,
-  handleDeleteEvent
+  handleDeleteTrack,
+  handleDeleteEvent,
+  handlePlayTrack,
+  handleBackToLibrary
 };

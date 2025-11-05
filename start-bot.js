@@ -17,6 +17,9 @@ const { initializeScheduler } = require('./src/services/scheduler');
 // Import message auto-delete cleanup
 const { clearAllTimers } = require('./src/utils/messageAutoDelete');
 
+// Import event reminder service
+const { startReminderCron } = require('./src/services/eventReminderService');
+
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', error);
@@ -50,6 +53,9 @@ async function startBot() {
     
     // Initialize scheduled tasks (scheduler runs independently)
     initializeScheduler(bot);
+    
+    // Start event reminder cron job
+    startReminderCron(bot);
     
     // Launch bot in polling mode
     await bot.launch();

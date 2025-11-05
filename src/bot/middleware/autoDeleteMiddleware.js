@@ -42,8 +42,15 @@ function autoDeleteMiddleware() {
       try {
         const result = await originalSendMessage(chatId, text, extra);
 
-        // Schedule deletion if this is a group message
-        if (result && result.message_id && result.chat?.type === 'group' || result.chat?.type === 'supergroup') {
+        // Check if this is an event notification (should not be auto-deleted)
+        const isEventNotification = extra?.__eventNotification || 
+                                   text?.includes('**Event Reminder**') ||
+                                   text?.includes('**New Video Call Scheduled!**') ||
+                                   text?.includes('**New Live Stream Scheduled!**') ||
+                                   text?.includes('**New Broadcast Scheduled!**');
+
+        // Schedule deletion if this is a group message and NOT an event notification
+        if (result && result.message_id && (result.chat?.type === 'group' || result.chat?.type === 'supergroup') && !isEventNotification) {
           scheduleMessageDeletion(ctx, result.message_id, chatId);
         }
 
