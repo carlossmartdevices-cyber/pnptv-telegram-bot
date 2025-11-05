@@ -16,7 +16,41 @@ function privateResponseMiddleware() {
     }
 
     // Commands/actions that should remain in group (group management functions)
-    const groupOnlyCommands = ['/status', '/refresh', '/info', '/library', '/toptracks', '/addtrack', '/deletetrack'];
+    // 
+    // ✅ GROUP COMMANDS (responses stay in group chat):
+    // - /status       - Bot status and health check
+    // - /refresh      - Refresh bot data/cache
+    // - /info         - Bot information display
+    // - /library      - Browse music library with tracks
+    // - /toptracks    - Show most played tracks
+    // - /addtrack     - Add new music tracks (admin only)
+    // - /deletetrack  - Delete music tracks (admin only)
+    // - /schedulecall - Schedule video calls for group
+    // - /schedulestream - Schedule live streams for group
+    // - /upcoming     - View upcoming group events
+    // - /settimezone  - Set timezone for events
+    // - play_track:*  - Track play button callbacks
+    //
+    // ❌ PRIVATE COMMANDS (responses sent to private chat):
+    // - /start        - Initial bot setup and onboarding
+    // - /help         - Help menu and command list
+    // - /map          - Location and map features
+    // - /nearby       - Find nearby members
+    // - /live         - Live streaming features
+    // - /app          - Mini app access
+    // - /profile      - User profile management
+    // - /subscribe    - Subscription management
+    // - /admin        - Admin panel (admin only)
+    // - /plans        - Subscription plans (admin only)
+    // - /aichat       - Start AI chat session
+    // - /endchat      - End AI chat session
+    // - /deleteevent  - Delete scheduled events
+    // - /playlist     - Manage playlists
+    //
+    // Note: Group members will see "✉️ I've sent you the response via private message"
+    // for private commands, and get a "Start Bot" button if they haven't started the bot.
+    //
+    const groupOnlyCommands = ['/status', '/refresh', '/info', '/library', '/toptracks', '/addtrack', '/deletetrack', '/schedulecall', '/schedulestream', '/upcoming', '/settimezone'];
     const commandText = ctx.message?.text || ctx.callbackQuery?.data || '';
     
     // Allow group management functions to work normally

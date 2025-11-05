@@ -84,7 +84,7 @@ async function handleNearby(ctx) {
 }
 
 /**
- * Handle /library command - View music library (Basic and Premium tiers)
+ * Handle /library command - View music library (Available to all users)
  */
 async function handleLibrary(ctx) {
   try {
@@ -92,54 +92,36 @@ async function handleLibrary(ctx) {
     if (ctx.allowGroupResponse) {
       ctx.allowGroupResponse();
     }
-    
+
     const userId = ctx.from.id.toString();
     // Use 'community-library' as the fixed groupId for all users
-    // This ensures all premium members can see the same library
+    // This ensures all members can see the same library
     // regardless of whether they call from DM or group chat
     const groupId = 'community-library';
 
-    const { tier } = await getUserPermissions(userId);
+    // Check if user exists in database
+    const { userData } = await getUserPermissions(userId);
 
-    // Library requires at least Basic tier
-    if (tier === 'Free') {
-      // Check if user is not in database (userData is null)
-      const { userData } = await getUserPermissions(userId);
-      
-      if (!userData) {
-        // User not in database - needs to start the bot first
-        await ctx.reply(
-          `🎵 *Music Library*\n\n` +
-          `Welcome! To access the music library, please start the bot first.\n\n` +
-          `👆 Click on my name and press "Start" to set up your account.\n\n` +
-          `After that, you can use /plans to see subscription options for premium features!`,
-          { 
-            parse_mode: 'Markdown',
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: '🤖 Start Bot',
-                    url: `https://t.me/PNPtvbot?start=library_access`
-                  }
-                ]
+    if (!userData) {
+      // User not in database - needs to start the bot first
+      await ctx.reply(
+        `🎵 *Music Library*\n\n` +
+        `Welcome! To access the music library, please start the bot first.\n\n` +
+        `👆 Click on my name and press "Start" to set up your account.`,
+        {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: '🤖 Start Bot',
+                  url: `https://t.me/PNPtvbot?start=library_access`
+                }
               ]
-            }
+            ]
           }
-        );
-      } else {
-        // User is in database but has Free tier
-        await ctx.reply(
-          `🎵 *Music Library*\n\n` +
-          `This feature is available for paid members.\n\n` +
-          `📀 With a subscription you can:\n` +
-          `• Browse music library\n` +
-          `• View playlists\n` +
-          `• Access exclusive content\n\n` +
-          `Send /plans to upgrade!`,
-          { parse_mode: 'Markdown' }
-        );
-      }
+        }
+      );
       return;
     }
 
@@ -172,7 +154,8 @@ async function handleLibrary(ctx) {
       let message = `${typeEmoji} *${track.title}*\n`;
       message += `👤 ${track.artist}\n`;
       message += `🎯 ${track.genre}\n`;
-      message += `🔥 ${track.playCount || 0} plays`;
+      message += `🔥 ${track.playCount || 0} plays\n`;
+      message += `🆔 \`${track.trackId}\``;
 
       // Create inline keyboard with buttons
       const keyboard = {

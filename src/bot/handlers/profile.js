@@ -4,6 +4,31 @@ const logger = require("../../utils/logger");
 const { getLocationDisplay } = require("../../services/profileService");
 
 /**
+ * Get personality badge display text
+ */
+async function getPersonalityBadgeDisplay(userData, lang) {
+  try {
+    // Check if user has personality choice from SantinoBot system
+    if (userData.personalityChoice && userData.personalityChoice.emoji && userData.personalityChoice.name) {
+      const choice = userData.personalityChoice;
+      const badgeText = lang === "es" ? "🎭 Personalidad:" : "🎭 Personality:";
+      return `${badgeText} ${choice.emoji} ${choice.name}\n`;
+    }
+    
+    // Check legacy badge field
+    if (userData.badge && typeof userData.badge === "string" && userData.badge.trim().length > 0) {
+      const badgeText = lang === "es" ? "🏆 Insignia:" : "🏆 Badge:";
+      return `${badgeText} ${userData.badge.trim()}\n`;
+    }
+    
+    return ""; // No personality/badge to display
+  } catch (error) {
+    logger.error("Error getting personality badge display:", error);
+    return "";
+  }
+}
+
+/**
  * View user profile with photo support
  */
 async function viewProfile(ctx) {
@@ -38,6 +63,8 @@ async function viewProfile(ctx) {
         location: null,
         locationName: null,
         locationGeohash: null,
+        badge: null,
+        personality: null,
       });
 
       logger.info(`Created new profile for user ${userId}`);
@@ -86,12 +113,16 @@ async function viewProfile(ctx) {
         ? "No definida"
         : "Not set";
 
+    // Get personality badge if available
+    const personalityBadge = await getPersonalityBadgeDisplay(userData, lang);
+
     // Build profile text
     const profileText = t("profileInfo", lang, {
       userId: userData.userId,
       username: usernameDisplay,
       tier: userData.tier || "Free",
       membershipInfo: "", // Add empty membershipInfo to avoid template errors
+      personalityBadge: personalityBadge,
       location: locationDisplay,
       bio: bioDisplay,
     });
@@ -526,4 +557,5 @@ module.exports = {
   toggleAdsOptOut,
   showLanguageSelection,
   setLanguage,
+  getPersonalityBadgeDisplay,
 };
