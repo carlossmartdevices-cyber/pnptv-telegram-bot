@@ -102,7 +102,14 @@ async function createPayment(options) {
       preferredTokens: [
         { chain: SUPPORTED_CHAINS.BASE, address: USDC_TOKENS[SUPPORTED_CHAINS.BASE] },
       ],
-      // Payment options removed - let Daimo determine available methods
+      // Show popular payment apps first (order matters)
+      paymentOptions: [
+        'Coinbase',      // Coinbase (most popular)
+        'CashApp',       // Cash App
+        'Venmo',         // Venmo
+        'AllExchanges',  // Other exchanges (Binance, Kraken, etc.)
+        'AllWallets',    // Crypto wallets (MetaMask, etc.)
+      ],
       redirectUri: BOT_URL ? `${BOT_URL}/payment/success` : undefined,
     },
     destination: {
