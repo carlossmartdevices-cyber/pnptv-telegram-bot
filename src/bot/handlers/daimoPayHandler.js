@@ -251,17 +251,18 @@ async function handleDaimoPlanSelection(ctx) {
           `🌐 *Red:* Base Network (comisiones ultra-bajas)\n\n` +
           `💳 *MÉTODOS DE PAGO DISPONIBLES:*\n` +
           `✅ Coinbase \\(recomendado\\)\n` +
+          `✅ Cash App\n` +
+          `✅ Venmo\n` +
           `✅ Binance, Kraken, otros exchanges\n` +
-          `✅ MetaMask, Rainbow, wallets cripto\n` +
-          `✅ Cualquier dirección con USDC\n\n` +
-          `📌 *¿No tienes cripto?*\n` +
-          `Compra USDC en Coinbase con:\n` +
-          `• Tarjeta débito/crédito\n` +
-          `• Transferencia bancaria\n` +
-          `• Apple Pay / Google Pay\n\n` +
+          `✅ MetaMask, Rainbow, wallets cripto\n\n` +
+          `📌 *¿No tienes USDC?*\n` +
+          `No te preocupes\\! Puedes:\n` +
+          `• Comprar USDC en Coinbase/Cash App/Venmo\n` +
+          `• Usar tarjeta débito/crédito\n` +
+          `• Transferir desde tu banco\n\n` +
           `*📱 Pasos para Pagar:*\n` +
           `1️⃣ Haz clic en "💳 Pagar Ahora"\n` +
-          `2️⃣ Elige Coinbase o tu exchange/wallet\n` +
+          `2️⃣ Elige tu app favorita \\(Coinbase, Cash App, Venmo\\)\n` +
           `3️⃣ Sigue las instrucciones en pantalla\n` +
           `4️⃣ ¡Tu membresía se activa al instante!\n\n` +
           `⏰ *Válido por:* 24 horas\n` +
@@ -274,17 +275,18 @@ async function handleDaimoPlanSelection(ctx) {
           `🌐 *Network:* Base (ultra-low fees)\n\n` +
           `💳 *PAYMENT METHODS AVAILABLE:*\n` +
           `✅ Coinbase \\(recommended\\)\n` +
+          `✅ Cash App\n` +
+          `✅ Venmo\n` +
           `✅ Binance, Kraken, other exchanges\n` +
-          `✅ MetaMask, Rainbow, crypto wallets\n` +
-          `✅ Any address with USDC\n\n` +
-          `📌 *Don't have crypto?*\n` +
-          `Buy USDC on Coinbase with:\n` +
-          `• Debit/credit card\n` +
-          `• Bank transfer\n` +
-          `• Apple Pay / Google Pay\n\n` +
+          `✅ MetaMask, Rainbow, crypto wallets\n\n` +
+          `📌 *Don't have USDC?*\n` +
+          `No problem\\! You can:\n` +
+          `• Buy USDC on Coinbase/Cash App/Venmo\n` +
+          `• Use debit/credit card\n` +
+          `• Transfer from your bank\n\n` +
           `*📱 How to Pay:*\n` +
           `1️⃣ Click "💳 Pay Now"\n` +
-          `2️⃣ Choose Coinbase or your exchange/wallet\n` +
+          `2️⃣ Choose your favorite app \\(Coinbase, Cash App, Venmo\\)\n` +
           `3️⃣ Follow the on\\-screen instructions\n` +
           `4️⃣ Your membership activates instantly!\n\n` +
           `⏰ *Valid for:* 24 hours\n` +
@@ -379,39 +381,39 @@ async function handleDaimoHelp(ctx) {
   const helpMsg = lang === "es"
     ? `💎 *Daimo Pay \\- Información*\n\n` +
       `*¿Qué es Daimo Pay?*\n` +
-      `Daimo Pay te permite pagar con USDC \\(stablecoin dólar\\) de forma segura y rápida\\.\n\n` +
+      `Daimo Pay te permite pagar con USDC \\(stablecoin dólar\\) desde múltiples apps y plataformas\\.\n\n` +
       `*📱 Métodos de Pago:*\n` +
-      `• 🏦 *Exchanges de cripto:* Coinbase, Binance, Kraken\n` +
-      `• 🔐 *Wallets cripto:* MetaMask, Rainbow, Trust Wallet\n` +
-      `• 📍 *Cualquier dirección* con USDC en Base Network\n\n` +
+      `• 💳 *Apps populares:* Coinbase, Cash App, Venmo\n` +
+      `• 🏦 *Exchanges:* Binance, Kraken, otros\n` +
+      `• 🔐 *Wallets:* MetaMask, Rainbow, Trust Wallet\n\n` +
       `*¿No tienes USDC?*\n` +
-      `No te preocupes\\! En Coinbase puedes:\n` +
-      `• Comprar USDC con tarjeta débito/crédito\n` +
-      `• Usar transferencia bancaria\n` +
-      `• Pagar con Apple Pay / Google Pay\n\n` +
+      `No te preocupes\\! Puedes comprar USDC en:\n` +
+      `• Coinbase, Cash App, Venmo\n` +
+      `• Usando tarjeta débito/crédito\n` +
+      `• Transferencia bancaria\n\n` +
       `*✨ Ventajas:*\n` +
       `✅ Activación automática instantánea\n` +
       `✅ Pago seguro en blockchain\n` +
-      `✅ Comisiones ultra\\-bajas en Base Network\n` +
+      `✅ Comisiones ultra\\-bajas \\(Base Network\\)\n` +
       `✅ Reembolso automático si hay problemas\n\n` +
       `*💡 Nota:*\n` +
       `USDC es una stablecoin 1:1 con el dólar\\. $10 USDC = $10 USD\\.`
     : `💎 *Daimo Pay \\- Information*\n\n` +
       `*What is Daimo Pay?*\n` +
-      `Daimo Pay allows you to pay with USDC \\(dollar stablecoin\\) securely and quickly\\.\n\n` +
+      `Daimo Pay allows you to pay with USDC \\(dollar stablecoin\\) from multiple apps and platforms\\.\n\n` +
       `*📱 Payment Methods:*\n` +
-      `• 🏦 *Crypto Exchanges:* Coinbase, Binance, Kraken\n` +
-      `• 🔐 *Crypto Wallets:* MetaMask, Rainbow, Trust Wallet\n` +
-      `• 📍 *Any address* with USDC on Base Network\n\n` +
+      `• 💳 *Popular apps:* Coinbase, Cash App, Venmo\n` +
+      `• 🏦 *Exchanges:* Binance, Kraken, others\n` +
+      `• 🔐 *Wallets:* MetaMask, Rainbow, Trust Wallet\n\n` +
       `*Don't have USDC?*\n` +
-      `No problem\\! On Coinbase you can:\n` +
-      `• Buy USDC with debit/credit card\n` +
-      `• Use bank transfer\n` +
-      `• Pay with Apple Pay / Google Pay\n\n` +
+      `No problem\\! You can buy USDC on:\n` +
+      `• Coinbase, Cash App, Venmo\n` +
+      `• Using debit/credit card\n` +
+      `• Bank transfer\n\n` +
       `*✨ Benefits:*\n` +
       `✅ Instant automatic activation\n` +
       `✅ Secure blockchain payment\n` +
-      `✅ Ultra\\-low fees on Base Network\n` +
+      `✅ Ultra\\-low fees \\(Base Network\\)\n` +
       `✅ Automatic refund if issues occur\n\n` +
       `*💡 Note:*\n` +
       `USDC is a 1:1 dollar\\-pegged stablecoin\\. $10 USDC = $10 USD\\.`;
