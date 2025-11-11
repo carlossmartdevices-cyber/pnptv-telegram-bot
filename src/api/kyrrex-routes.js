@@ -448,7 +448,7 @@ async function notifyPaymentSuccess(userId, paymentData) {
         `You now have full access to all premium content.`;
 
     await bot.telegram.sendMessage(userId, successMsg, {
-      parse_mode: 'Markdown',
+      parse_mode: 'MarkdownV2',
       reply_markup: {
         inline_keyboard: [
           [{

@@ -3,7 +3,7 @@ const router = express.Router();
 const copCardService = require('../services/copCardService');
 const { activateMembership } = require('../utils/membershipManager');
 const logger = require('../utils/logger');
-const { escapeHtml } = require('../utils/telegramEscapes');
+const { escapeHtml, escapeMdV2 } = require('../utils/telegramEscapes');
 
 /**
  * COP Card Payment Webhook Routes
@@ -413,16 +413,16 @@ router.post('/verify/:reference', async (req, res) => {
     await copCardService.markAsCompleted(payment.paymentId);
 
     // Send success notification to user
-    try {
+      try {
       await bot.telegram.sendMessage(
         payment.userId,
         `🎉 *¡Membresía Activada!*\n\n` +
-        `Tu pago de $${payment.amount.toLocaleString('es-CO')} COP ha sido verificado.\n\n` +
-        `💎 Plan: ${payment.planName}\n` +
-        `⏱️ Duración: ${payment.durationDays} días\n` +
-        `🔖 Referencia: \`${payment.reference}\`\n\n` +
+        `Tu pago de $${escapeMdV2(payment.amount.toLocaleString('es-CO'))} COP ha sido verificado.\n\n` +
+        `💎 Plan: ${escapeMdV2(payment.planName)}\n` +
+        `⏱️ Duración: ${escapeMdV2(String(payment.durationDays))} días\n` +
+        `🔖 Referencia: \`${escapeMdV2(payment.reference)}\`\n\n` +
         `✅ Tu membresía está activa. ¡Disfruta del contenido premium!`,
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'MarkdownV2' }
       );
     } catch (notifyError) {
       logger.warn('Failed to send activation notification to user:', notifyError);

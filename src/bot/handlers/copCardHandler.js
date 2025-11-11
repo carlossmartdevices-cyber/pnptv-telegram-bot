@@ -1,6 +1,7 @@
 const copCardService = require('../../services/copCardService');
 const planService = require('../../services/planService');
 const logger = require('../../utils/logger');
+const { escapeMdV2 } = require('../../utils/telegramEscapes');
 
 /**
  * COP Card Payment Handler
@@ -53,7 +54,7 @@ async function showCopCardPlans(ctx) {
     }]);
 
     await ctx.reply(message, {
-      parse_mode: 'Markdown',
+      parse_mode: 'MarkdownV2',
       reply_markup: { inline_keyboard: keyboard }
     });
 
@@ -113,31 +114,31 @@ async function handleCopCardPlanSelection(ctx) {
     const thankYouUrl = `${webhookUrl}/cop-card/thank-you`;
 
     const message = lang === 'es'
-      ? `💳 *Pago con Tarjeta - ${plan.displayName || plan.name}*\n\n` +
-        `💵 *Precio USD:* $${plan.price} USD\n` +
-        `💰 *Monto a pagar:* $${amountCOP.toLocaleString('es-CO')} COP\n` +
-        `⏱️ *Duración:* ${plan.durationDays || plan.duration} días\n` +
-        `🔖 *Referencia de pago:* \`${paymentIntent.reference}\`\n\n` +
+      ? `💳 *Pago con Tarjeta - ${escapeMdV2(plan.displayName || plan.name)}*\n\n` +
+        `💵 *Precio USD:* $${escapeMdV2(String(plan.price))} USD\n` +
+        `💰 *Monto a pagar:* $${escapeMdV2(amountCOP.toLocaleString('es-CO'))} COP\n` +
+        `⏱️ *Duración:* ${escapeMdV2(String(plan.durationDays || plan.duration))} días\n` +
+        `🔖 *Referencia de pago:* \`${escapeMdV2(paymentIntent.reference)}\`\n\n` +
         `📝 *Instrucciones:*\n` +
         `1. Haz clic en "💳 Ir a Pagar" abajo\n` +
         `2. Completa el pago con tu tarjeta de crédito/débito\n` +
         `3. *Serás cobrado en pesos colombianos (COP)*\n` +
         `4. Después del pago, serás redirigido a una página con instrucciones\n` +
         `5. Regresa aquí y presiona "✅ He completado el pago"\n\n` +
-        `⚠️ *Importante:* Guarda tu referencia: \`${paymentIntent.reference}\`\n` +
+        `⚠️ *Importante:* Guarda tu referencia: \`${escapeMdV2(paymentIntent.reference)}\`\n` +
         `Tu membresía se activará después de verificar el pago (máximo 24h)`
-      : `💳 *Card Payment - ${plan.displayName || plan.name}*\n\n` +
-        `💵 *USD Price:* $${plan.price} USD\n` +
-        `💰 *Amount to pay:* $${amountCOP.toLocaleString('es-CO')} COP\n` +
-        `⏱️ *Duration:* ${plan.durationDays || plan.duration} days\n` +
-        `🔖 *Payment reference:* \`${paymentIntent.reference}\`\n\n` +
+      : `💳 *Card Payment - ${escapeMdV2(plan.displayName || plan.name)}*\n\n` +
+        `💵 *USD Price:* $${escapeMdV2(String(plan.price))} USD\n` +
+        `💰 *Amount to pay:* $${escapeMdV2(amountCOP.toLocaleString('es-CO'))} COP\n` +
+        `⏱️ *Duration:* ${escapeMdV2(String(plan.durationDays || plan.duration))} days\n` +
+        `🔖 *Payment reference:* \`${escapeMdV2(paymentIntent.reference)}\`\n\n` +
         `📝 *Instructions:*\n` +
         `1. Click "💳 Go to Payment" below\n` +
         `2. Complete payment with your credit/debit card\n` +
         `3. *You will be charged in Colombian pesos (COP)*\n` +
         `4. After payment, you'll be redirected to a page with instructions\n` +
         `5. Return here and press "✅ I've completed payment"\n\n` +
-        `⚠️ *Important:* Save your reference: \`${paymentIntent.reference}\`\n` +
+        `⚠️ *Important:* Save your reference: \`${escapeMdV2(paymentIntent.reference)}\`\n` +
         `Your membership will be activated after payment verification (max 24h)`;
 
     const keyboard = [
@@ -160,7 +161,7 @@ async function handleCopCardPlanSelection(ctx) {
     ];
 
     await ctx.reply(message, {
-      parse_mode: 'Markdown',
+      parse_mode: 'MarkdownV2',
       reply_markup: { inline_keyboard: keyboard }
     });
 
@@ -204,7 +205,7 @@ async function handleCopCardPaymentConfirmed(ctx) {
         : '✅ *Payment already confirmed*\n\nYour payment is being processed. We\'ll notify you when your membership is activated.\n\n' +
           `🔖 Reference: \`${payment.reference}\``;
 
-      await ctx.reply(message, { parse_mode: 'Markdown' });
+    await ctx.reply(message, { parse_mode: 'MarkdownV2' });
       return;
     }
 
@@ -219,16 +220,16 @@ async function handleCopCardPaymentConfirmed(ctx) {
     const message = lang === 'es'
       ? '✅ *Pago registrado*\n\n' +
         'Gracias por confirmar tu pago. Estamos verificando la transacción y activaremos tu membresía en breve.\n\n' +
-        `💰 Monto: $${payment.amount.toLocaleString('es-CO')} COP\n` +
-        `🔖 Referencia: \`${payment.reference}\`\n` +
-        `💎 Plan: ${payment.planName}\n\n` +
+        `💰 Monto: $${escapeMdV2(payment.amount.toLocaleString('es-CO'))} COP\n` +
+        `🔖 Referencia: \`${escapeMdV2(payment.reference)}\`\n` +
+        `💎 Plan: ${escapeMdV2(payment.planName)}\n\n` +
         '⏳ Tiempo estimado de verificación: 5-15 minutos\n\n' +
         'Te notificaremos cuando tu membresía esté activa.'
       : '✅ *Payment registered*\n\n' +
         'Thank you for confirming your payment. We\'re verifying the transaction and will activate your membership shortly.\n\n' +
-        `💰 Amount: $${payment.amount.toLocaleString('es-CO')} COP\n` +
-        `🔖 Reference: \`${payment.reference}\`\n` +
-        `💎 Plan: ${payment.planName}\n\n` +
+        `💰 Amount: $${escapeMdV2(payment.amount.toLocaleString('es-CO'))} COP\n` +
+        `🔖 Reference: \`${escapeMdV2(payment.reference)}\`\n` +
+        `💎 Plan: ${escapeMdV2(payment.planName)}\n\n` +
         '⏳ Estimated verification time: 5-15 minutes\n\n' +
         'We\'ll notify you when your membership is active.';
 
@@ -244,7 +245,7 @@ async function handleCopCardPaymentConfirmed(ctx) {
     ];
 
     await ctx.reply(message, {
-      parse_mode: 'Markdown',
+      parse_mode: 'MarkdownV2',
       reply_markup: { inline_keyboard: keyboard }
     });
 
@@ -301,9 +302,9 @@ async function handleCopCardStatus(ctx) {
 
     const statusMsg = statusMessages[payment.status] || statusMessages['pending_payment'];
     const message = (statusMsg[lang] || statusMsg['en']) + '\n\n' +
-      `💰 Monto: $${payment.amount.toLocaleString('es-CO')} COP\n` +
-      `🔖 Referencia: \`${payment.reference}\`\n` +
-      `📅 Creado: ${payment.createdAt.toLocaleString(lang === 'es' ? 'es-CO' : 'en-US')}`;
+      `💰 Monto: $${escapeMdV2(payment.amount.toLocaleString('es-CO'))} COP\n` +
+      `🔖 Referencia: \`${escapeMdV2(payment.reference)}\`\n` +
+      `📅 Creado: ${escapeMdV2(payment.createdAt.toLocaleString(lang === 'es' ? 'es-CO' : 'en-US'))}`;
 
     const keyboard = [[{
       text: lang === 'es' ? '🔄 Actualizar' : '🔄 Refresh',
@@ -311,7 +312,7 @@ async function handleCopCardStatus(ctx) {
     }]];
 
     await ctx.reply(message, {
-      parse_mode: 'Markdown',
+      parse_mode: 'MarkdownV2',
       reply_markup: { inline_keyboard: keyboard }
     });
 

@@ -78,9 +78,9 @@ class PlanService {
     icon,
     cryptoBonus,
     recommended = false,
-    paymentMethod = // or "nequi"
+    paymentMethod = "nequi",
     paymentLink = null, // For manual Nequi payments
-    requiresManualActivation = false
+    requiresManualActivation = false,
   }) {
     // Validate input
     const validation = this.validatePlanData({ name, price, duration, features, tier, description });
@@ -88,9 +88,10 @@ class PlanService {
       throw new Error(`Invalid plan data: ${validation.errors.join(", ")}`);
     }
 
-    // Validate payment method
-    if (!["nequi"].includes(paymentMethod)) {
-      throw new Error("Payment method must be either 'nequi', or ");
+    // Validate payment method - allow commonly used methods
+    const allowedMethods = ["nequi", "daimo", "kyrrex", "cop", "manual"];
+    if (!allowedMethods.includes(paymentMethod)) {
+      throw new Error(`Payment method must be one of: ${allowedMethods.join(", ")}`);
     }
 
     // If Nequi, require payment link
@@ -98,9 +99,9 @@ class PlanService {
       throw new Error("Payment link is required for Nequi payment method");
     }
 
-    // Daimo payment requires USD
+    // Daimo payment prefers USD
     if (paymentMethod === "daimo" && currency !== "USD") {
-      logger.warn(`Daimo payment requires USD, converting from ${currency}`);
+      logger.warn(`Daimo payment prefers USD, converting from ${currency}`);
     }
 
     // Check for duplicate plan names
@@ -123,9 +124,9 @@ class PlanService {
       icon: icon || "💎",
       cryptoBonus: cryptoBonus || null,
       recommended: Boolean(recommended),
-      paymentMethod: paymentMethod,
-      paymentLink: paymentLink || null,
-      requiresManualActivation: paymentMethod === "nequi" || requiresManualActivation,
+  paymentMethod: paymentMethod,
+  paymentLink: paymentLink || null,
+  requiresManualActivation: Boolean(requiresManualActivation) || paymentMethod === "nequi",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       active: true,

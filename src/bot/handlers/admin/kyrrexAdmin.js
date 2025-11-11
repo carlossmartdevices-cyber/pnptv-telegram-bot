@@ -1,6 +1,7 @@
 const { db } = require("../../../config/firebase");
 const logger = require("../../../utils/logger");
 const kyrrexService = require("../../../services/kyrrexService");
+const { escapeMdV2 } = require("../../../utils/telegramEscapes");
 
 /**
  * Admin Kyrrex Management Functions
@@ -24,29 +25,29 @@ async function showKyrrexDashboard(ctx) {
     const dashboardMsg = lang === "es"
       ? `🪙 *Panel de Administración Kyrrex*\n\n` +
         `📊 *Estadísticas:*\n` +
-        `• Total pagos: ${stats.totalPayments}\n` +
-        `• Pagos completados: ${stats.completedPayments}\n` +
-        `• Pagos pendientes: ${stats.pendingPayments}\n` +
-        `• Pagos expirados: ${stats.expiredPayments}\n` +
-        `• Ingresos totales: $${stats.totalRevenue.toFixed(2)} USD\n\n` +
+        `• Total pagos: ${escapeMdV2(String(stats.totalPayments))}\n` +
+        `• Pagos completados: ${escapeMdV2(String(stats.completedPayments))}\n` +
+        `• Pagos pendientes: ${escapeMdV2(String(stats.pendingPayments))}\n` +
+        `• Pagos expirados: ${escapeMdV2(String(stats.expiredPayments))}\n` +
+        `• Ingresos totales: $${escapeMdV2((stats.totalRevenue || 0).toFixed(2))} USD\n\n` +
         `⚙️ *Configuración:*\n` +
         `• Estado: ${config.enabled ? '✅ Activo' : '❌ Inactivo'}\n` +
-        `• API Key: ${config.apiKey || 'No configurada'}\n` +
+        `• API Key: ${escapeMdV2(config.apiKey || 'No configurada')}\n` +
         `• Wallet: ${config.walletAddress ? '✅ Configurada' : '❌ No configurada'}\n` +
-        `• Webhook: ${config.webhookUrl || 'No configurado'}\n\n` +
+        `• Webhook: ${escapeMdV2(config.webhookUrl || 'No configurado')}\n\n` +
         `*Selecciona una opción:*`
       : `🪙 *Kyrrex Admin Dashboard*\n\n` +
         `📊 *Statistics:*\n` +
-        `• Total payments: ${stats.totalPayments}\n` +
-        `• Completed payments: ${stats.completedPayments}\n` +
-        `• Pending payments: ${stats.pendingPayments}\n` +
-        `• Expired payments: ${stats.expiredPayments}\n` +
-        `• Total revenue: $${stats.totalRevenue.toFixed(2)} USD\n\n` +
+        `• Total payments: ${escapeMdV2(String(stats.totalPayments))}\n` +
+        `• Completed payments: ${escapeMdV2(String(stats.completedPayments))}\n` +
+        `• Pending payments: ${escapeMdV2(String(stats.pendingPayments))}\n` +
+        `• Expired payments: ${escapeMdV2(String(stats.expiredPayments))}\n` +
+        `• Total revenue: $${escapeMdV2((stats.totalRevenue || 0).toFixed(2))} USD\n\n` +
         `⚙️ *Configuration:*\n` +
         `• Status: ${config.enabled ? '✅ Active' : '❌ Inactive'}\n` +
-        `• API Key: ${config.apiKey || 'Not configured'}\n` +
+        `• API Key: ${escapeMdV2(config.apiKey || 'Not configured')}\n` +
         `• Wallet: ${config.walletAddress ? '✅ Configured' : '❌ Not configured'}\n` +
-        `• Webhook: ${config.webhookUrl || 'Not configured'}\n\n` +
+        `• Webhook: ${escapeMdV2(config.webhookUrl || 'Not configured')}\n\n` +
         `*Select an option:*`;
 
     const buttons = [
@@ -185,11 +186,11 @@ async function showRecentPayments(ctx) {
       const createdAt = payment.createdAt?.toDate?.() || new Date(payment.createdAt);
       const timeAgo = getTimeAgo(createdAt, lang);
 
-      paymentsMsg += `${index + 1}. ${statusEmoji} \`${payment.paymentId?.slice(-8) || payment.id.slice(-8)}\`\n`;
-      paymentsMsg += `   💰 ${payment.cryptoAmount} ${payment.cryptocurrency}\n`;
-      paymentsMsg += `   👤 Usuario: ${payment.userId}\n`;
-      paymentsMsg += `   📦 Plan: ${payment.planName}\n`;
-      paymentsMsg += `   🕐 ${timeAgo}\n\n`;
+      paymentsMsg += `${index + 1}. ${statusEmoji} \`${escapeMdV2(payment.paymentId?.slice(-8) || payment.id.slice(-8))}\`\n`;
+      paymentsMsg += `   💰 ${escapeMdV2(String(payment.cryptoAmount))} ${escapeMdV2(payment.cryptocurrency)}\n`;
+      paymentsMsg += `   👤 Usuario: ${escapeMdV2(String(payment.userId))}\n`;
+      paymentsMsg += `   📦 Plan: ${escapeMdV2(payment.planName)}\n`;
+      paymentsMsg += `   🕐 ${escapeMdV2(timeAgo)}\n\n`;
     });
 
     const buttons = [
@@ -281,12 +282,12 @@ async function showPendingPayments(ctx) {
       const expiresAt = payment.expiresAt?.toDate?.() || new Date(payment.expiresAt);
       const timeLeft = Math.max(0, Math.floor((expiresAt - new Date()) / (1000 * 60)));
 
-      paymentsMsg += `${index + 1}. \`${payment.paymentId?.slice(-8) || payment.id.slice(-8)}\`\n`;
-      paymentsMsg += `   💰 ${payment.cryptoAmount} ${payment.cryptocurrency}\n`;
-      paymentsMsg += `   👤 Usuario: ${payment.userId}\n`;
-      paymentsMsg += `   📦 Plan: ${payment.planName}\n`;
-      paymentsMsg += `   ⏰ Expira en: ${timeLeft} min\n`;
-      paymentsMsg += `   📍 \`${payment.depositAddress}\`\n\n`;
+  paymentsMsg += `${index + 1}. \`${escapeMdV2(payment.paymentId?.slice(-8) || payment.id.slice(-8))}\`\n`;
+  paymentsMsg += `   💰 ${escapeMdV2(String(payment.cryptoAmount))} ${escapeMdV2(payment.cryptocurrency)}\n`;
+  paymentsMsg += `   👤 Usuario: ${escapeMdV2(String(payment.userId))}\n`;
+  paymentsMsg += `   📦 Plan: ${escapeMdV2(payment.planName)}\n`;
+  paymentsMsg += `   ⏰ Expira en: ${escapeMdV2(String(timeLeft))} min\n`;
+  paymentsMsg += `   📍 \`${escapeMdV2(payment.depositAddress)}\`\n\n`;
 
       // Add confirm button for each payment
       buttons.push([{

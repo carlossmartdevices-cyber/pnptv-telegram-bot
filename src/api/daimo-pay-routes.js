@@ -208,14 +208,14 @@ async function handlePaymentStarted(event, userId, req) {
     const bot = req?.app?.get?.('bot');
       if (bot && userId) {
       const safeTx = escapeMdV2(String(source?.txHash?.substring(0, 16) || ''));
-      await bot.telegram.sendMessage(
-        userId,
-        `⏳ *Pago Detectado*\n\n` +
-        `Tu pago ha sido detectado y está siendo procesado.\n\n` +
+  await bot.telegram.sendMessage(
+    userId,
+    `⏳ *Pago Detectado*\n\n` +
+    `Tu pago ha sido detectado y está siendo procesado.\n\n` +
   `🔗 Hash: \`${safeTx}...\`\n\n` +
-        `Te notificaremos cuando esté completo.`,
-        { parse_mode: 'Markdown' }
-      );
+    `Te notificaremos cuando esté completo.`,
+    { parse_mode: 'MarkdownV2' }
+  );
     }
   } catch (notifError) {
     logger.warn('[DaimoPay Webhook] Failed to send payment_started notification:', notifError.message);
@@ -320,7 +320,7 @@ async function handlePaymentCompleted(event, userId, planId, amount, txHash, req
       finalMsg += `¡Gracias por tu suscripción! 🚀`;
 
       await bot.telegram.sendMessage(userId, finalMsg, {
-        parse_mode: 'Markdown',
+        parse_mode: 'MarkdownV2',
       });
 
       logger.info('[DaimoPay Webhook] Confirmation sent to user', { userId, paymentId: id });
@@ -405,7 +405,7 @@ async function activateMembershipAfterReorgCheck(paymentId, userId, plan, destin
       finalMsg += `¡Gracias por tu suscripción! 🚀`;
 
       await bot.telegram.sendMessage(userId, finalMsg, {
-        parse_mode: 'Markdown',
+        parse_mode: 'MarkdownV2',
       });
 
       logger.info('[DaimoPay Webhook] Confirmation sent after reorg check', { userId, paymentId });
@@ -441,7 +441,7 @@ async function handlePaymentBounced(event, userId, req) {
         `Tu pago no pudo ser completado.\n\n` +
         `Los fondos han sido devueltos automáticamente a tu dirección de origen.\n\n` +
         `Por favor intenta de nuevo o contacta al soporte si el problema persiste.`,
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'MarkdownV2' }
       );
     }
   } catch (notifError) {
@@ -471,7 +471,7 @@ async function handlePaymentRefunded(event, userId, req) {
         `Tu pago ha sido reembolsado.\n\n` +
         `Los fondos han sido devueltos a tu dirección de origen.\n\n` +
         `Si tienes preguntas, contacta al soporte.`,
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'MarkdownV2' }
       );
     }
   } catch (notifError) {

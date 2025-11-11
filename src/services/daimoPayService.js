@@ -102,13 +102,11 @@ async function createPayment(options) {
       preferredTokens: [
         { chain: SUPPORTED_CHAINS.BASE, address: USDC_TOKENS[SUPPORTED_CHAINS.BASE] },
       ],
-      // Show popular payment apps first (order matters)
+      // Show crypto payment options (Daimo only supports crypto, not fiat apps like Cash App/Venmo)
       paymentOptions: [
-        'Coinbase',      // Coinbase (most popular)
-        'CashApp',       // Cash App
-        'Venmo',         // Venmo
-        'AllExchanges',  // Other exchanges (Binance, Kraken, etc.)
-        'AllWallets',    // Crypto wallets (MetaMask, etc.)
+        'Coinbase',      // Coinbase - most user-friendly for buying USDC
+        'AllExchanges',  // All exchanges (Binance, Kraken, etc.)
+        'AllWallets',    // Crypto wallets (MetaMask, Rainbow, etc.)
       ],
       redirectUri: BOT_URL ? `${BOT_URL}/payment/success` : undefined,
     },

@@ -4,6 +4,7 @@ const { t } = require("../../utils/i18n");
 const kyrrexService = require("../../services/kyrrexService");
 const planService = require("../../services/planService");
 const QRCode = require('qrcode');
+const { escapeMdV2 } = require("../../utils/telegramEscapes");
 
 /**
  * Kyrrex Cryptocurrency Payment Handler
@@ -66,11 +67,11 @@ async function showKyrrexPlans(ctx) {
         "⚡ Activación automática tras confirmación\n" +
         "🌐 Comisiones ultra-bajas (TRC20 recomendado)\n\n" +
         "*💱 Tipos de cambio actuales (USD):*\n" +
-        `• BTC: $${rates.BTC?.toLocaleString() || '43,000'}\n` +
-        `• ETH: $${rates.ETH?.toLocaleString() || '2,400'}\n` +
-        `• USDT/USDC: $${rates.USDT || '1.00'}\n` +
-        `• BNB: $${rates.BNB || '240'}\n` +
-        `• TRX: $${rates.TRX || '0.10'}`
+  `• BTC: $${escapeMdV2(rates.BTC?.toLocaleString() || '43,000')}\n` +
+  `• ETH: $${escapeMdV2(rates.ETH?.toLocaleString() || '2,400')}\n` +
+  `• USDT/USDC: $${escapeMdV2(rates.USDT || '1.00')}\n` +
+  `• BNB: $${escapeMdV2(rates.BNB || '240')}\n` +
+  `• TRX: $${escapeMdV2(rates.TRX || '0.10')}`
       : "🪙 *Subscription Plans - Kyrrex Crypto*\n\n" +
         "Become a member of *PNPtv PRIME* and enjoy the best amateur content — Latino men smoking and slamming on Telegram.\n\n" +
         "🔥 *What you'll get:*\n\n" +
@@ -88,11 +89,11 @@ async function showKyrrexPlans(ctx) {
         "⚡ Automatic activation after confirmation\n" +
         "🌐 Ultra-low fees (TRC20 recommended)\n\n" +
         "*💱 Current exchange rates (USD):*\n" +
-        `• BTC: $${rates.BTC?.toLocaleString() || '43,000'}\n` +
-        `• ETH: $${rates.ETH?.toLocaleString() || '2,400'}\n` +
-        `• USDT/USDC: $${rates.USDT || '1.00'}\n` +
-        `• BNB: $${rates.BNB || '240'}\n` +
-        `• TRX: $${rates.TRX || '0.10'}`;
+  `• BTC: $${escapeMdV2(rates.BTC?.toLocaleString() || '43,000')}\n` +
+  `• ETH: $${escapeMdV2(rates.ETH?.toLocaleString() || '2,400')}\n` +
+  `• USDT/USDC: $${escapeMdV2(rates.USDT || '1.00')}\n` +
+  `• BNB: $${escapeMdV2(rates.BNB || '240')}\n` +
+  `• TRX: $${escapeMdV2(rates.TRX || '0.10')}`;
 
     const planButtons = [];
 
@@ -128,7 +129,7 @@ async function showKyrrexPlans(ctx) {
     if (ctx.callbackQuery && ctx.callbackQuery.message) {
       try {
         await ctx.editMessageText(header, {
-          parse_mode: "Markdown",
+          parse_mode: "MarkdownV2",
           reply_markup: {
             inline_keyboard: planButtons,
           },
@@ -136,7 +137,7 @@ async function showKyrrexPlans(ctx) {
       } catch (editError) {
         // If edit fails, send new message
         await ctx.reply(header, {
-          parse_mode: "Markdown",
+          parse_mode: "MarkdownV2",
           reply_markup: {
             inline_keyboard: planButtons,
           },
@@ -144,7 +145,7 @@ async function showKyrrexPlans(ctx) {
       }
     } else {
       await ctx.reply(header, {
-        parse_mode: "Markdown",
+        parse_mode: "MarkdownV2",
         reply_markup: {
           inline_keyboard: planButtons,
         },
@@ -253,7 +254,7 @@ async function handleKyrrexPlanSelection(ctx) {
     ];
 
     await ctx.editMessageText(cryptoMsg, {
-      parse_mode: "Markdown",
+      parse_mode: "MarkdownV2",
       reply_markup: {
         inline_keyboard: cryptoButtons,
       },
@@ -345,39 +346,39 @@ async function handleKyrrexCryptoSelection(ctx) {
       const networkInfo = paymentResult.network ? ` (${paymentResult.network})` : '';
       const successMsg = lang === "es"
         ? `🎉 *¡Dirección de Pago Generada!*\n\n` +
-          `📦 *Plan:* ${selectedPlan.planName}\n` +
-          `💰 *Precio:* ${paymentResult.amount} ${cryptocurrency}${networkInfo}\n` +
-          `💵 *Equivalente USD:* $${selectedPlan.price.toFixed(2)}\n` +
-          `⏱️ *Duración:* ${selectedPlan.durationDays || 30} días\n` +
-          `🌐 *Red:* ${paymentResult.network || 'Principal'}\n\n` +
+          `📦 *Plan:* ${escapeMdV2(selectedPlan.planName)}\n` +
+          `💰 *Precio:* ${escapeMdV2(String(paymentResult.amount))} ${escapeMdV2(cryptocurrency)}${escapeMdV2(networkInfo)}\n` +
+          `💵 *Equivalente USD:* $${escapeMdV2(selectedPlan.price.toFixed(2))}\n` +
+          `⏱️ *Duración:* ${escapeMdV2(String(selectedPlan.durationDays || 30))} días\n` +
+          `🌐 *Red:* ${escapeMdV2(paymentResult.network || 'Principal')}\n\n` +
           `*📍 Dirección de Pago:*\n` +
-          `\`${paymentResult.depositAddress}\`\n\n` +
+          `\`${escapeMdV2(paymentResult.depositAddress)}\`\n\n` +
           `*📱 Instrucciones de Pago:*\n` +
-          `1️⃣ Envía exactamente *${paymentResult.amount} ${cryptocurrency}*\n` +
+          `1️⃣ Envía exactamente *${escapeMdV2(String(paymentResult.amount))} ${escapeMdV2(cryptocurrency)}*\n` +
           `2️⃣ A la dirección de arriba\n` +
           `3️⃣ Confirmación automática tras 1 confirmación\n` +
           `4️⃣ ¡Tu membresía se activa al instante!\n\n` +
           `⏰ *Válido por:* 24 horas\n` +
           `🔒 *100% Seguro:* Protegido por blockchain\n` +
           `⚡ *Activación:* Automática tras confirmación\n\n` +
-          `⚠️ *IMPORTANTE:* Envía solo ${cryptocurrency} en red ${paymentResult.network}. Otros tokens se perderán.`
+          `⚠️ *IMPORTANTE:* Envía solo ${escapeMdV2(cryptocurrency)} en red ${escapeMdV2(paymentResult.network)}. Otros tokens se perderán.`
         : `🎉 *Payment Address Generated!*\n\n` +
-          `📦 *Plan:* ${selectedPlan.planName}\n` +
-          `💰 *Price:* ${paymentResult.amount} ${cryptocurrency}${networkInfo}\n` +
-          `💵 *USD Equivalent:* $${selectedPlan.price.toFixed(2)}\n` +
-          `⏱️ *Duration:* ${selectedPlan.durationDays || 30} days\n` +
-          `🌐 *Network:* ${paymentResult.network || 'Main'}\n\n` +
+          `📦 *Plan:* ${escapeMdV2(selectedPlan.planName)}\n` +
+          `💰 *Price:* ${escapeMdV2(String(paymentResult.amount))} ${escapeMdV2(cryptocurrency)}${escapeMdV2(networkInfo)}\n` +
+          `💵 *USD Equivalent:* $${escapeMdV2(selectedPlan.price.toFixed(2))}\n` +
+          `⏱️ *Duration:* ${escapeMdV2(String(selectedPlan.durationDays || 30))} days\n` +
+          `🌐 *Network:* ${escapeMdV2(paymentResult.network || 'Main')}\n\n` +
           `*📍 Payment Address:*\n` +
-          `\`${paymentResult.depositAddress}\`\n\n` +
+          `\`${escapeMdV2(paymentResult.depositAddress)}\`\n\n` +
           `*📱 Payment Instructions:*\n` +
-          `1️⃣ Send exactly *${paymentResult.amount} ${cryptocurrency}*\n` +
+          `1️⃣ Send exactly *${escapeMdV2(String(paymentResult.amount))} ${escapeMdV2(cryptocurrency)}*\n` +
           `2️⃣ To the address above\n` +
           `3️⃣ Automatic confirmation after 1 confirmation\n` +
           `4️⃣ Your membership activates instantly!\n\n` +
           `⏰ *Valid for:* 24 hours\n` +
           `🔒 *100% Secure:* Blockchain protected\n` +
           `⚡ *Activation:* Automatic after confirmation\n\n` +
-          `⚠️ *IMPORTANT:* Send only ${cryptocurrency} on ${paymentResult.network} network. Other tokens will be lost.`;
+          `⚠️ *IMPORTANT:* Send only ${escapeMdV2(cryptocurrency)} on ${escapeMdV2(paymentResult.network)} network. Other tokens will be lost.`;
 
       const buttons = [
         [
@@ -402,14 +403,14 @@ async function handleKyrrexCryptoSelection(ctx) {
       if (qrCodeBuffer) {
         await ctx.replyWithPhoto({ source: qrCodeBuffer }, {
           caption: successMsg,
-          parse_mode: "Markdown",
+          parse_mode: "MarkdownV2",
           reply_markup: {
             inline_keyboard: buttons,
           },
         });
       } else {
         await ctx.editMessageText(successMsg, {
-          parse_mode: "Markdown",
+          parse_mode: "MarkdownV2",
           reply_markup: {
             inline_keyboard: buttons,
           },
@@ -444,7 +445,7 @@ async function handleKyrrexCryptoSelection(ctx) {
           `Please contact the administrator or try another payment method.`;
 
       await ctx.editMessageText(errorMsg, {
-        parse_mode: "Markdown",
+        parse_mode: "MarkdownV2",
         reply_markup: {
           inline_keyboard: [
             [
@@ -507,17 +508,17 @@ async function handleKyrrexPaymentCheck(ctx) {
         statusMsg = lang === "es"
           ? `✅ *¡Pago Confirmado!*\n\n` +
             `Tu suscripción ha sido activada exitosamente.\n\n` +
-            `📦 *Plan:* ${paymentStatus.planName}\n` +
-            `💰 *Pagado:* ${paymentStatus.confirmedAmount || paymentStatus.cryptoAmount} ${paymentStatus.cryptocurrency}\n` +
-            `🔗 *TX Hash:* \`${paymentStatus.txHash}\`\n` +
-            `✅ *Confirmaciones:* ${paymentStatus.confirmations}\n\n` +
+            `📦 *Plan:* ${escapeMdV2(paymentStatus.planName)}\n` +
+            `💰 *Pagado:* ${escapeMdV2(String(paymentStatus.confirmedAmount || paymentStatus.cryptoAmount))} ${escapeMdV2(paymentStatus.cryptocurrency)}\n` +
+            `🔗 *TX Hash:* \`${escapeMdV2(paymentStatus.txHash)}\`\n` +
+            `✅ *Confirmaciones:* ${escapeMdV2(String(paymentStatus.confirmations))}\n\n` +
             `¡Bienvenido a PNPtv PRIME! 🎉`
           : `✅ *Payment Confirmed!*\n\n` +
             `Your subscription has been activated successfully.\n\n` +
-            `📦 *Plan:* ${paymentStatus.planName}\n` +
-            `💰 *Paid:* ${paymentStatus.confirmedAmount || paymentStatus.cryptoAmount} ${paymentStatus.cryptocurrency}\n` +
-            `🔗 *TX Hash:* \`${paymentStatus.txHash}\`\n` +
-            `✅ *Confirmations:* ${paymentStatus.confirmations}\n\n` +
+            `📦 *Plan:* ${escapeMdV2(paymentStatus.planName)}\n` +
+            `💰 *Paid:* ${escapeMdV2(String(paymentStatus.confirmedAmount || paymentStatus.cryptoAmount))} ${escapeMdV2(paymentStatus.cryptocurrency)}\n` +
+            `🔗 *TX Hash:* \`${escapeMdV2(paymentStatus.txHash)}\`\n` +
+            `✅ *Confirmations:* ${escapeMdV2(String(paymentStatus.confirmations))}\n\n` +
             `Welcome to PNPtv PRIME! 🎉`;
 
         buttons = [
@@ -550,14 +551,14 @@ async function handleKyrrexPaymentCheck(ctx) {
 
         statusMsg = lang === "es"
           ? `⏳ *Pago Pendiente*\n\n` +
-            `Esperando tu pago de ${paymentStatus.cryptoAmount} ${paymentStatus.cryptocurrency}\n\n` +
-            `📍 *Dirección:* \`${paymentStatus.depositAddress}\`\n` +
-            `⏰ *Expira en:* ${timeLeft} minutos\n\n` +
+            `Esperando tu pago de ${escapeMdV2(String(paymentStatus.cryptoAmount))} ${escapeMdV2(paymentStatus.cryptocurrency)}\n\n` +
+            `📍 *Dirección:* \`${escapeMdV2(paymentStatus.depositAddress)}\`\n` +
+            `⏰ *Expira en:* ${escapeMdV2(String(timeLeft))} minutos\n\n` +
             `El pago se confirmará automáticamente cuando se reciba la transacción.`
           : `⏳ *Payment Pending*\n\n` +
-            `Waiting for your payment of ${paymentStatus.cryptoAmount} ${paymentStatus.cryptocurrency}\n\n` +
-            `📍 *Address:* \`${paymentStatus.depositAddress}\`\n` +
-            `⏰ *Expires in:* ${timeLeft} minutes\n\n` +
+            `Waiting for your payment of ${escapeMdV2(String(paymentStatus.cryptoAmount))} ${escapeMdV2(paymentStatus.cryptocurrency)}\n\n` +
+            `📍 *Address:* \`${escapeMdV2(paymentStatus.depositAddress)}\`\n` +
+            `⏰ *Expires in:* ${escapeMdV2(String(timeLeft))} minutes\n\n` +
             `Payment will be confirmed automatically when transaction is received.`;
 
         buttons = [
@@ -575,7 +576,7 @@ async function handleKyrrexPaymentCheck(ctx) {
       }
 
       await ctx.editMessageText(statusMsg, {
-        parse_mode: "Markdown",
+        parse_mode: "MarkdownV2",
         reply_markup: {
           inline_keyboard: buttons,
         },
@@ -589,6 +590,7 @@ async function handleKyrrexPaymentCheck(ctx) {
           ? "❌ Error al verificar el pago. Intenta de nuevo."
           : "❌ Error checking payment. Please try again.",
         {
+          parse_mode: "MarkdownV2",
           reply_markup: {
             inline_keyboard: [
               [{
@@ -733,7 +735,7 @@ async function handleKyrrexHelp(ctx) {
   // Edit message instead of sending new one
   try {
     await ctx.editMessageText(helpMsg, {
-      parse_mode: "Markdown",
+      parse_mode: "MarkdownV2",
       reply_markup: {
         inline_keyboard: [
           [
@@ -754,7 +756,7 @@ async function handleKyrrexHelp(ctx) {
   } catch (editError) {
     // If edit fails, send new message
     await ctx.reply(helpMsg, {
-      parse_mode: "Markdown",
+      parse_mode: "MarkdownV2",
       reply_markup: {
         inline_keyboard: [
           [

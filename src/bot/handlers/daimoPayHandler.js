@@ -3,6 +3,7 @@ const logger = require("../../utils/logger");
 const { t } = require("../../utils/i18n");
 const daimoPayService = require("../../services/daimoPayService");
 const planService = require("../../services/planService");
+const { escapeMdV2 } = require("../../utils/telegramEscapes");
 
 /**
  * Daimo Pay Subscription Handler (Updated API - Nov 2025)
@@ -81,9 +82,9 @@ async function showDaimoPlans(ctx) {
     plans.forEach((plan) => {
       const price = plan.price || plan.priceInUSD || 0;
       
-      // Add button for this plan
+      // Add button for this plan (escape dynamic values to be safe)
       planButtons.push([{
-        text: `💎 ${plan.name} - $${price.toFixed(2)} USDC`,
+        text: `💎 ${escapeMdV2(plan.name)} - $${escapeMdV2(price.toFixed(2))} USDC`,
         callback_data: `daimo_plan_${plan.id}`,
       }]);
     });
@@ -117,7 +118,7 @@ async function showDaimoPlans(ctx) {
     if (ctx.callbackQuery && ctx.callbackQuery.message) {
       try {
         await ctx.editMessageText(plansText, {
-          parse_mode: "Markdown",
+          parse_mode: "MarkdownV2",
           reply_markup: {
             inline_keyboard: planButtons,
           },
@@ -125,7 +126,7 @@ async function showDaimoPlans(ctx) {
       } catch (editError) {
         // If edit fails, send new message
         await ctx.reply(plansText, {
-          parse_mode: "Markdown",
+          parse_mode: "MarkdownV2",
           reply_markup: {
             inline_keyboard: planButtons,
           },
@@ -133,7 +134,7 @@ async function showDaimoPlans(ctx) {
       }
     } else {
       await ctx.reply(plansText, {
-        parse_mode: "Markdown",
+        parse_mode: "MarkdownV2",
         reply_markup: {
           inline_keyboard: planButtons,
         },
@@ -244,50 +245,54 @@ async function handleDaimoPlanSelection(ctx) {
       // Success message with payment details
       const successMsg = lang === "es"
         ? `🎉 *¡Enlace de Pago Generado!*\n\n` +
-          `📦 *Plan:* ${plan.name}\n` +
-          `💰 *Precio:* $${price.toFixed(2)} USDC\n` +
-          `⏱️ *Duración:* ${plan.durationDays || 30} días\n` +
+          `📦 *Plan:* ${escapeMdV2(plan.name)}\n` +
+          `💰 *Precio:* $${escapeMdV2(price.toFixed(2))} USDC\n` +
+          `⏱️ *Duración:* ${escapeMdV2(String(plan.durationDays || 30))} días\n` +
           `🌐 *Red:* Base Network (comisiones ultra-bajas)\n\n` +
-          `� *PUEDES PAGAR CON:*\n` +
-          `✅ Cash App → USDC\n` +
-          `✅ Venmo → USDC\n` +
-          `✅ Zelle → USDC\n` +
-          `✅ Coinbase / Binance\n` +
-          `✅ Revolut / Wise\n` +
-          `✅ PayPal (a través de exchanges)\n` +
-          `✅ Cualquier wallet cripto\n\n` +
+          `💳 *MÉTODOS DE PAGO DISPONIBLES:*\n` +
+          `✅ Coinbase \\(recomendado\\)\n` +
+          `✅ Binance, Kraken, otros exchanges\n` +
+          `✅ MetaMask, Rainbow, wallets cripto\n` +
+          `✅ Cualquier dirección con USDC\n\n` +
+          `📌 *¿No tienes cripto?*\n` +
+          `Compra USDC en Coinbase con:\n` +
+          `• Tarjeta débito/crédito\n` +
+          `• Transferencia bancaria\n` +
+          `• Apple Pay / Google Pay\n\n` +
           `*📱 Pasos para Pagar:*\n` +
           `1️⃣ Haz clic en "💳 Pagar Ahora"\n` +
-          `2️⃣ Elige tu método favorito (Cash App, Venmo, etc.)\n` +
+          `2️⃣ Elige Coinbase o tu exchange/wallet\n` +
           `3️⃣ Sigue las instrucciones en pantalla\n` +
           `4️⃣ ¡Tu membresía se activa al instante!\n\n` +
           `⏰ *Válido por:* 24 horas\n` +
           `🔒 *100% Seguro:* Protegido por blockchain\n` +
           `⚡ *Activación:* Instantánea y automática`
         : `🎉 *Payment Link Generated!*\n\n` +
-          `📦 *Plan:* ${plan.name}\n` +
-          `💰 *Price:* $${price.toFixed(2)} USDC\n` +
-          `⏱️ *Duration:* ${plan.durationDays || 30} days\n` +
+          `📦 *Plan:* ${escapeMdV2(plan.name)}\n` +
+          `💰 *Price:* $${escapeMdV2(price.toFixed(2))} USDC\n` +
+          `⏱️ *Duration:* ${escapeMdV2(String(plan.durationDays || 30))} days\n` +
           `🌐 *Network:* Base (ultra-low fees)\n\n` +
-          `💳 *YOU CAN PAY WITH:*\n` +
-          `✅ Cash App → USDC\n` +
-          `✅ Venmo → USDC\n` +
-          `✅ Zelle → USDC\n` +
-          `✅ Coinbase / Binance\n` +
-          `✅ Revolut / Wise\n` +
-          `✅ PayPal (via exchanges)\n` +
-          `✅ Any crypto wallet\n\n` +
+          `💳 *PAYMENT METHODS AVAILABLE:*\n` +
+          `✅ Coinbase \\(recommended\\)\n` +
+          `✅ Binance, Kraken, other exchanges\n` +
+          `✅ MetaMask, Rainbow, crypto wallets\n` +
+          `✅ Any address with USDC\n\n` +
+          `📌 *Don't have crypto?*\n` +
+          `Buy USDC on Coinbase with:\n` +
+          `• Debit/credit card\n` +
+          `• Bank transfer\n` +
+          `• Apple Pay / Google Pay\n\n` +
           `*📱 How to Pay:*\n` +
           `1️⃣ Click "💳 Pay Now"\n` +
-          `2️⃣ Choose your favorite method (Cash App, Venmo, etc.)\n` +
-          `3️⃣ Follow the on-screen instructions\n` +
+          `2️⃣ Choose Coinbase or your exchange/wallet\n` +
+          `3️⃣ Follow the on\\-screen instructions\n` +
           `4️⃣ Your membership activates instantly!\n\n` +
           `⏰ *Valid for:* 24 hours\n` +
           `🔒 *100% Secure:* Blockchain protected\n` +
           `⚡ *Activation:* Instant and automatic`;
 
       await ctx.reply(successMsg, {
-        parse_mode: "Markdown",
+        parse_mode: "MarkdownV2",
         reply_markup: {
           inline_keyboard: [
             [
@@ -333,7 +338,7 @@ async function handleDaimoPlanSelection(ctx) {
           `Please contact the administrator or try another payment method.`;
 
       await ctx.reply(errorMsg, {
-        parse_mode: "Markdown",
+        parse_mode: "MarkdownV2",
         reply_markup: {
           inline_keyboard: [
             [
@@ -372,47 +377,49 @@ async function handleDaimoHelp(ctx) {
   const lang = ctx.session?.language || "en";
   
   const helpMsg = lang === "es"
-    ? `💎 *Daimo Pay - Información*\n\n` +
+    ? `💎 *Daimo Pay \\- Información*\n\n` +
       `*¿Qué es Daimo Pay?*\n` +
-      `Daimo Pay te permite pagar suscripciones con USDC (stablecoin dólar) desde múltiples fuentes:\n\n` +
-      `*📱 Métodos de Pago Disponibles:*\n` +
-      `• 🏦 *Exchanges:* Coinbase, Binance\n` +
-      `• 💸 *Apps de Pago:* Venmo, Cash App, Zelle\n` +
-      `• 🌍 *Banca Digital:* Revolut, Wise\n` +
-      `• 🔐 *Wallets:* MetaMask, cualquier wallet\n\n` +
+      `Daimo Pay te permite pagar con USDC \\(stablecoin dólar\\) de forma segura y rápida\\.\n\n` +
+      `*📱 Métodos de Pago:*\n` +
+      `• 🏦 *Exchanges de cripto:* Coinbase, Binance, Kraken\n` +
+      `• 🔐 *Wallets cripto:* MetaMask, Rainbow, Trust Wallet\n` +
+      `• 📍 *Cualquier dirección* con USDC en Base Network\n\n` +
+      `*¿No tienes USDC?*\n` +
+      `No te preocupes\\! En Coinbase puedes:\n` +
+      `• Comprar USDC con tarjeta débito/crédito\n` +
+      `• Usar transferencia bancaria\n` +
+      `• Pagar con Apple Pay / Google Pay\n\n` +
       `*✨ Ventajas:*\n` +
-      `✅ Sin tarjeta de crédito necesaria\n` +
       `✅ Activación automática instantánea\n` +
       `✅ Pago seguro en blockchain\n` +
-      `✅ Comisiones ultra-bajas\n` +
-      `✅ Soporte multi-red\n\n` +
-      `*🔒 Seguridad:*\n` +
-      `Todos los pagos están protegidos por tecnología blockchain. Si hay algún problema, los fondos se reembolsan automáticamente a tu dirección de origen.\n\n` +
+      `✅ Comisiones ultra\\-bajas en Base Network\n` +
+      `✅ Reembolso automático si hay problemas\n\n` +
       `*💡 Nota:*\n` +
-      `USDC es una stablecoin 1:1 con el dólar USD. $10 USDC = $10 USD.`
-    : `💎 *Daimo Pay - Information*\n\n` +
+      `USDC es una stablecoin 1:1 con el dólar\\. $10 USDC = $10 USD\\.`
+    : `💎 *Daimo Pay \\- Information*\n\n` +
       `*What is Daimo Pay?*\n` +
-      `Daimo Pay allows you to pay for subscriptions with USDC (dollar stablecoin) from multiple sources:\n\n` +
-      `*📱 Available Payment Methods:*\n` +
-      `• 🏦 *Exchanges:* Coinbase, Binance\n` +
-      `• 💸 *Payment Apps:* Venmo, Cash App, Zelle\n` +
-      `• 🌍 *Digital Banking:* Revolut, Wise\n` +
-      `• 🔐 *Wallets:* MetaMask, any wallet\n\n` +
+      `Daimo Pay allows you to pay with USDC \\(dollar stablecoin\\) securely and quickly\\.\n\n` +
+      `*📱 Payment Methods:*\n` +
+      `• 🏦 *Crypto Exchanges:* Coinbase, Binance, Kraken\n` +
+      `• 🔐 *Crypto Wallets:* MetaMask, Rainbow, Trust Wallet\n` +
+      `• 📍 *Any address* with USDC on Base Network\n\n` +
+      `*Don't have USDC?*\n` +
+      `No problem\\! On Coinbase you can:\n` +
+      `• Buy USDC with debit/credit card\n` +
+      `• Use bank transfer\n` +
+      `• Pay with Apple Pay / Google Pay\n\n` +
       `*✨ Benefits:*\n` +
-      `✅ No credit card needed\n` +
       `✅ Instant automatic activation\n` +
       `✅ Secure blockchain payment\n` +
-      `✅ Ultra-low fees\n` +
-      `✅ Multi-network support\n\n` +
-      `*🔒 Security:*\n` +
-      `All payments are protected by blockchain technology. If there's any issue, funds are automatically refunded to your source address.\n\n` +
+      `✅ Ultra\\-low fees on Base Network\n` +
+      `✅ Automatic refund if issues occur\n\n` +
       `*💡 Note:*\n` +
-      `USDC is a 1:1 dollar-pegged stablecoin. $10 USDC = $10 USD.`;
+      `USDC is a 1:1 dollar\\-pegged stablecoin\\. $10 USDC = $10 USD\\.`;
 
   // Edit message instead of sending new one
   try {
     await ctx.editMessageText(helpMsg, {
-      parse_mode: "Markdown",
+      parse_mode: "MarkdownV2",
       reply_markup: {
         inline_keyboard: [
           [
@@ -433,7 +440,7 @@ async function handleDaimoHelp(ctx) {
   } catch (editError) {
     // If edit fails, send new message
     await ctx.reply(helpMsg, {
-      parse_mode: "Markdown",
+      parse_mode: "MarkdownV2",
       reply_markup: {
         inline_keyboard: [
           [
