@@ -251,18 +251,19 @@ async function handleDaimoPlanSelection(ctx) {
           `🌐 *Red:* Base Network (comisiones ultra-bajas)\n\n` +
           `💳 *MÉTODOS DE PAGO DISPONIBLES:*\n` +
           `✅ Coinbase \\(recomendado\\)\n` +
-          `✅ Cash App\n` +
-          `✅ Venmo\n` +
+          `✅ Cash App, Venmo, Zelle\n` +
+          `✅ Wise, Revolut\n` +
           `✅ Binance, Kraken, otros exchanges\n` +
           `✅ MetaMask, Rainbow, wallets cripto\n\n` +
           `📌 *¿No tienes USDC?*\n` +
-          `No te preocupes\\! Puedes:\n` +
-          `• Comprar USDC en Coinbase/Cash App/Venmo\n` +
-          `• Usar tarjeta débito/crédito\n` +
-          `• Transferir desde tu banco\n\n` +
+          `No te preocupes\\! Puedes comprar USDC con:\n` +
+          `• Coinbase, Cash App, Venmo, Zelle\n` +
+          `• Wise, Revolut\n` +
+          `• Tarjeta débito/crédito\n` +
+          `• Transferencia bancaria\n\n` +
           `*📱 Pasos para Pagar:*\n` +
           `1️⃣ Haz clic en "💳 Pagar Ahora"\n` +
-          `2️⃣ Elige tu app favorita \\(Coinbase, Cash App, Venmo\\)\n` +
+          `2️⃣ Elige tu app favorita\n` +
           `3️⃣ Sigue las instrucciones en pantalla\n` +
           `4️⃣ ¡Tu membresía se activa al instante!\n\n` +
           `⏰ *Válido por:* 24 horas\n` +
@@ -275,18 +276,19 @@ async function handleDaimoPlanSelection(ctx) {
           `🌐 *Network:* Base (ultra-low fees)\n\n` +
           `💳 *PAYMENT METHODS AVAILABLE:*\n` +
           `✅ Coinbase \\(recommended\\)\n` +
-          `✅ Cash App\n` +
-          `✅ Venmo\n` +
+          `✅ Cash App, Venmo, Zelle\n` +
+          `✅ Wise, Revolut\n` +
           `✅ Binance, Kraken, other exchanges\n` +
           `✅ MetaMask, Rainbow, crypto wallets\n\n` +
           `📌 *Don't have USDC?*\n` +
-          `No problem\\! You can:\n` +
-          `• Buy USDC on Coinbase/Cash App/Venmo\n` +
-          `• Use debit/credit card\n` +
-          `• Transfer from your bank\n\n` +
+          `No problem\\! You can buy USDC with:\n` +
+          `• Coinbase, Cash App, Venmo, Zelle\n` +
+          `• Wise, Revolut\n` +
+          `• Debit/credit card\n` +
+          `• Bank transfer\n\n` +
           `*📱 How to Pay:*\n` +
           `1️⃣ Click "💳 Pay Now"\n` +
-          `2️⃣ Choose your favorite app \\(Coinbase, Cash App, Venmo\\)\n` +
+          `2️⃣ Choose your favorite app\n` +
           `3️⃣ Follow the on\\-screen instructions\n` +
           `4️⃣ Your membership activates instantly!\n\n` +
           `⏰ *Valid for:* 24 hours\n` +
@@ -383,12 +385,13 @@ async function handleDaimoHelp(ctx) {
       `*¿Qué es Daimo Pay?*\n` +
       `Daimo Pay te permite pagar con USDC \\(stablecoin dólar\\) desde múltiples apps y plataformas\\.\n\n` +
       `*📱 Métodos de Pago:*\n` +
-      `• 💳 *Apps populares:* Coinbase, Cash App, Venmo\n` +
+      `• 💳 *Apps US:* Coinbase, Cash App, Venmo, Zelle\n` +
+      `• 🌍 *Apps internacionales:* Wise, Revolut\n` +
       `• 🏦 *Exchanges:* Binance, Kraken, otros\n` +
       `• 🔐 *Wallets:* MetaMask, Rainbow, Trust Wallet\n\n` +
       `*¿No tienes USDC?*\n` +
       `No te preocupes\\! Puedes comprar USDC en:\n` +
-      `• Coinbase, Cash App, Venmo\n` +
+      `• Coinbase, Cash App, Venmo, Zelle, Wise, Revolut\n` +
       `• Usando tarjeta débito/crédito\n` +
       `• Transferencia bancaria\n\n` +
       `*✨ Ventajas:*\n` +
@@ -402,12 +405,13 @@ async function handleDaimoHelp(ctx) {
       `*What is Daimo Pay?*\n` +
       `Daimo Pay allows you to pay with USDC \\(dollar stablecoin\\) from multiple apps and platforms\\.\n\n` +
       `*📱 Payment Methods:*\n` +
-      `• 💳 *Popular apps:* Coinbase, Cash App, Venmo\n` +
+      `• 💳 *US apps:* Coinbase, Cash App, Venmo, Zelle\n` +
+      `• 🌍 *International apps:* Wise, Revolut\n` +
       `• 🏦 *Exchanges:* Binance, Kraken, others\n` +
       `• 🔐 *Wallets:* MetaMask, Rainbow, Trust Wallet\n\n` +
       `*Don't have USDC?*\n` +
       `No problem\\! You can buy USDC on:\n` +
-      `• Coinbase, Cash App, Venmo\n` +
+      `• Coinbase, Cash App, Venmo, Zelle, Wise, Revolut\n` +
       `• Using debit/credit card\n` +
       `• Bank transfer\n\n` +
       `*✨ Benefits:*\n` +

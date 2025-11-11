@@ -144,6 +144,7 @@ router.get('/rates', async (req, res) => {
  */
 router.post('/payment/create', async (req, res) => {
   try {
+    logger.info('[Kyrrex API] /payment/create called', { path: req.path, method: req.method });
     const { planId, userId, cryptocurrency = 'USDT', network } = req.body;
     
     if (!planId || !userId) {

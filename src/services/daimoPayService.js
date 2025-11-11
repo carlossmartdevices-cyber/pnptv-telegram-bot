@@ -107,6 +107,9 @@ async function createPayment(options) {
         'Coinbase',      // Coinbase - easiest for beginners
         'CashApp',       // Cash App - popular in US
         'Venmo',         // Venmo - popular in US
+        'Zelle',         // Zelle - popular in US
+        'Wise',          // Wise (TransferWise) - international
+        'Revolut',       // Revolut - popular in Europe
         'AllExchanges',  // Other exchanges (Binance, Kraken, etc.)
         'AllWallets',    // Crypto wallets (MetaMask, Rainbow, etc.)
       ],
