@@ -1,5 +1,6 @@
 const logger = require("../../utils/logger");
 const { t } = require("../../utils/i18n");
+const { escapeMdV2 } = require('../../utils/telegramEscapes');
 
 /**
  * Middleware to ensure bot responses are sent to private chat when used in groups
@@ -50,12 +51,13 @@ function privateResponseMiddleware() {
     // Note: Group members will see "✉️ I've sent you the response via private message"
     // for private commands, and get a "Start Bot" button if they haven't started the bot.
     //
-    const groupOnlyCommands = ['/status', '/refresh', '/info', '/library', '/toptracks', '/addtrack', '/deletetrack', '/schedulecall', '/schedulestream', '/upcoming', '/settimezone'];
+    const groupOnlyCommands = ['/status', '/refresh', '/info', '/menu', '/library', '/toptracks', '/addtrack', '/deletetrack', '/schedulecall', '/schedulestream', '/upcoming', '/settimezone'];
     const commandText = ctx.message?.text || ctx.callbackQuery?.data || '';
     
     // Allow group management functions to work normally
-    if (groupOnlyCommands.some(cmd => commandText.startsWith(cmd)) || 
-        commandText.startsWith('play_track:')) {
+    if (groupOnlyCommands.some(cmd => commandText.startsWith(cmd)) ||
+        commandText.startsWith('play_track:') ||
+        commandText.startsWith('group_menu_')) {
       logger.info(`Group-only command/action ${commandText} executed in group ${ctx.chat.id}`);
       return next();
     }
@@ -116,13 +118,15 @@ function privateResponseMiddleware() {
 
         if (isPrivateMessageFail) {
           logger.warn(`Private message failed for user ${userId}: ${errorDesc}`);
+          // Use user's first name to avoid Markdown parsing issues with @ and underscores
+          const userName = ctx.from.first_name || ctx.from.username || "User";
+          const safeUserName = escapeMdV2(String(userName));
           await ctx.telegram.sendMessage(
             ctx.chat.id,
             lang === "es"
-              ? `⚠️ @${ctx.from.username || ctx.from.first_name}, necesitas iniciar una conversación conmigo primero.\n\n👆 Haz clic en mi nombre y presiona "Iniciar" para recibir respuestas privadas.`
-              : `⚠️ @${ctx.from.username || ctx.from.first_name}, you need to start a conversation with me first.\n\n👆 Click on my name and press "Start" to receive private responses.`,
+              ? `⚠️ ${safeUserName}, necesitas iniciar una conversación conmigo primero.\n\n👆 Haz clic en mi nombre y presiona "Iniciar" para recibir respuestas privadas.`
+              : `⚠️ ${safeUserName}, you need to start a conversation with me first.\n\n👆 Click on my name and press "Start" to receive private responses.`,
             {
-              parse_mode: "Markdown",
               reply_to_message_id: ctx.message?.message_id,
               reply_markup: {
                 inline_keyboard: [

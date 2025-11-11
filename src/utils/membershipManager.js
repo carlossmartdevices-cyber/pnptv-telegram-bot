@@ -136,12 +136,36 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
       throw new Error("userId and tier are required");
     }
 
-    // Validate tier exists
+    // Validate tier exists and map to valid tiers
     // New tier system: Free (default), Basic (premium channel access), Premium (crystal + diamond users)
-    const validTiers = ["Free", "Basic", "Premium"];
-    if (!validTiers.includes(tier)) {
-      throw new Error(`Invalid tier: ${tier}. Must be one of: ${validTiers.join(", ")}`);
+    const tierMapping = {
+      // Direct valid tiers
+      "Free": "Free",
+      "Basic": "Basic", 
+      "Premium": "Premium",
+      
+      // Legacy/plan tiers mapped to valid tiers
+      "Trial": "Basic",
+      "trial-week": "Basic",
+      "Diamond": "Premium",
+      "Crystal": "Premium",
+      "VIP": "Premium",
+      "Creator": "Premium",
+      "pnp-member": "Premium",
+      "diamond-member": "Premium",
+      "crystal-member": "Premium",
+      
+  // Test tiers
+  // NOTE: 'test-1usd' removed from mapping — test plan deleted
+    };
+
+    const mappedTier = tierMapping[tier];
+    if (!mappedTier) {
+      throw new Error(`Invalid tier: ${tier}. Must be one of: ${Object.keys(tierMapping).join(", ")}`);
     }
+    
+    // Use the mapped tier for processing
+    tier = mappedTier;
 
     const now = admin.firestore.Timestamp.now();
     const expirationDate = calculateExpirationDate(durationDays);
@@ -177,14 +201,17 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
     let inviteLink = null;
     let notificationSent = false;
 
+    // Get the telegram API - handle both bot object and ctx.telegram
+    const telegram = bot?.telegram || bot;
+
     // For premium tiers, generate invite link
-    if (bot && isPremium && process.env.CHANNEL_ID) {
+    if (telegram && isPremium && process.env.CHANNEL_ID) {
       try {
         const channelId = process.env.CHANNEL_ID;
         const expireDate = expirationDate ? Math.floor(expirationDate.getTime() / 1000) : null;
 
         // Create a unique invite link that expires when membership expires
-        const invite = await bot.telegram.createChatInviteLink(channelId, {
+        const invite = await telegram.createChatInviteLink(channelId, {
           member_limit: 1, // One-time use link
           expire_date: expireDate,
           name: `${tier} - User ${userId}`,
@@ -199,12 +226,12 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
     }
 
     // For free tier downgrades, generate free channel invite
-    if (bot && tier === "Free" && process.env.FREE_CHANNEL_ID) {
+    if (telegram && tier === "Free" && process.env.FREE_CHANNEL_ID) {
       try {
         const freeChannelId = process.env.FREE_CHANNEL_ID;
 
         // Create a unique invite link for free channel
-        const invite = await bot.telegram.createChatInviteLink(freeChannelId, {
+        const invite = await telegram.createChatInviteLink(freeChannelId, {
           member_limit: 1, // One-time use link
           name: `Free - User ${userId}`,
         });
@@ -217,7 +244,7 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
     }
 
     // Send notification message to user if bot instance is provided
-    if (bot) {
+    if (telegram) {
       try {
         // Get updated user data for generating message
         const updatedUserDoc = await db.collection("users").doc(userId).get();
@@ -228,7 +255,7 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
         // Generate tier display name
         const tierDisplayNames = {
           "Free": userLanguage === "es" ? "Gratuito" : "Free",
-          "Basic": userLanguage === "es" ? "Básico" : "Basic", 
+          "Basic": userLanguage === "es" ? "Básico" : "Basic",
           "Premium": userLanguage === "es" ? "Premium" : "Premium",
           "VIP": userLanguage === "es" ? "VIP" : "VIP",
           "Creator": userLanguage === "es" ? "Creador" : "Creator"
@@ -250,7 +277,7 @@ async function activateMembership(userId, tier, activatedBy = "admin", durationD
         });
 
         // Send notification message
-        await bot.telegram.sendMessage(userId, confirmationMessage, {
+        await telegram.sendMessage(userId, confirmationMessage, {
           parse_mode: "Markdown"
         });
 

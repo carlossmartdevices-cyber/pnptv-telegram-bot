@@ -42,10 +42,14 @@ const menus = {
         { text: "🗓 Scheduled", callback_data: "admin_scheduled_broadcasts" },
       ],
       [
+        { text: "💰 Payment Broadcast", callback_data: "admin_payment_broadcast" },
+      ],
+      [
         { text: "📈 Broadcast Analytics", callback_data: "admin_broadcast_analytics" },
       ],
       [
-        { text: "�💰 Plan Management", callback_data: "admin_plans" },
+        { text: "💰 Plan Management", callback_data: "admin_plans" },
+        { text: "🪙 Kyrrex Crypto", callback_data: "admin_kyrrex_dashboard" },
       ],
       [{ text: "📋 Menu Config", callback_data: "admin_menus" }],
     ],

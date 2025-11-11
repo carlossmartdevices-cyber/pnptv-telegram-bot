@@ -53,7 +53,7 @@ async function showDaimoPlans(ctx) {
         "📍 Conecta con otros miembros en tu área usando nuestra herramienta de geolocalización\n\n" +
         "� *Paga con USDC (stablecoin) desde:*\n" +
         "✅ Coinbase, Binance, exchanges\n" +
-        "✅ Venmo, Cash App, Zelle\n" +
+        "✅ Venmo, Cash App, Zelle, PayPal\n" +
         "✅ Revolut, Wise\n" +
         "✅ Cualquier wallet cripto\n\n" +
         "🔒 Pago seguro en blockchain\n" +
@@ -67,7 +67,7 @@ async function showDaimoPlans(ctx) {
         "📍 Connect with other members in your area using our geolocation tool\n\n" +
         "💰 *Pay with USDC (stablecoin) from:*\n" +
         "✅ Coinbase, Binance, exchanges\n" +
-        "✅ Venmo, Cash App, Zelle\n" +
+        "✅ Venmo, Cash App, Zelle, PayPal\n" +
         "✅ Revolut, Wise\n" +
         "✅ Any crypto wallet\n\n" +
         "🔒 Secure blockchain payment\n" +

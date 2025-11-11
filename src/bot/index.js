@@ -27,6 +27,7 @@ const errorHandler = require("./middleware/errorHandler");
 const privateResponseMiddleware = require("./middleware/privateResponseMiddleware");
 const autoDeleteMiddleware = require("./middleware/autoDeleteMiddleware");
 const deleteUserCommandsMiddleware = require("./middleware/deleteUserCommandsMiddleware");
+const moderationMiddleware = require("./middleware/moderationMiddleware");
 
 // Start session cleanup service
 const { sessionCleanup } = require("../utils/sessionCleanup");
@@ -80,6 +81,21 @@ const {
   handleDaimoHelp,
 } = require("./handlers/daimoPayHandler");
 const {
+  showCopCardPlans,
+  handleCopCardPlanSelection,
+  handleCopCardPaymentConfirmed,
+  handleCopCardStatus,
+  handleCopCardHelp,
+} = require("./handlers/copCardHandler");
+const {
+  showKyrrexPlans,
+  handleKyrrexPlanSelection,
+  handleKyrrexCryptoSelection,
+  handleKyrrexPaymentCheck,
+  handleKyrrexCopyAddress,
+  handleKyrrexHelp,
+} = require("./handlers/kyrrexPayHandler");
+const {
   adminPanel,
   handleAdminCallback,
   sendBroadcast,
@@ -96,6 +112,24 @@ const { handleMapCallback, handleLocation } = require("./handlers/map");
 const { handleNearbyCallback } = require("./handlers/nearby");
 const { handleLiveCallback } = require("./handlers/live");
 const { startAIChat, endAIChat, handleChatMessage, handleAIChatCallback } = require("./handlers/aiChat");
+const {
+  handleShowBlacklist,
+  handleAddWord,
+  handleRemoveWord,
+  handleAddLink,
+  handleRemoveLink,
+  handleCheckViolations,
+  handleClearViolations
+} = require("./handlers/moderation");
+const {
+  handleRules,
+  handleGroupRules,
+  handleMapRules,
+  handleZoomRules,
+  handleLibraryRules,
+  handleBackToRulesMenu,
+  handleCloseRules
+} = require("./handlers/rules");
 
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
@@ -105,6 +139,7 @@ bot.use(session); // Firestore session middleware
 
 // Apply middleware
 bot.use(rateLimitMiddleware());
+bot.use(moderationMiddleware); // Check messages for blacklisted content (before other middleware)
 bot.use(deleteUserCommandsMiddleware()); // Delete user command messages from groups after 10 seconds
 bot.use(autoDeleteMiddleware()); // Auto-delete bot messages in groups after 5 minutes
 bot.use(privateResponseMiddleware()); // Redirect group responses to private chat
@@ -142,7 +177,11 @@ bot.command("map", mapHandler);
 bot.command("nearby", handleNearby);
 bot.command("live", liveHandler);
 bot.command("app", appHandler);
-bot.command("profile", viewProfile);
+bot.command("profile", async (ctx) => {
+  const userId = ctx.from.id.toString();
+  logger.info(`COMMAND DEBUG: /profile invoked by user ${userId}`);
+  await viewProfile(ctx);
+});
 bot.command("subscribe", subscribeHandler);
 bot.command("admin", adminMiddleware(), adminPanel);
 bot.command("plans", adminMiddleware(), async (ctx) => {
@@ -151,7 +190,29 @@ bot.command("plans", adminMiddleware(), async (ctx) => {
 bot.command("aichat", startAIChat);
 bot.command("endchat", endAIChat);
 
+// ===== HIDDEN ADMIN COMMANDS =====
+bot.command("sendpaymentbutton", adminMiddleware(), async (ctx) => {
+  const { sendPaymentButton } = require("./handlers/admin");
+  await sendPaymentButton(ctx);
+});
+
+// ===== OPT-OUT COMMANDS =====
+bot.command("optout", async (ctx) => {
+  const { handleOptOut } = require("./handlers/admin");
+  await handleOptOut(ctx);
+});
+
+bot.command("optin", async (ctx) => {
+  const { handleOptIn } = require("./handlers/admin");
+  await handleOptIn(ctx);
+});
+
 // ===== COMMUNITY FEATURES =====
+bot.command("menu", async (ctx) => {
+  const { showGroupMenu } = require("./handlers/groupMenu");
+  await showGroupMenu(ctx);
+});
+bot.command("rules", handleRules);
 bot.command("library", handleLibrary);
 bot.command("toptracks", handleTopTracks);
 bot.command("schedulecall", handleScheduleCall);
@@ -162,6 +223,15 @@ bot.command("addtrack", handleAddTrack);
 bot.command("deletetrack", handleDeleteTrack);
 bot.command("deleteevent", handleDeleteEvent);
 bot.command("settimezone", handleSetTimezone);
+
+// ===== MODERATION COMMANDS (Admin Only) =====
+bot.command("blacklist", handleShowBlacklist);
+bot.command("addword", handleAddWord);
+bot.command("removeword", handleRemoveWord);
+bot.command("addlink", handleAddLink);
+bot.command("removelink", handleRemoveLink);
+bot.command("violations", handleCheckViolations);
+bot.command("clearviolations", handleClearViolations);
 
 // ===== ONBOARDING FLOW =====
 // Handle both language callback formats: lang_xx and language_xx
@@ -221,6 +291,52 @@ bot.action(/^daimo_plan_(.+)$/, async (ctx) => {
 
 bot.action("daimo_help", async (ctx) => {
   await handleDaimoHelp(ctx);
+});
+
+// ===== COP CARD PAYMENT HANDLERS =====
+bot.action("cop_card_show_plans", async (ctx) => {
+  await showCopCardPlans(ctx);
+});
+
+bot.action(/^cop_card_plan_(.+)$/, async (ctx) => {
+  await handleCopCardPlanSelection(ctx);
+});
+
+bot.action(/^cop_card_confirmed_(.+)$/, async (ctx) => {
+  await handleCopCardPaymentConfirmed(ctx);
+});
+
+bot.action(/^cop_card_status_(.+)$/, async (ctx) => {
+  await handleCopCardStatus(ctx);
+});
+
+bot.action("cop_card_help", async (ctx) => {
+  await handleCopCardHelp(ctx);
+});
+
+// ===== KYRREX CRYPTO PAYMENT HANDLERS =====
+bot.action("kyrrex_show_plans", async (ctx) => {
+  await showKyrrexPlans(ctx);
+});
+
+bot.action(/^kyrrex_plan_(.+)$/, async (ctx) => {
+  await handleKyrrexPlanSelection(ctx);
+});
+
+bot.action(/^kyrrex_crypto_(.+)$/, async (ctx) => {
+  await handleKyrrexCryptoSelection(ctx);
+});
+
+bot.action(/^kyrrex_check_(.+)$/, async (ctx) => {
+  await handleKyrrexPaymentCheck(ctx);
+});
+
+bot.action(/^kyrrex_copy_(.+)$/, async (ctx) => {
+  await handleKyrrexCopyAddress(ctx);
+});
+
+bot.action("kyrrex_help", async (ctx) => {
+  await handleKyrrexHelp(ctx);
 });
 
 // Main menu item handlers
@@ -311,6 +427,50 @@ bot.action("back_to_library", handleBackToLibrary);
 // ===== TIMEZONE CALLBACKS =====
 bot.action(/^set_tz:/, handleTimezoneCallback);
 
+// ===== RULES CALLBACKS =====
+bot.action("rules_group", handleGroupRules);
+bot.action("rules_map", handleMapRules);
+bot.action("rules_zoom", handleZoomRules);
+bot.action("rules_library", handleLibraryRules);
+bot.action("rules_menu", handleBackToRulesMenu);
+bot.action("close_rules", handleCloseRules);
+
+// ===== GROUP MENU CALLBACKS =====
+bot.action("group_menu_library", async (ctx) => {
+  const { handleLibraryCallback } = require("./handlers/groupMenu");
+  await handleLibraryCallback(ctx);
+});
+
+bot.action("group_menu_openroom", async (ctx) => {
+  const { handleOpenRoomCallback } = require("./handlers/groupMenu");
+  await handleOpenRoomCallback(ctx);
+});
+
+bot.action("group_menu_rules", async (ctx) => {
+  const { handleRulesCallback } = require("./handlers/groupMenu");
+  await handleRulesCallback(ctx);
+});
+
+bot.action("group_menu_help", async (ctx) => {
+  const { handleHelpCallback } = require("./handlers/groupMenu");
+  await handleHelpCallback(ctx);
+});
+
+bot.action("group_menu_subscribe", async (ctx) => {
+  const { handleSubscribeCallback } = require("./handlers/groupMenu");
+  await handleSubscribeCallback(ctx);
+});
+
+bot.action("group_menu_back", async (ctx) => {
+  const { handleBackToMenu } = require("./handlers/groupMenu");
+  await handleBackToMenu(ctx);
+});
+
+bot.action("group_menu_close", async (ctx) => {
+  const { handleCloseMenu } = require("./handlers/groupMenu");
+  await handleCloseMenu(ctx);
+});
+
 // ===== ADMIN CALLBACKS =====
 
 bot.action(/^plan:/, handlePlanCallback);
@@ -350,6 +510,39 @@ bot.action("broadcast_multi_text_only", async (ctx) => {
 bot.action("broadcast_formatting_help", async (ctx) => {
   await ctx.answerCbQuery();
   await handleAdminCallback(ctx);
+});
+
+// ===== PAYMENT CONFIRMATION CALLBACKS =====
+bot.action("payment_confirmation_start", async (ctx) => {
+  await ctx.answerCbQuery();
+  const { handlePaymentConfirmationStart } = require("./handlers/admin");
+  await handlePaymentConfirmationStart(ctx);
+});
+
+bot.action(/^payment_confirm_(.+)$/, async (ctx) => {
+  await ctx.answerCbQuery();
+  const planId = ctx.match[1];
+  const { handlePaymentPlanSelection } = require("./handlers/admin");
+  await handlePaymentPlanSelection(ctx, planId);
+});
+
+bot.action("show_all_plans", async (ctx) => {
+  await ctx.answerCbQuery();
+  const { showAllPlansForPayment } = require("./handlers/admin");
+  await showAllPlansForPayment(ctx);
+});
+
+bot.action("broadcast_opt_out", async (ctx) => {
+  await ctx.answerCbQuery();
+  const { handleOptOutCallback } = require("./handlers/admin");
+  await handleOptOutCallback(ctx);
+});
+
+// ===== MEMBERSHIP UPDATE CALLBACK =====
+
+bot.action("request_membership_update", async (ctx) => {
+  const { handleMembershipUpdateRequest } = require("./handlers/membershipUpdateHandler");
+  await handleMembershipUpdateRequest(ctx);
 });
 
 // ===== BROADCAST SEGMENTATION CALLBACKS =====
@@ -493,6 +686,10 @@ bot.on("photo", async (ctx, next) => {
   if ((ctx.session.waitingFor === "broadcast_media" || ctx.session.waitingFor === "broadcast_text") && isAdmin(ctx.from.id)) {
     const { handleBroadcastMedia } = require("./handlers/admin");
     await handleBroadcastMedia(ctx, "photo");
+  } else if (ctx.session.waitingForPaymentProof) {
+    // Handle payment receipt upload
+    const { handlePaymentProofUpload } = require("./handlers/admin");
+    await handlePaymentProofUpload(ctx, "photo");
   } else {
     await handlePhotoMessage(ctx);
   }
@@ -511,6 +708,10 @@ bot.on("document", async (ctx) => {
   if ((ctx.session.waitingFor === "broadcast_media" || ctx.session.waitingFor === "broadcast_text") && isAdmin(ctx.from.id)) {
     const { handleBroadcastMedia } = require("./handlers/admin");
     await handleBroadcastMedia(ctx, "document");
+  } else if (ctx.session.waitingForPaymentProof) {
+    // Handle payment receipt upload
+    const { handlePaymentProofUpload } = require("./handlers/admin");
+    await handlePaymentProofUpload(ctx, "document");
   }
 });
 
@@ -728,6 +929,18 @@ bot.on("text", async (ctx) => {
       } else if (text.includes("pnptv app") || text.includes("app pnptv") || text.includes("mini app") || text.includes("abrir mini")) {
         // Handle PNPTv App / Mini App keyboard button
         await appHandler(ctx);
+      } else if (
+        text.includes("payment") || text.includes("paid") || text.includes("activate") || 
+        text.includes("membership") || text.includes("subscription") || text.includes("pago") || 
+        text.includes("pagué") || text.includes("activar") || text.includes("membresía") || 
+        text.includes("suscripción") || text.includes("made a payment") || text.includes("hice un pago") ||
+        text.includes("sent payment") || text.includes("envié pago") || text.includes("transferred") || 
+        text.includes("transferí") || text.includes("crypto") || text.includes("usdc") ||
+        text.includes("coinbase") || text.includes("binance") || text.includes("zelle") ||
+        text.includes("cash app") || text.includes("venmo") || text.includes("revolut") || text.includes("wise")
+      ) {
+        // Handle payment/activation requests
+        await ctx.reply(t("paymentContactAdmin", lang, { userId: ctx.from.id }), { parse_mode: "Markdown" });
       }
     }
   } catch (error) {

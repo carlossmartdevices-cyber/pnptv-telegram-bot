@@ -32,8 +32,8 @@ src/bot/helpers/subscriptionHelpers.js  - Payment button integration
 
 ```bash
 DAIMO_API_KEY=pay-televisionlatina-VxZH9SQoHYasAoQmdWKuUw
-DAIMO_DESTINATION_ADDRESS=0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0
-DAIMO_REFUND_ADDRESS=0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0
+DAIMO_DESTINATION_ADDRESS=0xcaf17dbbccc0e9ac87dad1af1f2fe3ba3a4d0613
+DAIMO_REFUND_ADDRESS=0xcaf17dbbccc0e9ac87dad1af1f2fe3ba3a4d0613
 DAIMO_WEBHOOK_TOKEN=0x676371f88a7dfe837c563ba8b0fb2f66341cc96a34f9614a1b0a30804c5dd1a729c77020b732fe128f53961fcec9dce2b5f8215eacdf171d7fd3e9c875feaee11b
 BOT_URL=https://pnptv.app
 ```
@@ -137,8 +137,8 @@ Daimo Pay Configuration:
 ========================
 Enabled: ✅ YES
 API Key: ***KuUw
-Destination: 0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0
-Refund Address: 0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0
+Destination: 0xcaf17dbbccc0e9ac87dad1af1f2fe3ba3a4d0613
+Refund Address: 0xcaf17dbbccc0e9ac87dad1af1f2fe3ba3a4d0613
 Webhook URL: https://pnptv.app/daimo/webhook
 ========================
 ✅ ALL CONFIGURED

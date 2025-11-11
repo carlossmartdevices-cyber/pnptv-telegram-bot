@@ -27,6 +27,12 @@ const path = require("path");
 // Request logging middleware (production optimized)
 app.use((req, res, next) => {
   const start = Date.now();
+  
+  // Debug logging for Daimo routes
+  if (req.path.startsWith('/daimo')) {
+    console.log(`[DEBUG] Daimo route request: ${req.method} ${req.path}`);
+  }
+  
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (req.path !== "/health") {
@@ -79,6 +85,9 @@ app.get("/ready", async (req, res) => {
   }
 });
 
+// Make bot instance available to routes FIRST
+app.set('bot', bot);
+
 // API routes for payment page
 logger.info('Loading API routes from ./api/routes');
 const apiRoutes = require('./api/routes');
@@ -86,18 +95,92 @@ logger.info('API routes loaded', { type: typeof apiRoutes, stackLength: apiRoute
 app.use('/api', apiRoutes);
 logger.info('API routes mounted at /api');
 
-// Daimo Pay webhook routes
+// Daimo Pay webhook routes - MOVED BEFORE STATIC MIDDLEWARE
+logger.info('Loading Daimo Pay routes...');
 const daimoPayRoutes = require('../api/daimo-pay-routes');
+logger.info('Daimo Pay routes loaded', { type: typeof daimoPayRoutes, stackLength: daimoPayRoutes.stack ? daimoPayRoutes.stack.length : 'No stack' });
 app.use('/daimo', daimoPayRoutes);
+logger.info('Daimo Pay routes mounted at /daimo');
 
-// Make bot instance available to routes
-app.set('bot', bot);
+// COP Card payment routes
+const copCardRoutes = require('../api/cop-card-routes');
+app.use('/cop-card', copCardRoutes);
+
+// Kyrrex cryptocurrency payment routes
+const kyrrexRoutes = require('../api/kyrrex-routes');
+app.use('/kyrrex', kyrrexRoutes);
+logger.info('Kyrrex routes mounted at /kyrrex');
 
 // Serve static assets for payment page
 app.use("/assets", express.static(path.join(__dirname, "../../public/payment/assets")));
 
-// Serve public directory for static files (guide, etc.)
+// Serve public directory for static files (guide, etc.) - MOVED AFTER API ROUTES
 app.use(express.static(path.join(__dirname, "../../public")));
+
+// Next.js WebApp Integration
+const next = require('next');
+const nextApp = next({ 
+  dev: process.env.NODE_ENV !== 'production',
+  dir: path.join(__dirname, '../webapp'),
+  conf: {
+    // Next.js config will be loaded from next.config.js in webapp directory
+  }
+});
+const handle = nextApp.getRequestHandler();
+
+// Initialize Next.js app
+nextApp.prepare().then(() => {
+  logger.info('Next.js webapp initialized');
+}).catch((err) => {
+  logger.error('Failed to initialize Next.js webapp:', err);
+});
+
+// WebApp routes - serve Next.js app for /app and /webapp paths
+app.get(/^\/app($|\/.*)/, async (req, res) => {
+  try {
+    // Rewrite /app to root for Next.js
+    req.url = req.url.replace(/^\/app/, '') || '/';
+    await handle(req, res);
+  } catch (error) {
+    logger.error('WebApp error:', error);
+    // Fallback to static HTML if Next.js fails
+    const appPath = path.join(__dirname, "../../public/app.html");
+    res.sendFile(appPath);
+  }
+});
+
+app.get(/^\/webapp($|\/.*)/, async (req, res) => {
+  try {
+    // Rewrite /webapp to root for Next.js
+    req.url = req.url.replace(/^\/webapp/, '') || '/';
+    await handle(req, res);
+  } catch (error) {
+    logger.error('WebApp error:', error);
+    res.status(500).json({ error: 'WebApp unavailable' });
+  }
+});
+
+// Mini App API endpoint for user data
+app.get("/api/user/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const userDoc = await db.collection('users').doc(userId).get();
+    
+    if (!userDoc.exists) {
+      return res.json({ tier: 'Free', status: 'new_user' });
+    }
+    
+    const userData = userDoc.data();
+    res.json({
+      tier: userData.tier || 'Free',
+      membershipExpiresAt: userData.membershipExpiresAt,
+      status: 'active'
+    });
+  } catch (error) {
+    logger.error('Error fetching user data for Mini App:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // Guide/Instructions page
 app.get("/guide", (req, res) => {
@@ -141,6 +224,12 @@ app.post(`/bot${process.env.TELEGRAM_TOKEN}`, async (req, res) => {
   try {
     // Respond immediately to avoid timeout
     res.sendStatus(200);
+
+    // Add debug logging for admin user commands
+    const update = req.body;
+    if (update.message?.from?.id === 8365312597 && update.message?.text) {
+      logger.info(`WEBHOOK DEBUG: Admin command received: "${update.message.text}" from user ${update.message.from.id}`);
+    }
 
     // Process update asynchronously
     await bot.handleUpdate(req.body);

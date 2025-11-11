@@ -44,8 +44,8 @@ module.exports = {
         PORT: 3000,
       },
 
-      // Load environment file
-      env_file: '.env.production',
+      // Load environment file (removed - dotenv in code handles this)
+      // env_file: '.env.production',
 
       // Environment variables (development)
       env_development: {

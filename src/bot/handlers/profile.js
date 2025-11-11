@@ -43,6 +43,17 @@ async function viewProfile(ctx) {
     return;
   }
 
+  // Temporary admin-only debug reply to confirm handler execution via Telegram
+  try {
+    if (isAdmin(userId)) {
+      // Send a short debug message only to admin to confirm the handler was reached
+      await ctx.reply("DEBUG: viewProfile handler reached — rendering profile now.");
+    }
+  } catch (dbgErr) {
+    // Non-fatal: log and continue
+    logger.warn(`Failed to send debug reply for user ${userId}: ${dbgErr.message}`);
+  }
+
   try {
     const userRef = db.collection("users").doc(userId);
     const doc = await userRef.get();

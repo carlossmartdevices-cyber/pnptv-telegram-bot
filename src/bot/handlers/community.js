@@ -330,14 +330,36 @@ async function handleScheduleCall(ctx) {
         return;
       }
 
-      // Check if date is valid and in the future
-      if (isNaN(scheduledTime.getTime()) || scheduledTime < new Date()) {
+      // Check if date is valid and in the future (minimum 15 minutes from now)
+      const now = new Date();
+      const minimumTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
+
+      if (isNaN(scheduledTime.getTime())) {
         await ctx.reply(
           `❌ *Invalid Date/Time*\n\n` +
-          `Please provide a future date and time.\n\n` +
+          `Please provide a valid date and time.\n\n` +
           `Format: YYYY-MM-DD HH:MM\n` +
           `Example: 2025-11-10 22:00\n\n` +
           `⏰ Your timezone: ${timezoneName}\n` +
+          `💡 Use /settimezone to change your timezone`,
+          { parse_mode: 'Markdown' }
+        );
+        return;
+      }
+
+      if (scheduledTime < minimumTime) {
+        const minutesFromNow = Math.ceil((scheduledTime.getTime() - now.getTime()) / (60 * 1000));
+        const errorMsg = scheduledTime < now
+          ? `The time you selected is in the past.`
+          : `The time is too soon (only ${minutesFromNow} minutes from now).`;
+
+        await ctx.reply(
+          `❌ *Invalid Date/Time*\n\n` +
+          `${errorMsg}\n\n` +
+          `⏰ Please schedule at least 15 minutes in advance.\n\n` +
+          `Format: YYYY-MM-DD HH:MM\n` +
+          `Example: 2025-11-10 22:00\n\n` +
+          `🕐 Your timezone: ${timezoneName}\n` +
           `💡 Use /settimezone to change your timezone`,
           { parse_mode: 'Markdown' }
         );
@@ -508,14 +530,36 @@ async function handleScheduleStream(ctx) {
         return;
       }
 
-      // Check if date is valid and in the future
-      if (isNaN(scheduledTime.getTime()) || scheduledTime < new Date()) {
+      // Check if date is valid and in the future (minimum 15 minutes from now)
+      const now = new Date();
+      const minimumTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
+
+      if (isNaN(scheduledTime.getTime())) {
         await ctx.reply(
           `❌ *Invalid Date/Time*\n\n` +
-          `Please provide a future date and time.\n\n` +
+          `Please provide a valid date and time.\n\n` +
           `Format: YYYY-MM-DD HH:MM\n` +
           `Example: 2025-11-10 22:00\n\n` +
           `⏰ Your timezone: ${timezoneName}\n` +
+          `💡 Use /settimezone to change your timezone`,
+          { parse_mode: 'Markdown' }
+        );
+        return;
+      }
+
+      if (scheduledTime < minimumTime) {
+        const minutesFromNow = Math.ceil((scheduledTime.getTime() - now.getTime()) / (60 * 1000));
+        const errorMsg = scheduledTime < now
+          ? `The time you selected is in the past.`
+          : `The time is too soon (only ${minutesFromNow} minutes from now).`;
+
+        await ctx.reply(
+          `❌ *Invalid Date/Time*\n\n` +
+          `${errorMsg}\n\n` +
+          `⏰ Please schedule at least 15 minutes in advance.\n\n` +
+          `Format: YYYY-MM-DD HH:MM\n` +
+          `Example: 2025-11-10 22:00\n\n` +
+          `🕐 Your timezone: ${timezoneName}\n` +
           `💡 Use /settimezone to change your timezone`,
           { parse_mode: 'Markdown' }
         );

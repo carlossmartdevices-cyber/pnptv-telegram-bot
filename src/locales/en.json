@@ -116,6 +116,17 @@
   "aiChatEnded": "✅ Chat ended. Returning to main menu...",
   "aiChatNoAPI": "🤖 AI support is currently unavailable. Please reach out to support@pnptv.app for assistance.",
   "aiChatRateLimit": "💫 Easy, love — let's take a breath. Give me just a moment before your next message.",
+  "paymentContactAdmin": "💰 *Made a payment and need to activate your membership?*\n\nPlease contact our administrator for manual activation:\n\n👤 **Administrator:** @pnptvadmin\n\n📋 **Required information:**\n• Your user ID: `{userId}`\n• Payment proof\n• Selected plan\n\n⚡️ **For faster automatic payments:**\nUse /subscribe and pay with Daimo (USDC) for instant activation.",
   "groupWelcomeFreeMember": "👋 Welcome @{username}!\n\n🎉 Welcome to PNPtv Community!\n\n🆓 **Free Member**\n• Share photos and videos ✅\n• Access to community content\n• Join the conversation!\n\n💎 Upgrade to premium for exclusive Santino content and VIP features!\n\n📌 Check out our guide: https://pnptv.app/guide",
-  "groupWelcomePremiumMember": "👋 Welcome @{username}!\n\n🎉 Welcome to PNPtv Community!\n\n💎 **{tier} Member**\n• Full media access\n• Premium content unlocked\n• Exclusive features\n• Status: Active ✅\n\n🔥 You're all set — enjoy the ride!\n\n📌 Check out our guide: https://pnptv.app/guide"
+  "groupWelcomePremiumMember": "👋 Welcome @{username}!\n\n🎉 Welcome to PNPtv Community!\n\n💎 **{tier} Member**\n• Full media access\n• Premium content unlocked\n• Exclusive features\n• Status: Active ✅\n\n🔥 You're all set — enjoy the ride!\n\n📌 Check out our guide: https://pnptv.app/guide",
+  "paymentConfirmationStart": "💎 **Select Your Plan**\n\nChoose the plan you paid for:",
+  "paymentReceiptRequest": "💰 **Payment Registered**\n\nThank you for confirming your payment. We're verifying the transaction and will activate your membership shortly.\n\n💰 **Amount:** ${amount} USD ({amountCOP} COP)\n🔖 **Reference:** COP{reference}\n💎 **Plan:** {planName}\n\n⏳ **Estimated verification time:** 5-15 minutes\n\nWe'll notify you when your membership is active.\n\n📸 **Please attach your payment receipt/proof for faster processing:**",
+  "paymentProofReceived": "✅ **Payment Proof Received**\n\nYour payment proof has been forwarded to our admin team for verification.\n\n👤 **Administrator:** @pnptvadmin\n📋 **Your Reference:** COP{reference}\n\n⚡️ You'll receive a notification once your membership is activated!",
+  "paymentBroadcastMessage": "🔥 **Upgrade Your PNPtv Experience!**\n\nReady to unlock exclusive premium content with Santino and access all VIP features?\n\n💎 **Choose your plan and activate instantly!**\n\nClick below to confirm your payment and get premium access:",
+  "paymentChannelMessage": "💎 **Ready to upgrade your PNPtv experience?**\n\nJoin our premium community and unlock exclusive content!\n\n👇 Click below if you've made a payment:",
+  "optOutBroadcast": "🔕 Opt out from broadcasts",
+  "optOutConfirmation": "✅ **Opted Out Successfully**\n\nYou will no longer receive broadcast messages from PNPtv.\n\n💡 You can still use all bot features normally.\n\nTo opt back in, use /optin command.",
+  "optInConfirmation": "✅ **Opted In Successfully**\n\nYou will now receive broadcast messages from PNPtv again.\n\nThank you for staying connected with our community!",
+  "alreadyOptedOut": "🔕 You're already opted out from broadcasts.\n\nUse /optin to receive broadcasts again.",
+  "alreadyOptedIn": "🔔 You're already receiving broadcasts.\n\nUse /optout to stop receiving them."
 }

@@ -25,6 +25,19 @@ const {
   getBroadcastAnalytics, 
   getTopPerformingSegments 
 } = require("../../services/broadcastAnalytics");
+const {
+  showKyrrexDashboard,
+  showRecentPayments,
+  showPendingPayments, 
+  handlePaymentConfirmation,
+  executePaymentConfirmation,
+  showBalances,
+} = require("./admin/kyrrexAdmin");
+
+// Admin utilities (defines isAdmin, ADMIN_IDS, adminMiddleware)
+const { isAdmin, ADMIN_IDS, adminMiddleware } = require("../../config/admin");
+// Telegram escaping helpers (centralized)
+const { escapeMdV2, escapeHtml, escapeArray } = require('../../utils/telegramEscapes');
 
 /**
  * Get comprehensive formatting help text for broadcasts
@@ -450,14 +463,15 @@ async function executeSearch(ctx, query) {
 async function showUserDetails(ctx, userId, userData) {
   try {
     const lang = ctx.session.language || "en";
+    // Use centralized escapeHtml helper from utils/telegramEscapes for HTML parse mode
 
     let message = lang === "es"
-      ? "👤 **Detalles del Usuario**\n\n"
-      : "👤 **User Details**\n\n";
+      ? "👤 <b>Detalles del Usuario</b>\n\n"
+      : "👤 <b>User Details</b>\n\n";
 
-    message += `🆔 ID: \`${userId}\`\n`;
-    message += `👤 Username: @${userData.username || "Anonymous"}\n`;
-    message += `💎 Tier: ${userData.tier || "Free"}\n`;
+    message += `🆔 ID: <code>${escapeHtml(userId)}</code>\n`;
+    message += `👤 Username: ${escapeHtml(userData.username ? '@' + userData.username : 'Anonymous')}\n`;
+    message += `💎 Tier: ${escapeHtml(userData.tier || 'Free')}\n`;
 
     // Show membership expiration info
     if (userData.membershipExpiresAt) {
@@ -475,19 +489,19 @@ async function showUserDetails(ctx, userId, userData) {
       message += `⏰ Expires: Never (Lifetime)\n`;
     }
 
-    message += `📸 Photo: ${userData.photoFileId ? "Yes" : "No"}\n`;
-    message += `📍 Location: ${userData.location ? "Yes" : "No"}\n`;
-    message += `📝 Bio: ${userData.bio || "Not set"}\n\n`;
+  message += `📸 Photo: ${userData.photoFileId ? 'Yes' : 'No'}\n`;
+  message += `📍 Location: ${userData.location ? 'Yes' : 'No'}\n`;
+  message += `📝 Bio: ${escapeHtml(userData.bio || 'Not set')}\n\n`;
 
     const createdAt = userData.createdAt?.toDate();
     const lastActive = userData.lastActive?.toDate();
 
-    message += `📅 Created: ${createdAt ? createdAt.toLocaleDateString() : "Unknown"}\n`;
-    message += `🕐 Last Active: ${lastActive ? lastActive.toLocaleString() : "Unknown"}\n`;
+  message += `📅 Created: ${createdAt ? escapeHtml(createdAt.toLocaleDateString()) : 'Unknown'}\n`;
+  message += `🕐 Last Active: ${lastActive ? escapeHtml(lastActive.toLocaleString()) : 'Unknown'}\n`;
 
     // Show ban status
     if (userData.banned) {
-      message += `\n🚫 **Status: BANNED**\n`;
+      message += `\n🚫 <b>STATUS: BANNED</b>\n`;
     }
 
     const keyboard = [
@@ -517,7 +531,7 @@ async function showUserDetails(ctx, userId, userData) {
         }]];
 
     await ctx.reply(message, {
-      parse_mode: "Markdown",
+      parse_mode: 'HTML',
       reply_markup: {
         inline_keyboard: keyboard,
       },
@@ -628,20 +642,35 @@ async function editUserTier(ctx, userId) {
 /**
  * Set user tier with expiration
  */
-async function setUserTier(ctx, userId, tier, durationDays = 30) {
+async function setUserTier(ctx, userId, planIdOrTier, durationDays = 30) {
   try {
     const lang = ctx.session.language || "en";
 
+    // Map plan IDs to tiers
+    const planToTierMap = {
+      'trial-week': 'Basic',
+      'pnp-member': 'Basic',
+      'crystal-member': 'Premium',
+      'diamond-member': 'Premium',
+      'free': 'Free',
+      'Free': 'Free',
+      'Basic': 'Basic',
+      'Premium': 'Premium'
+    };
+
+    // Get the actual tier from the plan ID
+    const tier = planToTierMap[planIdOrTier] || planIdOrTier;
+
     // Use membership manager to activate with expiration and send notification
     const result = await activateMembership(userId, tier, "admin", durationDays, ctx.telegram);
-    
+
     // Note: activateMembership now automatically sends notification with invite link
 
     const confirmMsg = tier === "Free"
       ? (lang === "es" ? `✅ Usuario cambiado a Free` : `✅ User changed to Free`)
       : (lang === "es"
-        ? `✅ ${tier} activado por ${durationDays} días`
-        : `✅ ${tier} activated for ${durationDays} days`);
+        ? `✅ ${planIdOrTier} activado por ${durationDays} días`
+        : `✅ ${planIdOrTier} activated for ${durationDays} days`);
 
     await ctx.answerCbQuery(confirmMsg);
 
@@ -649,7 +678,7 @@ async function setUserTier(ctx, userId, tier, durationDays = 30) {
     const updatedUserDoc = await db.collection("users").doc(userId).get();
     await showUserDetails(ctx, userId, updatedUserDoc.data());
 
-    logger.info(`Admin ${ctx.from.id} set tier ${tier} for user: ${userId} (${durationDays} days)`);
+    logger.info(`Admin ${ctx.from.id} set tier ${tier} (plan: ${planIdOrTier}) for user: ${userId} (${durationDays} days)`);
   } catch (error) {
     logger.error("Error setting user tier:", error);
     await ctx.answerCbQuery(t("error", ctx.session.language || "en"));
@@ -918,35 +947,42 @@ async function handleSegmentSelection(ctx, segmentKey) {
       ? `📢 **Configurar Mensaje**\n\n**Audiencia Seleccionada:** ${segmentName}\n**Usuarios objetivo:** ${stats.userCount}\n\n**Paso 3:** ¿Cómo quieres configurar el mensaje?\n\n🌐 **Por idioma:** Diferentes mensajes para inglés y español\n📝 **Mensaje único:** Mismo mensaje para todos los usuarios`
       : `📢 **Configure Message**\n\n**Selected Audience:** ${segmentName}\n**Target users:** ${stats.userCount}\n\n**Step 3:** How do you want to configure the message?\n\n🌐 **By language:** Different messages for English and Spanish\n📝 **Single message:** Same message for all users`;
 
-    await ctx.editMessageText(message, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: lang === "es" ? "🌐 Mensajes por idioma" : "🌐 Messages by language",
-              callback_data: "broadcast_multi_language"
-            }
-          ],
-          [
-            {
-              text: lang === "es" ? "📝 Mensaje único" : "📝 Single message",
-              callback_data: "broadcast_single_message"
-            }
-          ],
-          [
-            {
-              text: lang === "es" ? "« Cambiar Audiencia" : "« Change Audience",
-              callback_data: "broadcast_select_segment"
-            },
-            {
-              text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
-              callback_data: "admin_back"
-            }
+    try {
+      await ctx.editMessageText(message, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: lang === "es" ? "🌐 Mensajes por idioma" : "🌐 Messages by language",
+                callback_data: "broadcast_multi_language"
+              }
+            ],
+            [
+              {
+                text: lang === "es" ? "📝 Mensaje único" : "📝 Single message",
+                callback_data: "broadcast_single_message"
+              }
+            ],
+            [
+              {
+                text: lang === "es" ? "« Cambiar Audiencia" : "« Change Audience",
+                callback_data: "broadcast_select_segment"
+              },
+              {
+                text: lang === "es" ? "✖️ Cancelar" : "✖️ Cancel",
+                callback_data: "admin_back"
+              }
+            ]
           ]
-        ]
+        }
+      });
+    } catch (editError) {
+      // Ignore "message not modified" errors
+      if (!editError.description?.includes('message is not modified')) {
+        throw editError;
       }
-    });
+    }
 
     logger.info(`Admin ${ctx.from.id} selected segment ${segmentKey} with ${stats.userCount} users`);
   } catch (error) {
@@ -1270,8 +1306,8 @@ function filterUsersByWizard(users, wizard) {
   return users.filter(user => {
     const userData = user.data();
 
-    // Always filter out users who opted out of ads
-    if (userData.adsOptOut === true) {
+    // Always filter out users who opted out of ads or broadcasts
+    if (userData.adsOptOut === true || userData.broadcastOptOut === true) {
       return false;
     }
 
@@ -1291,8 +1327,8 @@ function filterUsersByWizard(users, wizard) {
       case "subscribers":
         // Active subscribers with premium tier and not expired
         if (!userData.tier || userData.tier === "Free") return false;
-        if (!userData.expiresAt) return false;
-        const expiresAt = userData.expiresAt.toDate();
+        if (!userData.membershipExpiresAt) return false;
+        const expiresAt = userData.membershipExpiresAt.toDate();
         if (expiresAt <= now) return false;
         break;
 
@@ -1303,8 +1339,8 @@ function filterUsersByWizard(users, wizard) {
       case "churned":
         // Users who had a subscription but it expired
         if (!userData.tier || userData.tier === "Free") return false;
-        if (!userData.expiresAt) return false;
-        const expired = userData.expiresAt.toDate();
+        if (!userData.membershipExpiresAt) return false;
+        const expired = userData.membershipExpiresAt.toDate();
         if (expired > now) return false;
         break;
     }
@@ -1392,10 +1428,12 @@ async function executeBroadcast(ctx, isTestMode = false) {
       parse_mode: "Markdown"
     };
 
-    // Add inline buttons if configured
-    if (wizard.buttons && wizard.buttons.length > 0) {
+    // Add inline buttons if configured, plus opt-out button
+    let keyboard = wizard.buttons ? [...wizard.buttons] : [];
+    // Note: We'll add the opt-out button per user based on their language
+    if (keyboard.length > 0) {
       messageOptions.reply_markup = {
-        inline_keyboard: wizard.buttons
+        inline_keyboard: keyboard
       };
     }
 
@@ -1405,6 +1443,19 @@ async function executeBroadcast(ctx, isTestMode = false) {
     for (const doc of filteredUsers) {
       try {
         const userId = doc.id;
+        const userData = doc.data();
+        const userLang = userData.language || "en";
+
+        // Create user-specific message options with opt-out button
+        const userMessageOptions = { ...messageOptions };
+        let userKeyboard = wizard.buttons ? [...wizard.buttons] : [];
+        userKeyboard = addOptOutButton(userKeyboard, userLang);
+        
+        if (userKeyboard.length > 0) {
+          userMessageOptions.reply_markup = {
+            inline_keyboard: userKeyboard
+          };
+        }
 
         // Send with media if available
         if (wizard.media) {
@@ -1414,25 +1465,25 @@ async function executeBroadcast(ctx, isTestMode = false) {
             case "photo":
               await ctx.telegram.sendPhoto(userId, wizard.media.file_id, {
                 caption,
-                ...messageOptions
+                ...userMessageOptions
               });
               break;
             case "video":
               await ctx.telegram.sendVideo(userId, wizard.media.file_id, {
                 caption,
-                ...messageOptions
+                ...userMessageOptions
               });
               break;
             case "document":
               await ctx.telegram.sendDocument(userId, wizard.media.file_id, {
                 caption,
-                ...messageOptions
+                ...userMessageOptions
               });
               break;
           }
         } else {
           // Send text only
-          await ctx.telegram.sendMessage(userId, wizard.text, messageOptions);
+          await ctx.telegram.sendMessage(userId, wizard.text, userMessageOptions);
         }
 
         sentCount++;
@@ -2099,7 +2150,7 @@ async function executeBroadcast(ctx) {
     const isWizardMode = !!ctx.session.broadcastWizard;
     const broadcastData = isWizardMode ? ctx.session.broadcastWizard : ctx.session.broadcast;
 
-    if (!broadcastData || !broadcastData.text) {
+    if (!broadcastData || (!broadcastData.text && !broadcastData.textEN && !broadcastData.textES)) {
       await ctx.reply(lang === "es" ? "Error: No hay mensaje pendiente" : "Error: No pending message");
       return;
     }
@@ -2107,6 +2158,9 @@ async function executeBroadcast(ctx) {
     // Extract data from wizard
     const media = broadcastData.media;
     const text = broadcastData.text;
+    const textEN = broadcastData.textEN;
+    const textES = broadcastData.textES;
+    const multiLanguage = broadcastData.multiLanguage || (textEN && textES);
     const targetLanguage = broadcastData.targetLanguage;
     const targetStatus = broadcastData.targetStatus;
     
@@ -2182,7 +2236,12 @@ async function executeBroadcast(ctx) {
     // Send to all users with rate limiting
     for (const user of users) {
       try {
-        const messageText = text;
+        // Determine message text based on user language for multi-language broadcasts
+        let messageText = text;
+        if (multiLanguage) {
+          const userLang = user.language || 'en';
+          messageText = userLang === 'es' ? (textES || text) : (textEN || text);
+        }
 
         if (media) {
           // Send media with caption
@@ -4622,6 +4681,24 @@ async function handleAdminCallback(ctx) {
     } else if (action === "admin_analytics_segments") {
       await ctx.answerCbQuery();
       await showAnalyticsBySegment(ctx);
+    } else if (action === "admin_payment_broadcast") {
+      await ctx.answerCbQuery();
+      await sendPaymentBroadcast(ctx);
+    } else if (action === "admin_payment_broadcast_confirm") {
+      await ctx.answerCbQuery();
+      await executePaymentBroadcast(ctx);
+    } else if (action === "admin_kyrrex_dashboard") {
+      await showKyrrexDashboard(ctx);
+    } else if (action === "admin_kyrrex_recent") {
+      await showRecentPayments(ctx);
+    } else if (action === "admin_kyrrex_pending") {
+      await showPendingPayments(ctx);
+    } else if (action.startsWith("admin_kyrrex_confirm_") && !action.includes("_yes_")) {
+      await handlePaymentConfirmation(ctx);
+    } else if (action.startsWith("admin_kyrrex_confirm_yes_")) {
+      await executePaymentConfirmation(ctx);
+    } else if (action === "admin_kyrrex_balances") {
+      await showBalances(ctx);
     }
   } catch (error) {
     logger.error("Error handling admin callback:", error);
@@ -5226,6 +5303,533 @@ async function showAnalyticsBySegment(ctx) {
   }
 }
 
+/**
+ * ===============================================
+ * PAYMENT CONFIRMATION SYSTEM
+ * ===============================================
+ */
+
+/**
+ * Handle payment confirmation start - show plan selection
+ */
+async function handlePaymentConfirmationStart(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    const plans = require("../../config/plans");
+    
+    const activePlans = [
+      plans.TRIAL_WEEK,
+      plans.PNP_MEMBER,
+      plans.PNP_CRYSTAL,
+      plans.PNP_DIAMOND,
+      plans.LIFETIME_PASS
+    ].filter(plan => plan.active);
+
+    const keyboard = activePlans.map(plan => [{
+      text: `${getPlanEmoji(plan.id)} ${plan.displayName} - $${plan.price}`,
+      callback_data: `payment_confirm_${plan.id}`
+    }]);
+
+    keyboard.push([{
+      text: lang === "es" ? "← Volver" : "← Back",
+      callback_data: "back_to_main"
+    }]);
+
+    await ctx.editMessageText(t("paymentConfirmationStart", lang), {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: keyboard
+      }
+    });
+
+    logger.info(`User ${ctx.from.id} started payment confirmation process`);
+  } catch (error) {
+    logger.error("Error handling payment confirmation start:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle payment plan selection
+ */
+async function handlePaymentPlanSelection(ctx, planId) {
+  try {
+    const lang = ctx.session.language || "en";
+    const plans = require("../../config/plans");
+    
+    // Find the selected plan
+    const plan = Object.values(plans).find(p => p.id === planId);
+    if (!plan) {
+      await ctx.reply(lang === "es" ? "❌ Plan no encontrado" : "❌ Plan not found");
+      return;
+    }
+
+    // Generate reference number
+    const reference = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
+    
+    // Store payment info in session
+    ctx.session.waitingForPaymentProof = planId;
+    ctx.session.paymentConfirmation = {
+      plan: plan,
+      reference: reference,
+      timestamp: new Date(),
+      userId: ctx.from.id
+    };
+
+    // Create payment receipt message
+    const messageText = t("paymentReceiptRequest", lang)
+      .replace("{amount}", plan.price.toString())
+      .replace("{amountCOP}", plan.priceInCOP.toLocaleString())
+      .replace("{reference}", reference)
+      .replace("{planName}", plan.displayName);
+
+    const keyboard = [
+      [{
+        text: lang === "es" ? "📞 Contactar Admin @pnptvadmin" : "📞 Contact Admin @pnptvadmin",
+        url: "https://t.me/pnptvadmin"
+      }],
+      [{
+        text: lang === "es" ? "← Volver al Menú" : "← Back to Menu",
+        callback_data: "back_to_main"
+      }]
+    ];
+
+    await ctx.editMessageText(messageText, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: keyboard
+      }
+    });
+
+    logger.info(`User ${ctx.from.id} selected plan ${planId} for payment confirmation`);
+  } catch (error) {
+    logger.error("Error handling payment plan selection:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Show all plans for payment (alternative entry point)
+ */
+async function showAllPlansForPayment(ctx) {
+  await handlePaymentConfirmationStart(ctx);
+}
+
+/**
+ * Handle payment proof upload (photo/document)
+ */
+async function handlePaymentProofUpload(ctx, mediaType) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    if (!ctx.session.waitingForPaymentProof || !ctx.session.paymentConfirmation) {
+      await ctx.reply(lang === "es" ? "❌ No hay solicitud de pago pendiente" : "❌ No pending payment request");
+      return;
+    }
+
+    const { plan, reference } = ctx.session.paymentConfirmation;
+    
+    // Get media info
+    let mediaInfo = {};
+    if (mediaType === "photo") {
+      const photo = ctx.message.photo[ctx.message.photo.length - 1];
+      mediaInfo = {
+        file_id: photo.file_id,
+        file_unique_id: photo.file_unique_id,
+        type: "photo"
+      };
+    } else if (mediaType === "document") {
+      mediaInfo = {
+        file_id: ctx.message.document.file_id,
+        file_unique_id: ctx.message.document.file_unique_id,
+        file_name: ctx.message.document.file_name,
+        type: "document"
+      };
+    }
+
+    // Store payment proof in Firestore
+    await db.collection("payment_proofs").add({
+      userId: ctx.from.id,
+      username: ctx.from.username || "N/A",
+      planId: plan.id,
+      planName: plan.displayName,
+      planPrice: plan.price,
+      reference: reference,
+      mediaInfo: mediaInfo,
+      timestamp: new Date(),
+      status: "pending",
+      adminNotified: false
+    });
+
+    // Notify user
+    const confirmationText = t("paymentProofReceived", lang)
+      .replace("{reference}", reference);
+
+    await ctx.reply(confirmationText, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [[{
+          text: lang === "es" ? "🏠 Menú Principal" : "🏠 Main Menu",
+          callback_data: "back_to_main"
+        }]]
+      }
+    });
+
+    // Forward to admin
+    const adminIds = process.env.ADMIN_IDS?.split(',') || [];
+    const adminMessage = `💰 **New Payment Proof Received**\n\n👤 **User:** @${ctx.from.username || 'N/A'} (${ctx.from.id})\n💎 **Plan:** ${plan.displayName}\n💰 **Amount:** $${plan.price} USD\n🔖 **Reference:** COP${reference}\n📅 **Date:** ${new Date().toLocaleString()}\n\n📸 **Proof attached below:**`;
+
+    for (const adminId of adminIds) {
+      try {
+        await ctx.telegram.sendMessage(adminId, adminMessage, { parse_mode: "Markdown" });
+        
+        // Forward the media
+        if (mediaType === "photo") {
+          await ctx.telegram.sendPhoto(adminId, mediaInfo.file_id, {
+            caption: `Payment proof for ${plan.displayName} - User: ${ctx.from.id}`
+          });
+        } else if (mediaType === "document") {
+          await ctx.telegram.sendDocument(adminId, mediaInfo.file_id, {
+            caption: `Payment proof for ${plan.displayName} - User: ${ctx.from.id}`
+          });
+        }
+      } catch (adminError) {
+        logger.error(`Failed to notify admin ${adminId}:`, adminError);
+      }
+    }
+
+    // Clear session state
+    ctx.session.waitingForPaymentProof = null;
+    ctx.session.paymentConfirmation = null;
+
+    logger.info(`Payment proof received from user ${ctx.from.id} for plan ${plan.id}`);
+  } catch (error) {
+    logger.error("Error handling payment proof upload:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Send payment button to channel/group (admin command)
+ */
+async function sendPaymentButton(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    if (!isAdmin(ctx.from.id)) {
+      await ctx.reply(lang === "es" ? "❌ No autorizado" : "❌ Unauthorized");
+      return;
+    }
+
+    const messageText = t("paymentChannelMessage", lang);
+    
+    let keyboard = [[{
+      text: lang === "es" ? "💰 Hice Mi Pago" : "💰 I Made My Payment",
+      callback_data: "payment_confirmation_start"
+    }]];
+    
+    keyboard = addOptOutButton(keyboard, lang);
+
+    await ctx.reply(messageText, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: keyboard
+      }
+    });
+
+    logger.info(`Admin ${ctx.from.id} sent payment button to chat ${ctx.chat.id}`);
+  } catch (error) {
+    logger.error("Error sending payment button:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Send payment broadcast to all users
+ */
+async function sendPaymentBroadcast(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    if (!isAdmin(ctx.from.id)) {
+      await ctx.reply(lang === "es" ? "❌ No autorizado" : "❌ Unauthorized");
+      return;
+    }
+
+    // Show confirmation dialog
+    const confirmationText = lang === "es" 
+      ? "💰 **Confirmar Transmisión de Pagos**\n\n¿Enviar mensaje de confirmación de pago a todos los usuarios?\n\nEste mensaje incluirá:\n• Botón \"Hice Mi Pago\"\n• Opción para seleccionar plan\n• Sistema de comprobante de pago\n\n**Usuarios que recibirán:** Todos los usuarios registrados"
+      : "💰 **Confirm Payment Broadcast**\n\nSend payment confirmation message to all users?\n\nThis message will include:\n• \"I Made My Payment\" button\n• Plan selection option\n• Payment proof system\n\n**Recipients:** All registered users";
+
+    await ctx.editMessageText(confirmationText, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: lang === "es" ? "✅ Confirmar Envío" : "✅ Confirm Send",
+              callback_data: "admin_payment_broadcast_confirm"
+            }
+          ],
+          [
+            {
+              text: lang === "es" ? "❌ Cancelar" : "❌ Cancel",
+              callback_data: "admin_back"
+            }
+          ]
+        ]
+      }
+    });
+
+    logger.info(`Admin ${ctx.from.id} initiated payment broadcast confirmation`);
+  } catch (error) {
+    logger.error("Error showing payment broadcast confirmation:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Execute payment broadcast to all users
+ */
+async function executePaymentBroadcast(ctx) {
+  try {
+    const lang = ctx.session.language || "en";
+    
+    // Show progress message
+    const progressMsg = await ctx.editMessageText(
+      lang === "es" ? "📤 Enviando transmisión de pagos..." : "📤 Sending payment broadcast...",
+      { parse_mode: "Markdown" }
+    );
+
+    // Get all users
+    const usersSnapshot = await db.collection("users").get();
+    const users = [];
+    
+    usersSnapshot.forEach(doc => {
+      const userData = doc.data();
+      if (userData.onboardingComplete && !userData.broadcastOptOut) {
+        users.push({
+          userId: doc.id,
+          language: userData.language || "en"
+        });
+      }
+    });
+
+    let successCount = 0;
+    let failureCount = 0;
+
+    // Send to users in batches
+    const batchSize = 20;
+    for (let i = 0; i < users.length; i += batchSize) {
+      const batch = users.slice(i, i + batchSize);
+      
+      await Promise.all(batch.map(async (user) => {
+        try {
+          const userLang = user.language;
+          const messageText = t("paymentBroadcastMessage", userLang);
+          
+          const keyboard = [[{
+            text: userLang === "es" ? "💰 Hice Mi Pago" : "💰 I Made My Payment",
+            callback_data: "payment_confirmation_start"
+          }], [{
+            text: userLang === "es" ? "💎 Ver Todos los Planes" : "💎 View All Plans",
+            callback_data: "show_all_plans"
+          }], [{
+            text: userLang === "es" ? "🔕 No recibir transmisiones" : "🔕 Opt out from broadcasts",
+            callback_data: "broadcast_opt_out"
+          }]];
+
+          await ctx.telegram.sendMessage(user.userId, messageText, {
+            parse_mode: "Markdown",
+            reply_markup: {
+              inline_keyboard: keyboard
+            }
+          });
+          
+          successCount++;
+        } catch (error) {
+          logger.error(`Failed to send payment broadcast to user ${user.userId}:`, error);
+          failureCount++;
+        }
+      }));
+
+      // Rate limiting - wait between batches
+      if (i + batchSize < users.length) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      // Update progress
+      const progress = Math.round(((i + batchSize) / users.length) * 100);
+      if (progress % 20 === 0) {
+        try {
+          await ctx.telegram.editMessageText(
+            ctx.chat.id,
+            progressMsg.message_id,
+            undefined,
+            lang === "es" 
+              ? `📤 Enviando transmisión de pagos... ${progress}%`
+              : `📤 Sending payment broadcast... ${progress}%`
+          );
+        } catch (editError) {
+          // Ignore edit errors
+        }
+      }
+    }
+
+    // Final report
+    const reportText = lang === "es"
+      ? `✅ **Transmisión de Pagos Completada**\n\n📊 **Resultados:**\n• Enviados exitosamente: ${successCount}\n• Fallos: ${failureCount}\n• Total de usuarios: ${users.length}\n\n🎯 Los usuarios pueden ahora usar el botón "Hice Mi Pago" para confirmar sus pagos.`
+      : `✅ **Payment Broadcast Complete**\n\n📊 **Results:**\n• Successfully sent: ${successCount}\n• Failed: ${failureCount}\n• Total users: ${users.length}\n\n🎯 Users can now use the "I Made My Payment" button to confirm their payments.`;
+
+    await ctx.telegram.editMessageText(
+      ctx.chat.id,
+      progressMsg.message_id,
+      undefined,
+      reportText,
+      {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [[{
+            text: lang === "es" ? "🏠 Panel Admin" : "🏠 Admin Panel",
+            callback_data: "admin_back"
+          }]]
+        }
+      }
+    );
+
+    logger.info(`Payment broadcast completed by admin ${ctx.from.id}: ${successCount} sent, ${failureCount} failed`);
+  } catch (error) {
+    logger.error("Error executing payment broadcast:", error);
+    await ctx.reply(t("error", ctx.session.language || "en"));
+  }
+}
+
+/**
+ * Handle opt-out command
+ */
+async function handleOptOut(ctx) {
+  try {
+    const lang = ctx.session?.language || "en";
+    const userId = ctx.from.id.toString();
+
+    // Check current status
+    const userDoc = await db.collection("users").doc(userId).get();
+    const userData = userDoc.data();
+
+    if (userData?.broadcastOptOut) {
+      await ctx.reply(t("alreadyOptedOut", lang), { parse_mode: "Markdown" });
+      return;
+    }
+
+    // Opt out user
+    await db.collection("users").doc(userId).update({
+      broadcastOptOut: true,
+      optOutDate: new Date()
+    });
+
+    await ctx.reply(t("optOutConfirmation", lang), { parse_mode: "Markdown" });
+
+    logger.info(`User ${userId} opted out from broadcasts`);
+  } catch (error) {
+    logger.error("Error handling opt-out:", error);
+    await ctx.reply(t("error", ctx.session?.language || "en"));
+  }
+}
+
+/**
+ * Handle opt-in command
+ */
+async function handleOptIn(ctx) {
+  try {
+    const lang = ctx.session?.language || "en";
+    const userId = ctx.from.id.toString();
+
+    // Check current status
+    const userDoc = await db.collection("users").doc(userId).get();
+    const userData = userDoc.data();
+
+    if (!userData?.broadcastOptOut) {
+      await ctx.reply(t("alreadyOptedIn", lang), { parse_mode: "Markdown" });
+      return;
+    }
+
+    // Opt in user
+    await db.collection("users").doc(userId).update({
+      broadcastOptOut: false,
+      optInDate: new Date()
+    });
+
+    await ctx.reply(t("optInConfirmation", lang), { parse_mode: "Markdown" });
+
+    logger.info(`User ${userId} opted back in to broadcasts`);
+  } catch (error) {
+    logger.error("Error handling opt-in:", error);
+    await ctx.reply(t("error", ctx.session?.language || "en"));
+  }
+}
+
+/**
+ * Handle opt-out callback from broadcast button
+ */
+async function handleOptOutCallback(ctx) {
+  try {
+    const lang = ctx.session?.language || "en";
+    const userId = ctx.from.id.toString();
+
+    // Opt out user
+    await db.collection("users").doc(userId).update({
+      broadcastOptOut: true,
+      optOutDate: new Date()
+    });
+
+    await ctx.editMessageText(t("optOutConfirmation", lang), {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [[{
+          text: lang === "es" ? "🏠 Menú Principal" : "🏠 Main Menu",
+          callback_data: "back_to_main"
+        }]]
+      }
+    });
+
+    logger.info(`User ${userId} opted out from broadcasts via button`);
+  } catch (error) {
+    logger.error("Error handling opt-out callback:", error);
+    await ctx.reply(t("error", ctx.session?.language || "en"));
+  }
+}
+
+/**
+ * Add opt-out button to keyboard
+ */
+function addOptOutButton(keyboard, userLang) {
+  if (!keyboard) {
+    keyboard = [];
+  }
+  
+  // Add opt-out button as last row
+  keyboard.push([{
+    text: userLang === "es" ? "🔕 No recibir transmisiones" : "🔕 Opt out from broadcasts",
+    callback_data: "broadcast_opt_out"
+  }]);
+  
+  return keyboard;
+}
+
+/**
+ * Get emoji for plan
+ */
+function getPlanEmoji(planId) {
+  const emojis = {
+    'trial-week': '🔥',
+    'pnp-member': '⭐',
+    'crystal-member': '💎',
+    'diamond-member': '👑',
+    'lifetime-pass': '🌟'
+  };
+  return emojis[planId] || '💎';
+}
+
 module.exports = {
   adminPanel,
   showStats,
@@ -5279,4 +5883,15 @@ module.exports = {
   showSegmentSelection,
   showMoreSegmentOptions,
   handleSegmentSelection,
+  handlePaymentConfirmationStart,
+  handlePaymentPlanSelection,
+  showAllPlansForPayment,
+  handlePaymentProofUpload,
+  sendPaymentButton,
+  sendPaymentBroadcast,
+  executePaymentBroadcast,
+  handleOptOut,
+  handleOptIn,
+  handleOptOutCallback,
+  addOptOutButton,
 };

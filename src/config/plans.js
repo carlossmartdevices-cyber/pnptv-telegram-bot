@@ -21,6 +21,7 @@ const plans = {
 		description: 'One week trial to explore premium channel',
 		features: ['Premium channel access', 'HD streaming'],
 		active: true,
+		wompiPaymentLink: 'https://checkout.nequi.wompi.co/l/p3eKDu',
 	},
 	PNP_MEMBER: {
 		id: 'pnp-member',
@@ -35,6 +36,7 @@ const plans = {
 		description: 'Monthly membership with premium channel access',
 		features: ['Premium channel access', 'HD streaming', 'Basic support'],
 		active: true,
+		wompiPaymentLink: 'https://checkout.nequi.wompi.co/l/3eyFhA',
 	},
 	PNP_CRYSTAL: {
 		id: 'crystal-member',
@@ -49,6 +51,7 @@ const plans = {
 		description: '4-month package with all premium features',
 		features: ['All premium features', 'Video calls', 'Live streaming', '4K streaming', 'Priority support'],
 		active: true,
+		wompiPaymentLink: 'https://checkout.nequi.wompi.co/l/tpS71x',
 	},
 	PNP_DIAMOND: {
 		id: 'diamond-member',
@@ -63,6 +66,23 @@ const plans = {
 		description: 'Annual VIP membership with exclusive benefits',
 		features: ['All premium features', 'Video calls', 'Live streaming', 'VIP access', 'Priority support', 'Exclusive content'],
 		active: true,
+		wompiPaymentLink: 'https://checkout.nequi.wompi.co/l/hakdMS',
+	},
+	LIFETIME_PASS: {
+		id: 'lifetime-pass',
+		name: 'Lifetime Pass',
+		displayName: 'Lifetime Pass',
+		price: 249.99,
+		priceInCOP: 249.99 * 4000,
+		currency: 'USD',
+		duration: 36500, // 100 years
+		durationDays: 36500,
+		tier: 'Premium',
+		description: 'One-time payment for lifetime access',
+		features: ['All premium features', 'Video calls', 'Live streaming', 'VIP access', 'Priority support', 'Exclusive content', 'Lifetime access', 'No renewal needed'],
+		active: true,
+		wompiPaymentLink: 'https://checkout.nequi.wompi.co/l/b04EoQ',
+		isLifetime: true,
 	},
 
 	// Backwards-compatible aliases (deprecated) — map legacy keys to canonical plans

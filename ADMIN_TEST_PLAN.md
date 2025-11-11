@@ -424,7 +424,7 @@ users/{userId}: {
 **DaimoPayButton Configuration**:
 ```javascript
 appId: "televisionlatina"
-toAddress: "0x98a1b6fdFAE5cF3A274b921d8AcDB441E697a5B0"
+toAddress: "0xcaf17dbbccc0e9ac87dad1af1f2fe3ba3a4d0613"
 toChain: 10 (Optimism)
 toToken: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85" (USDC)
 toUnits: "14.99" (decimal format)

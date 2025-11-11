@@ -77,10 +77,26 @@ async function handleSubscription(ctx, planIdentifier, paymentMethod = null, ret
     const paymentButtons = [
       [
         {
-          text: lang === "es" 
-            ? "� Pagar (Cash App, Venmo, Zelle, USDC)" 
-            : "� Pay (Cash App, Venmo, Zelle, USDC)",
+          text: lang === "es"
+            ? "💳 Pagar (Cash App, Venmo, Zelle, USDC)"
+            : "💳 Pay (Cash App, Venmo, Zelle, USDC)",
           callback_data: `daimo_plan_${plan.id}`,
+        }
+      ],
+      [
+        {
+          text: lang === "es"
+            ? "🪙 Pagar con Criptomonedas"
+            : "🪙 Pay with Cryptocurrency",
+          callback_data: `kyrrex_plan_${plan.id}`,
+        }
+      ],
+      [
+        {
+          text: lang === "es"
+            ? "💳 Pagar con Tarjeta COP"
+            : "💳 Pay with COP Card",
+          callback_data: `cop_card_plan_${plan.id}`,
         }
       ],
       [

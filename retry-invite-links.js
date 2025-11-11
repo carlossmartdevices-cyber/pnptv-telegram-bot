@@ -4,14 +4,7 @@ const { Telegraf } = require("telegraf");
 const { db } = require("./src/config/firebase");
 const logger = require("./src/utils/logger");
 
-/**
- * Helper function to escape Markdown special characters
- */
-function escapeMarkdown(text) {
-  if (!text) return text;
-  // Escape special characters for Markdown
-  return text.replace(/([_*\[\]()~`>#+\-=|{}.!])/g, '\\$1');
-}
+const { escapeMdV2 } = require('./src/utils/telegramEscapes');
 
 /**
  * Retry script to send invite links to users who didn't receive them
@@ -101,8 +94,8 @@ async function retryInviteLinks() {
           }
         }
 
-        // Escape username for Markdown
-        const safeUserName = escapeMarkdown(userName);
+  // Escape dynamic fields for MarkdownV2
+  const safeUserName = escapeMdV2(userName);
         const expiryText = expiresAt
           ? expiresAt.toLocaleDateString(isSpanish ? 'es-CO' : 'en-US', {
               year: 'numeric',
@@ -124,7 +117,7 @@ ${inviteLink}
 • Este es tu link único y personal de acceso
 • Solo funciona UNA vez
 • No lo compartas con nadie
-• Expira: ${escapeMarkdown(expiryText)}
+• Expira: ${escapeMdV2(expiryText)}
 
 💎 ¡Disfruta de todo el contenido exclusivo premium\\!
 
@@ -140,7 +133,7 @@ ${inviteLink}
 • This is your unique personal access link
 • It works only ONCE
 • Do not share it with anyone
-• Expires: ${escapeMarkdown(expiryText)}
+• Expires: ${escapeMdV2(expiryText)}
 
 💎 Enjoy all the exclusive premium content\\!
 

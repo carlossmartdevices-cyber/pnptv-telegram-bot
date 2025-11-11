@@ -98,18 +98,17 @@ async function createPayment(options) {
   const paymentData = {
     display: {
       intent: `Subscription: ${planName}`,
-      preferredChains: [SUPPORTED_CHAINS.BASE, SUPPORTED_CHAINS.OPTIMISM],
+      preferredChains: [SUPPORTED_CHAINS.BASE],  // Force Base network only
       preferredTokens: [
         { chain: SUPPORTED_CHAINS.BASE, address: USDC_TOKENS[SUPPORTED_CHAINS.BASE] },
-        { chain: SUPPORTED_CHAINS.OPTIMISM, address: USDC_TOKENS[SUPPORTED_CHAINS.OPTIMISM] },
       ],
-      paymentOptions: ['Coinbase', 'Venmo', 'CashApp', 'Binance', 'Revolut', 'Wise'],
+      // Payment options removed - let Daimo determine available methods
       redirectUri: BOT_URL ? `${BOT_URL}/payment/success` : undefined,
     },
     destination: {
       destinationAddress: DESTINATION_ADDRESS,
-      chainId: chainId,
-      tokenAddress: tokenAddress,
+      chainId: SUPPORTED_CHAINS.BASE,  // Force Base network
+      tokenAddress: USDC_TOKENS[SUPPORTED_CHAINS.BASE],  // Force Base USDC token
       amountUnits: amountUnits,
     },
     refundAddress: REFUND_ADDRESS,

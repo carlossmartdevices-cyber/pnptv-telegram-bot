@@ -1,0 +1,132 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+✅ Environment loaded from /root/bot 1/.env
+✅ Environment variables validated successfully
+Iniciando Firebase...
+FIREBASE_CREDENTIALS length: 2327 chars
+First 200 chars: {"type":"service_account","project_id":"pnptv-b8af8","private_key_id":"1ccc8fb4b1ec59dffbbc53d0c50cea631c4e40ce","private_key":"-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgE...
+✅ Using Firebase credentials from environment variable
+   Project ID: pnptv-b8af8
+   Client Email: firebase-adminsdk-fbsvc@pnptv-b8af8.iam.gserviceaccount.com
+Firebase ha sido inicializado correctamente.
+=== Sending Membership Update Broadcast ===
+
+Started: 11/9/2025, 6:01:22 PM
+
+Found 90 users with Premium/Basic tier
+
+✅ Sent to @Fedorius (@SUIRODEF) - ID: 1071160931
+✅ Sent to Growl Time (@grrtime) - ID: 1090072883
+✅ Sent to Joseph (@jimonti) - ID: 1100099683
+✅ Sent to Ichiro Elias (@ichiroelias) - ID: 1234213234
+✅ Sent to LP (@LeoMaPeAd) - ID: 1268661883
+✅ Sent to Juan 🇨🇴 (@JD_Co_Cld) - ID: 1368640424
+✅ Sent to Jo (@N/A) - ID: 1475485409
+✅ Sent to Icloudu2 (@icloudu2) - ID: 1491696458
+✅ Sent to Yoo (@LoTelePil) - ID: 1505187125
+✅ Sent to JD (@jsf4191) - ID: 1555839860
+✅ Sent to JuanMa Ruiz (@N/A) - ID: 1684976172
+✅ Sent to Carlos (@Carlos_9r) - ID: 1771672066
+❌ Failed for A (@abyzav) - ID: 1853540313: 403: Forbidden: bot was blocked by the user
+✅ Sent to T (@t12sf) - ID: 1920936907
+✅ Sent to N. B. (@brix_33) - ID: 2077767307
+✅ Sent to Tat (@N/A) - ID: 2120179967
+✅ Sent to T (@N/A) - ID: 5034174384
+✅ Sent to Max (@Markpop78) - ID: 521921359
+✅ Sent to CKCK (@ckkckk123) - ID: 5272134668
+✅ Sent to XXLatinBoy (@vichoxxl) - ID: 5346270416
+✅ Sent to Naughty (@Oracle0218) - ID: 5373548942
+✅ Sent to G (@GATLV) - ID: 538644654
+✅ Sent to Yuekiu (@Yuekiu) - ID: 540482380
+✅ Sent to José R (@Jsetdh) - ID: 5463213541
+✅ Sent to Corey (@karmadior69) - ID: 5475643506
+✅ Sent to Shima (@shimatyo) - ID: 5519461158
+✅ Sent to stl (@greyshirt19134) - ID: 5556393716
+✅ Sent to C (@dtownraised99) - ID: 5575449547
+✅ Sent to Deku (@Dekupy) - ID: 579971848
+✅ Sent to JE612 (@Je2786) - ID: 5830119032
+✅ Sent to FireFX (@ms601fx) - ID: 5849505145
+✅ Sent to Tony (@Bucaros69) - ID: 5869566424
+✅ Sent to Lets (@Bbslam505) - ID: 5899228122
+✅ Sent to 12216 (@dnd12216) - ID: 5990112447
+✅ Sent to User (@aarolu10) - ID: 6025431055
+✅ Sent to User (@Raccone3) - ID: 6091427813
+✅ Sent to User (@brkfre) - ID: 6218516061
+✅ Sent to User (@mafercm) - ID: 6381844084
+✅ Sent to Mr. R. (@mr_r_msk) - ID: 6426453759
+✅ Sent to PartyTime! (@TiMe4ParTy2) - ID: 6496516609
+✅ Sent to User (@Fratboy101) - ID: 6512908422
+✅ Sent to José (@bigbooty6969) - ID: 6557776792
+✅ Sent to Cesar (@SkeezerCauldron) - ID: 6785135243
+✅ Sent to Simon (@gmtpig) - ID: 6798050167
+✅ Sent to Local (@localboy86) - ID: 6890340367
+✅ Sent to Thesedarkhours (@thesedarkhours_76) - ID: 6965613313
+✅ Sent to Nico (@NicoReiss0521) - ID: 6984257203
+✅ Sent to g (@g_wast) - ID: 7004233882
+✅ Sent to Juicy Pork Bunz (@juicyporkbuns) - ID: 7018573427
+✅ Sent to User (@lukel02) - ID: 7071683657
+✅ Sent to Twink (@Twinksubslutttt) - ID: 7088487175
+✅ Sent to Spun⬇️Sub (@BBearPigSub) - ID: 7105094968
+✅ Sent to D (@PigiNPractice) - ID: 7166356500
+✅ Sent to German (@GermanSafin) - ID: 7178374095
+✅ Sent to Lygnios (@Lygnios) - ID: 7216485226
+✅ Sent to PNP (@PNPLatinoBoy) - ID: 7246621722
+❌ Failed for ShortyJ (@shortyj69) - ID: 7373917106: 403: Forbidden: bot was blocked by the user
+✅ Sent to VSTRAY (@Vs_Tray) - ID: 7409962596
+✅ Sent to ANT (@aadevaeva) - ID: 7432041476
+✅ Sent to D (@N/A) - ID: 7488115788
+✅ Sent to Aries (@virgo0305) - ID: 7501013439
+✅ Sent to Castor (@Castor275) - ID: 7529460726
+❌ Failed for x_x (@x_xass) - ID: 7535820309: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 52
+✅ Sent to ERI 🦁 (@N/A) - ID: 7568442975
+✅ Sent to Guo (@Guo6532) - ID: 7577911928
+✅ Sent to Alphonso (@Anonymous) - ID: 7616323085
+✅ Sent to Mauricio (@Anonymous) - ID: 7643943412
+❌ Failed for Mul (@Mul_utIam) - ID: 7664471211: 403: Forbidden: user is deactivated
+✅ Sent to Maks (@maksbknyc) - ID: 7679106398
+✅ Sent to Max DK (@Chill_Party_bttm) - ID: 7857923659
+✅ Sent to Donnie (@donnietube) - ID: 7888824789
+✅ Sent to Lokidomidick 🇩🇴 (@lokidomidick) - ID: 7901549957
+✅ Sent to Boy (@italy84mt) - ID: 7927157390
+✅ Sent to D (@deedeefly) - ID: 8020802390
+❌ Failed for Bar (@Alexbar_12345) - ID: 8081698947: 403: Forbidden: bot was blocked by the user
+✅ Sent to Meko (@nohands89) - ID: 8094227728
+✅ Sent to Angel (@N/A) - ID: 8109409476
+❌ Failed for ToGee*OrNotToGee (@LdnEast) - ID: 8109691903: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 483
+✅ Sent to Xane (@xanemaine) - ID: 8169718576
+✅ Sent to Nick (@Anonymous) - ID: 8195464838
+✅ Sent to J (@SpunJay) - ID: 8247049923
+✅ Sent to Mafer (@Anonymous) - ID: 8261515347
+✅ Sent to M (@ickyvictor) - ID: 8330392894
+✅ Sent to Santino (@N/A) - ID: 8365312597
+❌ Failed for User (@dacis23) - ID: 8482272306: 403: Forbidden: bot was blocked by the user
+✅ Sent to Jay (@N/A) - ID: 8493551723
+❌ Failed for PNPtv! (@pnptvadmin) - ID: 8552451957: 403: Forbidden: user is deactivated
+✅ Sent to Dina (@N/A) - ID: 8569798104
+✅ Sent to Azrie (@budakpsiko92) - ID: 996678036
+❌ Failed for User (@Anonymous) - ID: W1Jl2z3IhdXqeSRuvW51: 400: Bad Request: chat not found
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 BROADCAST SUMMARY
+
+✅ Successfully sent: 81
+❌ Failed: 9
+📈 Total attempted: 90
+
+Completed: 11/9/2025, 6:01:51 PM
+
+⚠️ ERRORS:
+
+  - Failed for A (@abyzav) - ID: 1853540313: 403: Forbidden: bot was blocked by the user
+  - Failed for ShortyJ (@shortyj69) - ID: 7373917106: 403: Forbidden: bot was blocked by the user
+  - Failed for x_x (@x_xass) - ID: 7535820309: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 52
+  - Failed for Mul (@Mul_utIam) - ID: 7664471211: 403: Forbidden: user is deactivated
+  - Failed for Bar (@Alexbar_12345) - ID: 8081698947: 403: Forbidden: bot was blocked by the user
+  - Failed for ToGee*OrNotToGee (@LdnEast) - ID: 8109691903: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 483
+  - Failed for User (@dacis23) - ID: 8482272306: 403: Forbidden: bot was blocked by the user
+  - Failed for PNPtv! (@pnptvadmin) - ID: 8552451957: 403: Forbidden: user is deactivated
+  - Failed for User (@Anonymous) - ID: W1Jl2z3IhdXqeSRuvW51: 400: Bad Request: chat not found
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
