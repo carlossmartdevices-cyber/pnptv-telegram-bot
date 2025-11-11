@@ -251,16 +251,16 @@ async function handleDaimoPlanSelection(ctx) {
           `🌐 *Red:* Base Network (comisiones ultra-bajas)\n\n` +
           `💳 *MÉTODOS DE PAGO DISPONIBLES:*\n` +
           `✅ Coinbase \\(recomendado\\)\n` +
-          `✅ Cash App, Venmo, Zelle\n` +
-          `✅ Wise, Revolut\n` +
+          `✅ Cash App\n` +
+          `✅ Venmo\n` +
           `✅ Binance, Kraken, otros exchanges\n` +
           `✅ MetaMask, Rainbow, wallets cripto\n\n` +
           `📌 *¿No tienes USDC?*\n` +
           `No te preocupes\\! Puedes comprar USDC con:\n` +
-          `• Coinbase, Cash App, Venmo, Zelle\n` +
-          `• Wise, Revolut\n` +
-          `• Tarjeta débito/crédito\n` +
-          `• Transferencia bancaria\n\n` +
+          `• Coinbase \\(más fácil\\)\n` +
+          `• Cash App o Venmo\n` +
+          `• Cualquier exchange de cripto\n` +
+          `• Tarjeta débito/crédito\n\n` +
           `*📱 Pasos para Pagar:*\n` +
           `1️⃣ Haz clic en "💳 Pagar Ahora"\n` +
           `2️⃣ Elige tu app favorita\n` +
@@ -276,16 +276,16 @@ async function handleDaimoPlanSelection(ctx) {
           `🌐 *Network:* Base (ultra-low fees)\n\n` +
           `💳 *PAYMENT METHODS AVAILABLE:*\n` +
           `✅ Coinbase \\(recommended\\)\n` +
-          `✅ Cash App, Venmo, Zelle\n` +
-          `✅ Wise, Revolut\n` +
+          `✅ Cash App\n` +
+          `✅ Venmo\n` +
           `✅ Binance, Kraken, other exchanges\n` +
           `✅ MetaMask, Rainbow, crypto wallets\n\n` +
           `📌 *Don't have USDC?*\n` +
           `No problem\\! You can buy USDC with:\n` +
-          `• Coinbase, Cash App, Venmo, Zelle\n` +
-          `• Wise, Revolut\n` +
-          `• Debit/credit card\n` +
-          `• Bank transfer\n\n` +
+          `• Coinbase \\(easiest\\)\n` +
+          `• Cash App or Venmo\n` +
+          `• Any crypto exchange\n` +
+          `• Debit/credit card\n\n` +
           `*📱 How to Pay:*\n` +
           `1️⃣ Click "💳 Pay Now"\n` +
           `2️⃣ Choose your favorite app\n` +

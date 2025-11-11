@@ -103,13 +103,12 @@ async function createPayment(options) {
         { chain: SUPPORTED_CHAINS.BASE, address: USDC_TOKENS[SUPPORTED_CHAINS.BASE] },
       ],
       // Show payment options in priority order (most user-friendly first)
+      // Note: Only Coinbase, CashApp, Venmo are documented in Daimo Pay API
+      // Other options like Zelle, Wise, Revolut are NOT supported
       paymentOptions: [
         'Coinbase',      // Coinbase - easiest for beginners
         'CashApp',       // Cash App - popular in US
         'Venmo',         // Venmo - popular in US
-        'Zelle',         // Zelle - popular in US
-        'Wise',          // Wise (TransferWise) - international
-        'Revolut',       // Revolut - popular in Europe
         'AllExchanges',  // Other exchanges (Binance, Kraken, etc.)
         'AllWallets',    // Crypto wallets (MetaMask, Rainbow, etc.)
       ],
