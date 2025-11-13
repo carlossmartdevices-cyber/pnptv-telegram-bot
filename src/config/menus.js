@@ -20,6 +20,7 @@ const menus = {
     ],
   },
 
+  // Admin menu - Full admin features
   admin: {
     inline_keyboard: [
       [
@@ -56,6 +57,14 @@ const menus = {
         { text: "🪙 Kyrrex Crypto", callback_data: "admin_kyrrex_dashboard" },
       ],
       [{ text: "📋 Menu Config", callback_data: "admin_menus" }],
+      [{ text: "🔐 Switch to User Mode", callback_data: "toggle_admin_mode" }],
+    ],
+  },
+
+  // Admin mode toggle menu - For switching modes
+  adminToggle: {
+    inline_keyboard: [
+      [{ text: "⚙️ Switch to Admin Mode", callback_data: "toggle_admin_mode" }],
     ],
   },
 

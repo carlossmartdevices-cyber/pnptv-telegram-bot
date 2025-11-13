@@ -1,0 +1,15 @@
+[dotenv@17.2.3] injecting env (62) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+✅ Environment loaded from /root/bot 1/.env
+✅ Environment variables validated successfully
+Iniciando Firebase...
+FIREBASE_CREDENTIALS length: 2327 chars
+First 200 chars: {"type":"service_account","project_id":"pnptv-b8af8","private_key_id":"1ccc8fb4b1ec59dffbbc53d0c50cea631c4e40ce","private_key":"-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgE...
+✅ Using Firebase credentials from environment variable
+   Project ID: pnptv-b8af8
+   Client Email: firebase-adminsdk-fbsvc@pnptv-b8af8.iam.gserviceaccount.com
+Firebase ha sido inicializado correctamente.
+📊 Prime Member Activation Analysis
+
+Total Premium Members: 92
+
