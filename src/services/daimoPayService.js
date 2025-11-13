@@ -65,19 +65,31 @@ class DaimoPayService {
         userName,
         platform: "telegram",
         bot: "pnptv",
+        reference: paymentId,
+        botName: "PNPtv Bot",
       };
 
-      // Prepare payment request
+      // USDC token address on Base Network
+      const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+
+      // Prepare payment request in Daimo format
       const paymentRequest = {
-        amount: Math.round(amount * 100), // Convert to cents
-        currency: "USDC",
-        chainId: chainId,
-        description: `PNPtv PRIME - ${planName}`,
-        externalId: paymentId,
+        display: {
+          intent: `PNPtv PRIME - ${planName}`,
+          preferredChains: [chainId],
+          preferredTokens: [
+            { chain: chainId, address: BASE_USDC }
+          ],
+          redirectUri: `https://${process.env.BOT_DOMAIN || 'pnptv.app'}/payment/success`,
+        },
+        destination: {
+          destinationAddress: process.env.DAIMO_DESTINATION_ADDRESS,
+          chainId: chainId,
+          tokenAddress: BASE_USDC,
+          amountUnits: amount.toString(),
+        },
+        refundAddress: process.env.DAIMO_REFUND_ADDRESS,
         metadata: metadata,
-        redirectUrl: `https://${process.env.BOT_DOMAIN || 'pnptv.app'}/payment-success`,
-        webhookUrl: `https://${process.env.BOT_DOMAIN || 'pnptv.app'}/webhook/daimo`,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
       };
 
       logger.info("[DaimoPayService] Creating payment request", {
@@ -88,12 +100,12 @@ class DaimoPayService {
         chainId,
       });
 
-      // Make API call to Daimo
-      const response = await fetch(`${this.baseUrl}/payments`, {
+      // Make API call to Daimo - use correct endpoint
+      const response = await fetch("https://pay.daimo.com/api/payment", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.apiKey}`,
+          "Api-Key": this.apiKey,
           "User-Agent": "PNPtv-Bot/1.0",
         },
         body: JSON.stringify(paymentRequest),
@@ -120,7 +132,7 @@ class DaimoPayService {
         status: "pending",
         chainId,
         daimoPaymentId: paymentData.id,
-        checkoutUrl: paymentData.checkoutUrl,
+        checkoutUrl: paymentData.url || paymentData.checkoutUrl,
         metadata,
         createdAt: new Date(),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
@@ -129,16 +141,16 @@ class DaimoPayService {
       logger.info("[DaimoPayService] Payment created successfully", {
         paymentId,
         daimoPaymentId: paymentData.id,
-        checkoutUrl: paymentData.checkoutUrl ? "URL_PROVIDED" : "NO_URL",
+        checkoutUrl: paymentData.url ? "URL_PROVIDED" : "NO_URL",
       });
 
       return {
         paymentId,
         id: paymentData.id,
-        checkoutUrl: paymentData.checkoutUrl,
+        checkoutUrl: paymentData.url || paymentData.checkoutUrl,
         amount,
         currency: "USDC",
-        expiresAt: paymentData.expiresAt,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         status: "pending",
       };
 

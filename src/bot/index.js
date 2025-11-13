@@ -241,15 +241,17 @@ bot.command("menu", async (ctx) => {
 bot.command("rules", handleRules);
 bot.command("library", handleLibrary);
 bot.command("toptracks", handleTopTracks);
-bot.command("schedulecall", handleScheduleCall);
-bot.command("schedulestream", handleScheduleStream);
+bot.command("zoomroom", handleScheduleCall);
+bot.command("schedulecall", handleScheduleCall); // Legacy alias
+// DISABLED: schedulestream, playlist, addtrack, deletetrack, deleteevent, zoomstatus
 bot.command("upcoming", handleUpcoming);
-bot.command("playlist", handlePlaylist);
-bot.command("addtrack", handleAddTrack);
-bot.command("deletetrack", handleDeleteTrack);
-bot.command("deleteevent", handleDeleteEvent);
 bot.command("settimezone", handleSetTimezone);
-bot.command("zoomstatus", handleZoomStatus);
+// bot.command("schedulestream", handleScheduleStream);
+// bot.command("playlist", handlePlaylist);
+// bot.command("addtrack", handleAddTrack);
+// bot.command("deletetrack", handleDeleteTrack);
+// bot.command("deleteevent", handleDeleteEvent);
+// bot.command("zoomstatus", handleZoomStatus);
 
 // ===== PRIME MIGRATION COMMANDS (Admin Only) =====
 bot.command("broadcastprime", adminMiddleware(), handleBroadcastPrime);
