@@ -9,6 +9,8 @@
   },
   "scripts": {
     "start": "node start-bot.js",
+    "start:webhook": "USE_WEBHOOK=true node start-bot.js",
+    "start:polling": "USE_WEBHOOK=false node start-bot.js",
     "start:direct": "node src/bot/index.js",
     "dev": "nodemon start-bot.js",
     "dev:payment": "next dev src/payment-page -p 3001",

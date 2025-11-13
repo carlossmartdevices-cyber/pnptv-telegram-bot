@@ -38,18 +38,39 @@ process.once('SIGTERM', () => {
   process.exit(0);
 });
 
+// Determine bot mode (webhook vs polling)
+const USE_WEBHOOK = process.env.USE_WEBHOOK === 'true' || process.env.NODE_ENV === 'production';
+
 // Start the bot
 async function startBot() {
   try {
     logger.info('🚀 Starting PNPtv Bot...');
-    
+    logger.info(`Mode: ${USE_WEBHOOK ? 'WEBHOOK' : 'POLLING'}`);
+
     // Initialize scheduled tasks (scheduler runs independently)
     initializeScheduler(bot);
-    
-    // Launch bot in polling mode
-    await bot.launch();
-    
-    logger.info('✅ Bot started successfully!');
+
+    if (USE_WEBHOOK) {
+      // Production mode: Use webhooks with Express server
+      const { startServer } = require('./src/server');
+
+      logger.info('Starting in WEBHOOK mode...');
+      await startServer();
+      logger.info('✅ Bot started successfully with webhook!');
+    } else {
+      // Development mode: Use polling
+      logger.info('Starting in POLLING mode (development)...');
+
+      // Remove any existing webhook before polling
+      await bot.telegram.deleteWebhook({ drop_pending_updates: false });
+      logger.info('Removed any existing webhook');
+
+      // Launch bot in polling mode
+      await bot.launch();
+
+      logger.info('✅ Bot started successfully in polling mode!');
+    }
+
     if (bot.botInfo && bot.botInfo.username) {
       logger.info(`Bot username: @${bot.botInfo.username}`);
     }
