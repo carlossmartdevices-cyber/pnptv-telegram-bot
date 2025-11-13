@@ -115,32 +115,32 @@ async function handleCopCardPlanSelection(ctx) {
     const thankYouUrl = `${webhookUrl}/cop-card/thank-you`;
 
     const message = lang === 'es'
-      ? `💳 *Pago con Tarjeta - ${escapeMdV2(plan.displayName || plan.name)}*\n\n` +
+      ? `💳 *Pago con Tarjeta \\- ${escapeMdV2(plan.displayName || plan.name)}*\n\n` +
         `💵 *Precio USD:* $${escapeMdV2(String(plan.price))} USD\n` +
         `💰 *Monto a pagar:* $${escapeMdV2(amountCOP.toLocaleString('es-CO'))} COP\n` +
         `⏱️ *Duración:* ${escapeMdV2(String(plan.durationDays || plan.duration))} días\n` +
         `🔖 *Referencia de pago:* \`${escapeMdV2(paymentIntent.reference)}\`\n\n` +
         `📝 *Instrucciones:*\n` +
-        `1. Haz clic en "💳 Ir a Pagar" abajo\n` +
-        `2. Completa el pago con tu tarjeta de crédito/débito\n` +
-        `3. *Serás cobrado en pesos colombianos (COP)*\n` +
-        `4. Después del pago, serás redirigido a una página con instrucciones\n` +
-        `5. Regresa aquí y presiona "✅ He completado el pago"\n\n` +
+        `1\\. Haz clic en "💳 Ir a Pagar" abajo\n` +
+        `2\\. Completa el pago con tu tarjeta de crédito/débito\n` +
+        `3\\. *Serás cobrado en pesos colombianos \\(COP\\)*\n` +
+        `4\\. Después del pago, serás redirigido a una página con instrucciones\n` +
+        `5\\. Regresa aquí y presiona "✅ He completado el pago"\n\n` +
         `⚠️ *Importante:* Guarda tu referencia: \`${escapeMdV2(paymentIntent.reference)}\`\n` +
-        `Tu membresía se activará después de verificar el pago (máximo 24h)`
-      : `💳 *Card Payment - ${escapeMdV2(plan.displayName || plan.name)}*\n\n` +
+        `Tu membresía se activará después de verificar el pago \\(máximo 24h\\)`
+      : `💳 *Card Payment \\- ${escapeMdV2(plan.displayName || plan.name)}*\n\n` +
         `💵 *USD Price:* $${escapeMdV2(String(plan.price))} USD\n` +
         `💰 *Amount to pay:* $${escapeMdV2(amountCOP.toLocaleString('es-CO'))} COP\n` +
         `⏱️ *Duration:* ${escapeMdV2(String(plan.durationDays || plan.duration))} days\n` +
         `🔖 *Payment reference:* \`${escapeMdV2(paymentIntent.reference)}\`\n\n` +
         `📝 *Instructions:*\n` +
-        `1. Click "💳 Go to Payment" below\n` +
-        `2. Complete payment with your credit/debit card\n` +
-        `3. *You will be charged in Colombian pesos (COP)*\n` +
-        `4. After payment, you'll be redirected to a page with instructions\n` +
-        `5. Return here and press "✅ I've completed payment"\n\n` +
+        `1\\. Click "💳 Go to Payment" below\n` +
+        `2\\. Complete payment with your credit/debit card\n` +
+        `3\\. *You will be charged in Colombian pesos \\(COP\\)*\n` +
+        `4\\. After payment, you'll be redirected to a page with instructions\n` +
+        `5\\. Return here and press "✅ I've completed payment"\n\n` +
         `⚠️ *Important:* Save your reference: \`${escapeMdV2(paymentIntent.reference)}\`\n` +
-        `Your membership will be activated after payment verification (max 24h)`;
+        `Your membership will be activated after payment verification \\(max 24h\\)`;
 
     const keyboard = [
       [{

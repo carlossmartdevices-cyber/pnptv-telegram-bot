@@ -42,6 +42,10 @@ const menus = {
         { text: "🗓 Scheduled", callback_data: "admin_scheduled_broadcasts" },
       ],
       [
+        { text: "📤 Post-to-Channel", callback_data: "ptc_menu" },
+        { text: "📢 Channel Broadcaster", callback_data: "cbc_new_post" },
+      ],
+      [
         { text: "💰 Payment Broadcast", callback_data: "admin_payment_broadcast" },
       ],
       [

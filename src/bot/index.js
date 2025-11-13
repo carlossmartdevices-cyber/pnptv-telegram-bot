@@ -481,24 +481,59 @@ bot.action("group_menu_library", async (ctx) => {
   await handleLibraryCallback(ctx);
 });
 
+bot.action("group_menu_profile", async (ctx) => {
+  const { handleProfileCallback } = require("./handlers/groupMenu");
+  await handleProfileCallback(ctx);
+});
+
+bot.action("group_menu_prime", async (ctx) => {
+  const { handlePrimeMemberCallback } = require("./handlers/groupMenu");
+  await handlePrimeMemberCallback(ctx);
+});
+
+bot.action("group_menu_toptracks", async (ctx) => {
+  const { handleTopTracksCallback } = require("./handlers/groupMenu");
+  await handleTopTracksCallback(ctx);
+});
+
 bot.action("group_menu_openroom", async (ctx) => {
   const { handleOpenRoomCallback } = require("./handlers/groupMenu");
   await handleOpenRoomCallback(ctx);
 });
 
-bot.action("group_menu_rules", async (ctx) => {
-  const { handleRulesCallback } = require("./handlers/groupMenu");
-  await handleRulesCallback(ctx);
+bot.action("group_menu_nearby", async (ctx) => {
+  const { handleNearbyCallback } = require("./handlers/groupMenu");
+  await handleNearbyCallback(ctx);
 });
 
-bot.action("group_menu_help", async (ctx) => {
-  const { handleHelpCallback } = require("./handlers/groupMenu");
-  await handleHelpCallback(ctx);
+bot.action("group_menu_music_events", async (ctx) => {
+  const { handleMusicEventsCallback } = require("./handlers/groupMenu");
+  await handleMusicEventsCallback(ctx);
 });
 
-bot.action("group_menu_subscribe", async (ctx) => {
-  const { handleSubscribeCallback } = require("./handlers/groupMenu");
-  await handleSubscribeCallback(ctx);
+bot.action("group_menu_upcoming", async (ctx) => {
+  const { handleUpcomingCallback } = require("./handlers/groupMenu");
+  await handleUpcomingCallback(ctx);
+});
+
+bot.action("group_menu_settings", async (ctx) => {
+  const { handleSettingsCallback } = require("./handlers/groupMenu");
+  await handleSettingsCallback(ctx);
+});
+
+bot.action("group_menu_help_ai", async (ctx) => {
+  const { handleHelpAICallback } = require("./handlers/groupMenu");
+  await handleHelpAICallback(ctx);
+});
+
+bot.action("group_menu_admin_case", async (ctx) => {
+  const { handleAdminCaseCallback } = require("./handlers/groupMenu");
+  await handleAdminCaseCallback(ctx);
+});
+
+bot.action("group_menu_settimezone", async (ctx) => {
+  const { handleSetTimezoneCallback } = require("./handlers/groupMenu");
+  await handleSetTimezoneCallback(ctx);
 });
 
 bot.action("group_menu_back", async (ctx) => {
@@ -509,6 +544,12 @@ bot.action("group_menu_back", async (ctx) => {
 bot.action("group_menu_close", async (ctx) => {
   const { handleCloseMenu } = require("./handlers/groupMenu");
   await handleCloseMenu(ctx);
+});
+
+// Zoom room timezone selection
+bot.action(/^set_zoom_tz_(.+)$/, async (ctx) => {
+  const { handleSetZoomTimezone } = require("./handlers/groupMenu");
+  await handleSetZoomTimezone(ctx);
 });
 
 // Menu show button from private responses

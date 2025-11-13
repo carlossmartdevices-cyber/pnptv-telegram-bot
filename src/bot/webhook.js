@@ -93,8 +93,8 @@ app.get("/ready", async (req, res) => {
 });
 
 // API routes for payment page
-logger.info('Loading API routes from ./api/routes');
-const apiRoutes = require('./api/routes');
+logger.info('Loading API routes from ../api/routes');
+const apiRoutes = require('../api/routes');
 logger.info('API routes loaded', { type: typeof apiRoutes, stackLength: apiRoutes.stack ? apiRoutes.stack.length : 'No stack' });
 app.use('/api', apiRoutes);
 logger.info('API routes mounted at /api');

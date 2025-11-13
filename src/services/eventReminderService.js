@@ -217,6 +217,16 @@ function generateEventAnnouncementMessage(eventData, eventTime, eventType) {
  * Runs every minute to check for due reminders
  */
 function startReminderCron(bot) {
+  // TEMPORARY: Disable until Firestore composite index is created
+  // Composite index needed for: event_reminders(status, reminderTime)
+  const CRON_DISABLED = process.env.DISABLE_REMINDER_CRON === 'true';
+  
+  if (CRON_DISABLED) {
+    logger.warn('⚠️ Event reminder cron job is DISABLED (requires Firestore index creation)');
+    logger.warn('To enable: 1) Create composite index in Firebase Console 2) Set DISABLE_REMINDER_CRON=false');
+    return;
+  }
+
   // Run every minute to check for due reminders
   cron.schedule('* * * * *', async () => {
     try {

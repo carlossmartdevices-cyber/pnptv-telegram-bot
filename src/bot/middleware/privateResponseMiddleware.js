@@ -118,6 +118,12 @@ function privateResponseMiddleware() {
                       url: `https://t.me/${botUsername}`
                     },
                     {
+                      text: lang === "es" ? "🤖 Abrir Bot" : "🤖 Open Bot",
+                      url: `https://t.me/${botUsername}`
+                    }
+                  ],
+                  [
+                    {
                       text: lang === "es" ? "🎯 Menú" : "🎯 Menu",
                       callback_data: "group_menu_show"
                     }

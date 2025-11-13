@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const logger = require('../../utils/logger');
-const primeActivationService = require('../../services/primeActivationService');
-const { isAdmin } = require('../../config/admin');
+const logger = require('../utils/logger');
+const primeActivationService = require('../services/primeActivationService');
+const { isAdmin } = require('../config/admin');
 
 // Configure multer for file uploads
 const upload = multer({
@@ -27,7 +27,10 @@ router.post('/auto', async (req, res) => {
   try {
     const { userId, username, tier } = req.body;
 
+    logger.info('Prime activation auto request received', { userId, username, tier });
+
     if (!userId || !tier) {
+      logger.error('Missing required fields in prime activation', { userId, tier, bodyKeys: Object.keys(req.body) });
       return res.status(400).json({
         success: false,
         error: 'Missing userId or tier'
@@ -40,6 +43,7 @@ router.post('/auto', async (req, res) => {
       tier
     );
 
+    logger.info('Prime activation auto success', { userId, result });
     res.json({
       success: true,
       ...result

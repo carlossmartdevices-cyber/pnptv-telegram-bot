@@ -67,7 +67,14 @@ async function startBot() {
     await bot.launch();
     
     logger.info('✅ Bot started successfully!');
-    logger.info(`Bot username: @${bot.botInfo.username}`);
+    
+    // Get bot info after launching
+    try {
+      const botInfo = await bot.telegram.getMe();
+      logger.info(`Bot username: @${botInfo.username}`);
+    } catch (botInfoError) {
+      logger.warn('Could not retrieve bot info:', botInfoError.message);
+    }
   } catch (error) {
     logger.error('❌ Failed to start bot:', error);
     process.exit(1);
