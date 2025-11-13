@@ -71,6 +71,8 @@ const { handleMapCallback, handleLocation } = require("./handlers/map");
 const { handleNearbyCallback } = require("./handlers/nearby");
 const { handleLiveCallback } = require("./handlers/live");
 const { startAIChat, endAIChat, handleChatMessage, handleAIChatCallback } = require("./handlers/aiChat");
+const { showRules, handleRulesCallback } = require("./handlers/rules");
+const { showGroupMenu, handleGroupMenuCallback } = require("./handlers/groupMenu");
 
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
@@ -122,6 +124,8 @@ bot.command("plans", adminMiddleware(), async (ctx) => {
 });
 bot.command("aichat", startAIChat);
 bot.command("endchat", endAIChat);
+bot.command("rules", showRules);
+bot.command("menu", showGroupMenu);
 
 // ===== ONBOARDING FLOW =====
 // Handle both language callback formats: lang_xx and language_xx
@@ -357,6 +361,20 @@ bot.action(/^open_nearby_app$/, handleNearbyCallback);
 // ===== LIVE CALLBACKS =====
 
 bot.action(/^(start_live|view_lives)$/, handleLiveCallback);
+
+// ===== RULES CALLBACKS =====
+
+bot.action(/^rules_/, async (ctx) => {
+  const action = ctx.callbackQuery.data.replace("rules_", "");
+  await handleRulesCallback(ctx, `rules_${action}`);
+});
+
+// ===== GROUP MENU CALLBACKS =====
+
+bot.action(/^group_menu/, async (ctx) => {
+  const action = ctx.callbackQuery.data;
+  await handleGroupMenuCallback(ctx, action);
+});
 
 // ===== BACK NAVIGATION =====
 

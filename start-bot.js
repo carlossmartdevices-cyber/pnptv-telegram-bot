@@ -50,7 +50,9 @@ async function startBot() {
     await bot.launch();
     
     logger.info('✅ Bot started successfully!');
-    logger.info(`Bot username: @${bot.botInfo.username}`);
+    if (bot.botInfo && bot.botInfo.username) {
+      logger.info(`Bot username: @${bot.botInfo.username}`);
+    }
   } catch (error) {
     logger.error('❌ Failed to start bot:', error);
     process.exit(1);
