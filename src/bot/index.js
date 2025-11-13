@@ -145,6 +145,13 @@ const {
 const { handleZoomStatus } = require("./handlers/zoomStatus");
 const { handleBroadcastPrime, handleBroadcastConfirmation } = require("./handlers/broadcastPrimeAdmin");
 const { initializePrimeScheduler } = require("../services/primeDeadlineScheduler");
+const { registerPostToChannelHandlers } = require("./handlers/admin/postToChannelIntegration");
+const {
+  showChannelBroadcasterMenu,
+  handleChannelBroadcasterCallback,
+  handleMediaUpload,
+  handleWizardTextInput
+} = require("./handlers/admin/channelBroadcaster");
 
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
@@ -246,6 +253,9 @@ bot.command("zoomstatus", handleZoomStatus);
 
 // ===== PRIME MIGRATION COMMANDS (Admin Only) =====
 bot.command("broadcastprime", adminMiddleware(), handleBroadcastPrime);
+
+// ===== CHANNEL BROADCASTER (Admin Only) =====
+bot.command("broadcaster", adminMiddleware(), showChannelBroadcasterMenu);
 
 // ===== MODERATION COMMANDS (Admin Only) =====
 bot.command("blacklist", handleShowBlacklist);
@@ -501,6 +511,28 @@ bot.action("group_menu_close", async (ctx) => {
   await handleCloseMenu(ctx);
 });
 
+// Menu show button from private responses
+bot.action("group_menu_show", async (ctx) => {
+  const { showGroupMenu } = require("./handlers/groupMenu");
+  await showGroupMenu(ctx);
+});
+
+// Help submenu callbacks
+bot.action("help_start_ai_chat", async (ctx) => {
+  const { handleHelpStartAIChat } = require("./handlers/groupMenu");
+  await handleHelpStartAIChat(ctx);
+});
+
+bot.action("help_open_cases", async (ctx) => {
+  const { handleHelpOpenCases } = require("./handlers/groupMenu");
+  await handleHelpOpenCases(ctx);
+});
+
+bot.action("help_back", async (ctx) => {
+  const { handleHelpBack } = require("./handlers/groupMenu");
+  await handleHelpBack(ctx);
+});
+
 // ===== ADMIN CALLBACKS =====
 
 bot.action(/^plan:/, handlePlanCallback);
@@ -541,6 +573,9 @@ bot.action("broadcast_formatting_help", async (ctx) => {
   await ctx.answerCbQuery();
   await handleAdminCallback(ctx);
 });
+
+// ===== POST-TO-CHANNEL HANDLERS =====
+registerPostToChannelHandlers(bot);
 
 // ===== PROMO CALLBACKS =====
 bot.action(/^promo_send_(en|es|both)$/, async (ctx) => {
@@ -627,7 +662,8 @@ bot.action(/^broadcast_segment_/, async (ctx) => {
 });
 
 // ===== PRIME MIGRATION CALLBACKS =====
-bot.action("confirm_prime_broadcast", handleBroadcastConfirmation);
+bot.action(/^broadcast_prime_(es|en|both)$/, handleBroadcastConfirmation);
+bot.action(/^confirm_broadcast_(es|en)$/, handleBroadcastConfirmation);
 bot.action("cancel_prime_broadcast", handleBroadcastConfirmation);
 
 // ===== MAP CALLBACKS =====
@@ -1040,6 +1076,32 @@ bot.on("text", async (ctx) => {
 
 bot.on("location", handleLocation);
 
+// ===== CHANNEL BROADCASTER MEDIA/TEXT HANDLERS =====
+// Handle media uploads for channel broadcaster
+bot.on(['photo', 'video', 'document', 'audio'], async (ctx, next) => {
+  if (ctx.session?.cbWizard?.step?.startsWith('awaiting_')) {
+    // In channel broadcaster wizard mode
+    await handleMediaUpload(ctx);
+  } else if (ctx.chat.type === 'group' || ctx.chat.type === 'supergroup') {
+    // In group chats - handle media message for permissions
+    await handleMediaMessage(ctx);
+  } else {
+    // Normal handling
+    return next();
+  }
+});
+
+// Handle text input in channel broadcaster wizard
+bot.on('text', async (ctx, next) => {
+  if (ctx.session?.cbWizard?.step === 'awaiting_text') {
+    // In channel broadcaster text composition
+    await handleWizardTextInput(ctx);
+  } else {
+    // Normal text handling
+    return next();
+  }
+});
+
 // ===== GROUP MANAGEMENT =====
 // Handle new members joining groups
 bot.on('new_chat_members', handleNewMember);
@@ -1059,6 +1121,9 @@ bot.on(['photo', 'video', 'document', 'audio', 'voice', 'video_note', 'sticker',
 bot.action("cancel_delete", (ctx) =>
   ctx.editMessageText("Operation cancelled")
 );
+
+// ===== CHANNEL BROADCASTER CALLBACKS =====
+bot.action(/^cbc_/, handleChannelBroadcasterCallback);
 
 bot.action("show_map", async (ctx) => {
   try {

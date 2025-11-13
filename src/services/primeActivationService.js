@@ -182,6 +182,9 @@ async function createAdminTopicForUser(userId, username, tier, ticketId, proofFi
 
     // Send message to admin group
     try {
+      const { Telegraf } = require('telegraf');
+      const bot = require('../bot');
+      
       await bot.telegram.sendMessage(parseInt(adminChatId), topicMessage, {
         parse_mode: 'Markdown',
         disable_notification: false
@@ -341,6 +344,7 @@ async function rejectActivation(ticketId, adminId, rejectReason = '') {
  */
 async function notifyUserActivationApproved(userId, tier, startDate, endDate) {
   try {
+    const bot = require('../bot');
     const tierName = TIER_DISPLAY_NAMES[tier];
     const nextPaymentDate = tier === ACTIVATION_TIERS.LIFETIME
       ? '♾️ Never'
@@ -386,6 +390,7 @@ Welcome aboard! 🚀
  */
 async function notifyUserActivationRejected(userId, reason) {
   try {
+    const bot = require('../bot');
     const message = `
 ❌ **PRIME Membership Activation - Rejected**
 

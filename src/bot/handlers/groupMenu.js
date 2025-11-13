@@ -326,60 +326,36 @@ async function handleRulesCallback(ctx) {
 
 /**
  * Handle help callback
- * Shows available group commands
+ * Redirects to AI support agent or case request manager
  */
 async function handleHelpCallback(ctx) {
   try {
-    await ctx.answerCbQuery();
-
     const lang = ctx.session?.language || 'en';
+    const userId = ctx.from.id;
 
+    // Show help options: AI Support or Case Manager
     const helpText = lang === 'es'
-      ? `❓ *Cómo Usar el Bot PNPtv*\n\n` +
-        `🔹 *COMANDOS DEL GRUPO:*\n` +
-        `Usa estos comandos aquí (respuestas visibles para todos):\n\n` +
-        `🎯 \`/menu\` - Menú rápido de acceso\n` +
-        `📚 \`/library\` - Biblioteca musical\n` +
-        `🎵 \`/toptracks\` - Pistas más populares\n` +
-        `📅 \`/schedulecall\` - Programar videollamada\n` +
-        `📡 \`/schedulestream\` - Programar stream\n` +
-        `🗓️ \`/upcoming\` - Ver próximos eventos\n` +
-        `📋 \`/rules\` - Reglas de la comunidad\n` +
-        `⏰ \`/settimezone\` - Zona horaria del grupo\n\n` +
-        `🔹 *FUNCIONES PRIVADAS:*\n` +
-        `Habla con el bot en privado para acceder a:\n\n` +
-        `👤 \`/profile\` - Editar tu perfil\n` +
-        `🗺️ \`/map\` - Compartir ubicación\n` +
-        `📍 \`/nearby\` - Miembros cercanos\n` +
-        `💎 \`/subscribe\` - Planes Premium\n\n` +
-        `📌 *DIFERENCIA IMPORTANTE:*\n` +
-        `• Grupo = Funciones comunitarias\n` +
-        `• Privado = Configuración personal\n\n` +
-        `💡 Tip: Usa el botón de menú arriba ↑`
-      : `❓ *How to Use PNPtv Bot*\n\n` +
-        `🔹 *GROUP COMMANDS:*\n` +
-        `Use these commands here (responses visible to all):\n\n` +
-        `🎯 \`/menu\` - Quick access menu\n` +
-        `📚 \`/library\` - Music library\n` +
-        `🎵 \`/toptracks\` - Most played tracks\n` +
-        `📅 \`/schedulecall\` - Schedule video call\n` +
-        `📡 \`/schedulestream\` - Schedule stream\n` +
-        `🗓️ \`/upcoming\` - View upcoming events\n` +
-        `📋 \`/rules\` - Community rules\n` +
-        `⏰ \`/settimezone\` - Group timezone\n\n` +
-        `🔹 *PRIVATE FEATURES:*\n` +
-        `Chat with bot privately to access:\n\n` +
-        `👤 \`/profile\` - Edit your profile\n` +
-        `🗺️ \`/map\` - Share location\n` +
-        `📍 \`/nearby\` - Find nearby members\n` +
-        `💎 \`/subscribe\` - Premium plans\n\n` +
-        `📌 *KEY DIFFERENCE:*\n` +
-        `• Group = Community features\n` +
-        `• Private = Personal settings\n\n` +
-        `💡 Tip: Use the menu button above ↑`;
+      ? `❓ *¿Cómo Podemos Ayudarte?*\n\n` +
+        `Elige una opción de soporte:\n\n` +
+        `🤖 *Chat con IA* - Respuestas inmediatas a preguntas frecuentes\n` +
+        `📋 *Gestor de Casos* - Para reportar problemas o hacer solicitudes especiales`
+      : `❓ *How Can We Help You?*\n\n` +
+        `Choose a support option:\n\n` +
+        `🤖 *AI Chat* - Instant answers to frequently asked questions\n` +
+        `📋 *Case Manager* - To report issues or make special requests`;
 
     const keyboard = {
       inline_keyboard: [
+        [
+          {
+            text: lang === 'es' ? '🤖 Chat de IA' : '🤖 AI Chat',
+            callback_data: 'help_start_ai_chat'
+          },
+          {
+            text: lang === 'es' ? '📋 Gestor de Casos' : '📋 Case Manager',
+            callback_data: 'help_open_cases'
+          }
+        ],
         [
           {
             text: lang === 'es' ? '« Volver al Menú' : '« Back to Menu',
@@ -394,11 +370,118 @@ async function handleHelpCallback(ctx) {
       reply_markup: keyboard
     });
 
-    logger.info(`[GroupMenu] Help shown to user ${ctx.from.id}`);
+    logger.info(`[GroupMenu] Help menu shown to user ${userId}`);
 
   } catch (error) {
     logger.error('[GroupMenu] Error in help callback:', error);
     await ctx.answerCbQuery('Error loading help');
+  }
+}
+
+/**
+ * Handle help_start_ai_chat callback
+ * Redirects user to start AI chat in private
+ */
+async function handleHelpStartAIChat(ctx) {
+  try {
+    const lang = ctx.session?.language || 'en';
+    const userId = ctx.from.id;
+
+    // Mark session to start AI chat
+    ctx.session.aiChatFromGroup = true;
+
+    const message = lang === 'es'
+      ? `✅ Abriendo el Chat de IA...\n\n💬 Por favor inicia una conversación privada conmigo para comenzar el chat de soporte.`
+      : `✅ Opening AI Chat...\n\n💬 Please start a private conversation with me to begin the support chat.`;
+
+    const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'PNPtvbot';
+
+    const keyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: lang === 'es' ? '💬 Abrir Chat IA' : '💬 Open AI Chat',
+            url: `https://t.me/${botUsername}?start=ai_chat`
+          }
+        ],
+        [
+          {
+            text: lang === 'es' ? '« Volver' : '« Back',
+            callback_data: 'help_back'
+          }
+        ]
+      ]
+    };
+
+    await ctx.editMessageText(message, {
+      parse_mode: 'Markdown',
+      reply_markup: keyboard
+    });
+
+    logger.info(`[GroupMenu] User ${userId} redirected to AI chat`);
+
+  } catch (error) {
+    logger.error('[GroupMenu] Error in handleHelpStartAIChat:', error);
+    await ctx.answerCbQuery('Error');
+  }
+}
+
+/**
+ * Handle help_open_cases callback
+ * Redirects user to case manager in private
+ */
+async function handleHelpOpenCases(ctx) {
+  try {
+    const lang = ctx.session?.language || 'en';
+    const userId = ctx.from.id;
+
+    const message = lang === 'es'
+      ? `✅ Abriendo Gestor de Casos...\n\n📋 Por favor inicia una conversación privada conmigo para acceder al gestor de casos.`
+      : `✅ Opening Case Manager...\n\n📋 Please start a private conversation with me to access the case manager.`;
+
+    const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'PNPtvbot';
+
+    const keyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: lang === 'es' ? '📋 Abrir Casos' : '📋 Open Cases',
+            url: `https://t.me/${botUsername}?start=cases`
+          }
+        ],
+        [
+          {
+            text: lang === 'es' ? '« Volver' : '« Back',
+            callback_data: 'help_back'
+          }
+        ]
+      ]
+    };
+
+    await ctx.editMessageText(message, {
+      parse_mode: 'Markdown',
+      reply_markup: keyboard
+    });
+
+    logger.info(`[GroupMenu] User ${userId} redirected to case manager`);
+
+  } catch (error) {
+    logger.error('[GroupMenu] Error in handleHelpOpenCases:', error);
+    await ctx.answerCbQuery('Error');
+  }
+}
+
+/**
+ * Handle help_back callback
+ * Returns to help menu
+ */
+async function handleHelpBack(ctx) {
+  try {
+    await ctx.answerCbQuery();
+    await handleHelpCallback(ctx);
+  } catch (error) {
+    logger.error('[GroupMenu] Error in handleHelpBack:', error);
+    await ctx.answerCbQuery('Error');
   }
 }
 
@@ -535,6 +618,9 @@ module.exports = {
   handleOpenRoomCallback,
   handleRulesCallback,
   handleHelpCallback,
+  handleHelpStartAIChat,
+  handleHelpOpenCases,
+  handleHelpBack,
   handleBackToMenu,
   handleCloseMenu,
   handleSubscribeCallback
