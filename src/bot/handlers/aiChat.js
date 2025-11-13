@@ -1,6 +1,9 @@
 const { t } = require("../../utils/i18n");
 const { ensureOnboarding } = require("../../utils/guards");
 const logger = require("../../utils/logger");
+const { db } = require("../../config/firebase");
+const supportTicketService = require("../../services/supportTicketService");
+const { sendAdminNotification } = require("../../services/adminNotificationService");
 
 // Mistral AI integration
 let mistral = null;
@@ -225,6 +228,7 @@ async function startAIChat(ctx) {
   ctx.session.aiChatHistory = [];
   ctx.session.waitingFor = null;  // Clear any pending admin/form operations
   ctx.session.editingField = null;  // Clear field editing state
+  ctx.session.humanSupportOffered = false; // Reset human escalation flag
 
   const welcomeMessage = t(ctx, "aiChatWelcome");
 
@@ -341,11 +345,17 @@ async function handleChatMessage(ctx) {
       ? "Responde en español siempre."
       : "Always respond in English.";
 
+    // Get user context from database
+    const userContext = await getUserContext(userId);
+    
+    // Build context-aware system prompt
+    const contextPrompt = buildContextPrompt(userContext, language);
+    
     // Use Chat Completions API (fallback mode - no agent needed)
     const messages = [
       {
         role: "system",
-        content: AGENT_INSTRUCTIONS + `\n\n${languagePrompt}`,
+        content: AGENT_INSTRUCTIONS + `\n\n${languagePrompt}\n\n${contextPrompt}`,
       },
       ...ctx.session.aiChatHistory.slice(-10),
     ];
@@ -381,6 +391,9 @@ async function handleChatMessage(ctx) {
       }
     }
 
+    // Check if response indicates user needs human help
+    const needsHumanHelp = detectNeedsHumanHelp(aiResponse, userMessage);
+    
     // Send response (handle long messages)
     const MAX_LENGTH = 4000;
     if (aiResponse.length > MAX_LENGTH) {
@@ -390,6 +403,12 @@ async function handleChatMessage(ctx) {
       }
     } else {
       await ctx.reply(aiResponse, { parse_mode: "Markdown" }).catch(() => {});
+    }
+
+    // Offer human support if AI couldn't help adequately
+    if (needsHumanHelp && !ctx.session.humanSupportOffered) {
+      await offerHumanSupport(ctx);
+      ctx.session.humanSupportOffered = true;
     }
 
   } catch (error) {
@@ -417,6 +436,265 @@ async function handleChatMessage(ctx) {
 }
 
 /**
+ * Build context prompt with user data
+ */
+function buildContextPrompt(userContext, language) {
+  let prompt = `\n--- USER CONTEXT ---\n`;
+  
+  prompt += `User Membership Tier: ${userContext.tier}\n`;
+  prompt += `Membership Status: ${userContext.membershipStatus}\n`;
+  if (userContext.activePlanId) {
+    prompt += `Active Plan: ${userContext.activePlanId}\n`;
+  }
+  if (userContext.membershipExpiresAt) {
+    prompt += `Membership Expires At: ${userContext.membershipExpiresAt.toISOString()}\n`;
+  }
+  if (typeof userContext.membershipDaysRemaining === 'number') {
+    prompt += `Membership Days Remaining: ${userContext.membershipDaysRemaining}\n`;
+  }
+  
+  if (userContext.recentPayments && userContext.recentPayments.length > 0) {
+    prompt += `Recent Payments:\n`;
+    userContext.recentPayments.forEach((payment, index) => {
+      prompt += `- ${payment.status} payment of $${payment.amount} for ${payment.planId} (${payment.createdAt.toDateString()})\n`;
+    });
+  }
+  
+  if (userContext.membershipStatus === 'expired') {
+    prompt += `\nIMPORTANT: User's membership has EXPIRED. Recommend renewal with /subscribe command.\n`;
+  }
+  
+  if (userContext.membershipStatus === 'no_membership' && userContext.tier === 'Free') {
+    prompt += `\nIMPORTANT: User is on FREE tier. Emphasize premium benefits and use /subscribe to upgrade.\n`;
+  }
+  
+  prompt += `\nUse this context to provide personalized responses about their membership, payments, and account status.`;
+  
+  return prompt;
+}
+
+/**
+ * Get user database context for AI
+ */
+async function getUserContext(userId) {
+  try {
+    const userDoc = await db.collection('users').doc(userId.toString()).get();
+    if (!userDoc.exists) {
+      return { tier: 'Free', membershipStatus: 'no_membership' };
+    }
+
+    const userData = userDoc.data();
+    const membershipExpiresAt = userData.membershipExpiresAt
+      ? userData.membershipExpiresAt.toDate()
+      : null;
+    const now = new Date();
+    const membershipDaysRemaining = membershipExpiresAt
+      ? Math.ceil((membershipExpiresAt - now) / (1000 * 60 * 60 * 24))
+      : null;
+    const context = {
+      tier: userData.tier || 'Free',
+      membershipStatus: userData.membershipExpiresAt ? 
+        (membershipExpiresAt > now ? 'active' : 'expired') : 
+        'no_membership',
+      activePlanId: userData.activePlanId || null,
+      membershipExpiresAt,
+      membershipDaysRemaining,
+      joinedAt: userData.createdAt ? userData.createdAt.toDate() : null,
+      lastActive: userData.lastActive ? userData.lastActive.toDate() : null
+    };
+
+    // Get recent payment history
+    const paymentsSnapshot = await db.collection('payments')
+      .where('userId', '==', userId.toString())
+      .orderBy('createdAt', 'desc')
+      .limit(3)
+      .get();
+    
+    context.recentPayments = paymentsSnapshot.docs.map(doc => {
+      const paymentData = doc.data();
+      return {
+        amount: paymentData.amount,
+        status: paymentData.status,
+        createdAt: paymentData.createdAt ? paymentData.createdAt.toDate() : new Date(0),
+        planId: paymentData.planId || 'unknown'
+      };
+    });
+
+    return context;
+  } catch (error) {
+    logger.error('Error getting user context:', error);
+    return { tier: 'Free', membershipStatus: 'unknown' };
+  }
+}
+
+/**
+ * Detect if user needs human help based on AI response and user message
+ */
+function detectNeedsHumanHelp(aiResponse, userMessage) {
+  const helpKeywords = [
+    'sorry', 'cannot help', 'unable to', "don't know", 'not sure',
+    'complex', 'contact support', 'technical issue', 'billing problem',
+    'payment failed', 'account locked', 'subscription issue', 'escalate',
+    'speak to support', 'reach out to support', 'need human assistance'
+  ];
+
+  const helpKeywordsEs = [
+    'no puedo ayudarte', 'no puedo ayudar', 'no estoy seguro', 'no sé',
+    'contacta soporte', 'habla con soporte', 'problema técnico',
+    'problema de pago', 'error de pago', 'bloqueada', 'necesitas ayuda humana',
+    'escalar al equipo'
+  ];
+  
+  const userFrustrationKeywords = [
+    "still not working", "doesn't help", 'not solved', 'frustrated',
+    'tried everything', "doesn't work", 'broken', 'bug', 'error',
+    'help me now', 'why is this happening', 'angry'
+  ];
+
+  const userFrustrationKeywordsEs = [
+    'sigue sin funcionar', 'no ayuda', 'no se resolvió', 'frustrado',
+    'intenté todo', 'no funciona', 'dañado', 'falla', 'error',
+    'ayúdame ahora', 'por qué pasa esto'
+  ];
+
+  const aiResponseLower = aiResponse.toLowerCase();
+  const userMessageLower = userMessage.toLowerCase();
+
+  const detectedHelpKeyword = helpKeywords.some(keyword => aiResponseLower.includes(keyword)) ||
+    helpKeywordsEs.some(keyword => aiResponseLower.includes(keyword));
+  const detectedFrustration = userFrustrationKeywords.some(keyword => userMessageLower.includes(keyword)) ||
+    userFrustrationKeywordsEs.some(keyword => userMessageLower.includes(keyword));
+
+  return detectedHelpKeyword || detectedFrustration;
+}
+
+/**
+ * Offer human support option
+ */
+async function offerHumanSupport(ctx) {
+  const language = ctx.session.language || "en";
+  
+  const message = language === "es" 
+    ? "🙋‍♀️ ¿Prefieres hablar con una persona? Toca el botón para decir *\"Quiero hablar con un humano\"*."
+    : "🙋‍♀️ Prefer to speak with a person? Tap below to say *\"I wanna speak to a human\"*.";
+
+  const keyboard = {
+    inline_keyboard: [
+      [
+        {
+          text: language === "es" ? "🧑‍💼 Quiero hablar con un humano" : "🧑‍💼 I wanna speak to a human",
+          callback_data: "request_human_support"
+        }
+      ],
+      [
+        {
+          text: language === "es" ? "🤖 Continuar con AI" : "🤖 Continue with AI",
+          callback_data: "continue_ai_chat"
+        }
+      ]
+    ]
+  };
+
+  await ctx.reply(message, {
+    parse_mode: "Markdown",
+    reply_markup: keyboard
+  });
+}
+
+/**
+ * Handle human support request
+ */
+async function handleHumanSupportRequest(ctx) {
+  const language = ctx.session.language || "en";
+  const userId = ctx.from.id;
+  const username = ctx.from.username;
+
+  try {
+    // Get user context for the ticket
+    const userContext = await getUserContext(userId);
+    
+    // Get recent AI conversation for context
+    const aiContext = {
+      recentMessages: ctx.session.aiChatHistory ? ctx.session.aiChatHistory.slice(-6) : [],
+      userContext: userContext
+    };
+
+    // Create support ticket
+    const ticket = await supportTicketService.createTicket(
+      userId,
+      username,
+      "User requested human support from AI chat",
+      aiContext
+    );
+
+    // Notify user
+    const confirmMessage = language === "es"
+      ? `✅ **Ticket de Soporte Creado**\n\n🎫 **Ticket #${ticket.id.slice(-6)}**\n\nTu solicitud ha sido enviada a nuestro equipo. Te responderemos pronto.\n\n⏱️ **Tiempo estimado:** 1-24 horas\n📧 **Email:** support@pnptv.app`
+      : `✅ **Support Ticket Created**\n\n🎫 **Ticket #${ticket.id.slice(-6)}**\n\nYour request has been sent to our team. We'll respond soon.\n\n⏱️ **Response time:** 1-24 hours\n📧 **Email:** support@pnptv.app`;
+
+    await ctx.editMessageText(confirmMessage, { parse_mode: "Markdown" });
+
+    // Notify admins
+    await notifyAdminsNewTicket(ctx, ticket);
+
+    // End AI chat session
+    ctx.session.aiChatActive = false;
+    ctx.session.aiChatHistory = null;
+    ctx.session.humanSupportOffered = false;
+
+  } catch (error) {
+    logger.error('Error creating support ticket:', error);
+    const errorMsg = language === "es"
+      ? "❌ Error al crear ticket. Contacta support@pnptv.app"
+      : "❌ Error creating ticket. Contact support@pnptv.app";
+    await ctx.reply(errorMsg);
+  }
+}
+
+/**
+ * Notify admins of new support ticket
+ */
+async function notifyAdminsNewTicket(ctx, ticket) {
+  try {
+    const notification = `🎫 **New Support Ticket**
+
+**Ticket:** #${ticket.id.slice(-6)}
+**User:** @${ticket.username || ticket.userId}
+**Status:** ${ticket.status}
+**Created:** ${ticket.createdAt.toLocaleString()}
+
+**Context:** User requested human help from AI chat
+
+**User Info:**
+• Tier: ${ticket.context.userContext?.tier || 'Unknown'}
+• Membership: ${ticket.context.userContext?.membershipStatus || 'Unknown'}
+
+Use /support_tickets to manage`;
+
+    const keyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: "🎯 Claim Ticket",
+            callback_data: `claim_ticket_${ticket.id}`
+          }
+        ]
+      ]
+    };
+
+    await sendAdminNotification({
+      telegram: ctx.telegram,
+      userId: ticket.userId,
+      username: ticket.username,
+      message: notification,
+      replyMarkup: keyboard,
+    });
+  } catch (error) {
+    logger.error('Error notifying admins:', error);
+  }
+}
+
+/**
  * Callback handler for AI chat button
  */
 async function handleAIChatCallback(ctx) {
@@ -424,6 +702,17 @@ async function handleAIChatCallback(ctx) {
 
   if (data === "start_ai_chat") {
     await startAIChat(ctx);
+  } else if (data === "request_human_support") {
+    await ctx.answerCbQuery();
+    await handleHumanSupportRequest(ctx);
+  } else if (data === "continue_ai_chat") {
+    await ctx.answerCbQuery();
+    const language = ctx.session.language || "en";
+    ctx.session.humanSupportOffered = false;
+    const msg = language === "es" 
+      ? "🤖 Continúo aquí para ayudarte. ¿Qué más necesitas?"
+      : "🤖 I'm still here to help. What else do you need?";
+    await ctx.reply(msg);
   }
 }
 
@@ -432,4 +721,5 @@ module.exports = {
   endAIChat,
   handleChatMessage,
   handleAIChatCallback,
+  handleHumanSupportRequest,
 };

@@ -33,6 +33,7 @@ const {
   executePaymentConfirmation,
   showBalances,
 } = require("./admin/kyrrexAdmin");
+const { sendReactivationBroadcast } = require("./admin/reactivationBroadcast");
 
 // Admin utilities (defines isAdmin, ADMIN_IDS, adminMiddleware)
 const { isAdmin, ADMIN_IDS, adminMiddleware } = require("../../config/admin");
@@ -5890,6 +5891,7 @@ module.exports = {
   sendPaymentButton,
   sendPaymentBroadcast,
   executePaymentBroadcast,
+  sendReactivationBroadcast,
   handleOptOut,
   handleOptIn,
   handleOptOutCallback,

@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  basePath: '/app',
   reactStrictMode: true,
   // App router is default in Next.js 15
   outputFileTracingRoot: process.cwd(),

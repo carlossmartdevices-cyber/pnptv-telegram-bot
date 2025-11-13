@@ -97,14 +97,6 @@ const {
   handleCopCardHelp,
 } = require("./handlers/copCardHandler");
 const {
-  showKyrrexPlans,
-  handleKyrrexPlanSelection,
-  handleKyrrexCryptoSelection,
-  handleKyrrexPaymentCheck,
-  handleKyrrexCopyAddress,
-  handleKyrrexHelp,
-} = require("./handlers/kyrrexPayHandler");
-const {
   adminPanel,
   handleAdminCallback,
   sendBroadcast,
@@ -116,11 +108,22 @@ const {
   executeCustomExtension,
   executeModifyExpiration,
   executePlanEdit,
+  sendReactivationBroadcast,
 } = require("./handlers/admin");
 const { handleMapCallback, handleLocation } = require("./handlers/map");
 const { handleNearbyCallback } = require("./handlers/nearby");
 const { handleLiveCallback } = require("./handlers/live");
 const { startAIChat, endAIChat, handleChatMessage, handleAIChatCallback } = require("./handlers/aiChat");
+const { 
+  showSupportTickets,
+  handleSupportCallback,
+  handleWaitingMessage
+} = require("./handlers/admin/supportTickets");
+const {
+  showReactivationIntro,
+  handleReactivationCallback,
+  handleReactivationProofUpload,
+} = require("./handlers/reactivation");
 const {
   handleShowBlacklist,
   handleAddWord,
@@ -194,11 +197,14 @@ bot.command("profile", async (ctx) => {
 bot.command("subscribe", subscribeHandler);
 bot.command("admin", adminMiddleware(), adminPanel);
 bot.command("sendpromo", adminMiddleware(), sendPromoAnnouncement);
+bot.command("reactivateprime", adminMiddleware(), sendReactivationBroadcast);
 bot.command("plans", adminMiddleware(), async (ctx) => {
   await showPlanDashboard(ctx);
 });
+bot.command("support_tickets", adminMiddleware(), showSupportTickets);
 bot.command("aichat", startAIChat);
 bot.command("endchat", endAIChat);
+bot.command("reactivate", showReactivationIntro);
 
 // ===== HIDDEN ADMIN COMMANDS =====
 bot.command("sendpaymentbutton", adminMiddleware(), async (ctx) => {
@@ -364,6 +370,13 @@ bot.action("show_help", async (ctx) => {
 
 // AI Chat callback handler
 bot.action("start_ai_chat", handleAIChatCallback);
+bot.action("request_human_support", handleAIChatCallback);
+bot.action("continue_ai_chat", handleAIChatCallback);
+
+// Support ticket callbacks
+bot.action(/^(view_ticket_|claim_ticket_|respond_ticket_|resolve_ticket_|close_ticket_|priority_ticket_|set_priority_).+/, handleSupportCallback);
+bot.action(/(refresh_tickets|back_to_tickets|all_tickets|my_tickets)/, handleSupportCallback);
+bot.action(/^(reactivate_.+|approve_reactivation_.+|deny_reactivation_.+)$/, handleReactivationCallback);
 
 // Payment method selection handlers removed (Daimo & ePayco)
 
@@ -724,6 +737,19 @@ bot.on("photo", async (ctx, next) => {
     // Handle payment receipt upload
     const { handlePaymentProofUpload } = require("./handlers/admin");
     await handlePaymentProofUpload(ctx, "photo");
+  } else if (ctx.session.waitingFor === "reactivation_proof") {
+    const photos = ctx.message.photo || [];
+    const highestRes = photos[photos.length - 1];
+    if (highestRes) {
+      const handled = await handleReactivationProofUpload(ctx, {
+        type: "photo",
+        fileId: highestRes.file_id,
+        fileUniqueId: highestRes.file_unique_id,
+      });
+      if (handled) {
+        return;
+      }
+    }
   } else {
     await handlePhotoMessage(ctx);
   }
@@ -746,6 +772,18 @@ bot.on("document", async (ctx) => {
     // Handle payment receipt upload
     const { handlePaymentProofUpload } = require("./handlers/admin");
     await handlePaymentProofUpload(ctx, "document");
+  } else if (ctx.session.waitingFor === "reactivation_proof") {
+    const document = ctx.message.document;
+    if (document) {
+      const handled = await handleReactivationProofUpload(ctx, {
+        type: "document",
+        fileId: document.file_id,
+        fileUniqueId: document.file_unique_id,
+      });
+      if (handled) {
+        return;
+      }
+    }
   }
 });
 
@@ -938,6 +976,9 @@ bot.on("text", async (ctx) => {
         const planName = parts[1];
         await executePlanEdit(ctx, planName, field, ctx.message.text);
       }
+    } else if (await handleWaitingMessage(ctx)) {
+      // Support ticket response handled
+      return;
     } else if (ctx.session.aiChatActive) {
       // Handle AI chat messages when in chat mode
       await handleChatMessage(ctx);
