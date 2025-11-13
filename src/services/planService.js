@@ -17,7 +17,19 @@ class PlanService {
   constructor() {
     this.plansCollection = db.collection("plans");
     // Fallback to static plans if Firestore is empty
-    this.staticPlans = require("../config/plans");
+    // Load canonical static plans and normalize keys so callers can
+    // uniformly access `paymentLink` (used by plan creation and handlers)
+    const rawStaticPlans = require("../config/plans");
+    // Normalize: ensure each static plan object exposes `paymentLink`
+    this.staticPlans = Object.keys(rawStaticPlans).reduce((acc, key) => {
+      const p = Object.assign({}, rawStaticPlans[key]);
+      // Some legacy static plans use `wompiPaymentLink` — copy it to `paymentLink`
+      if (!p.paymentLink && p.wompiPaymentLink) {
+        p.paymentLink = p.wompiPaymentLink;
+      }
+      acc[key] = p;
+      return acc;
+    }, {});
   }
 
   /**

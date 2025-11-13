@@ -1,0 +1,46 @@
+nohup: ignoring input
+[dotenv@17.2.3] injecting env (59) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+✅ Environment loaded from /root/bot 1/.env
+✅ Environment variables validated successfully
+Iniciando Firebase...
+FIREBASE_CREDENTIALS length: 2327 chars
+First 200 chars: {"type":"service_account","project_id":"pnptv-b8af8","private_key_id":"1ccc8fb4b1ec59dffbbc53d0c50cea631c4e40ce","private_key":"-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgE...
+✅ Using Firebase credentials from environment variable
+   Project ID: pnptv-b8af8
+   Client Email: firebase-adminsdk-fbsvc@pnptv-b8af8.iam.gserviceaccount.com
+Firebase ha sido inicializado correctamente.
+[32minfo[39m: Redis caching disabled. Set REDIS_URL and REDIS_ENABLED=true to enable. {"service":"pnptv-bot","timestamp":"2025-11-11 07:24:07"}
+[32minfo[39m: FirestoreSession initialized with collection: bot_sessions {"service":"pnptv-bot","timestamp":"2025-11-11 07:24:07"}
+[32minfo[39m: FirestoreSession initialized with collection: bot_sessions {"service":"pnptv-bot","timestamp":"2025-11-11 07:24:07"}
+[32minfo[39m: SessionCleanupService initialized {"enabled":true,"interval":21600000,"service":"pnptv-bot","timestamp":"2025-11-11 07:24:07"}
+[32minfo[39m: SessionCleanupService: Starting cleanup {"service":"pnptv-bot","timestamp":"2025-11-11 07:24:07"}
+[32minfo[39m: FirestoreSession: Starting cleanup of expired sessions {"service":"pnptv-bot","timestamp":"2025-11-11 07:24:07"}
+[32minfo[39m: SessionCleanupService: Started {"nextRun":"2025-11-11T13:24:07.716Z","service":"pnptv-bot","timestamp":"2025-11-11 07:24:07"}
+node:internal/modules/cjs/loader:1210
+  throw err;
+  ^
+
+Error: Cannot find module '../../services/daimoPayService'
+Require stack:
+- /root/bot 1/src/bot/handlers/daimoPayHandler.js
+- /root/bot 1/src/bot/index.js
+- /root/bot 1/src/bot/webhook.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+    at Module._load (node:internal/modules/cjs/loader:1038:27)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/root/bot 1/src/bot/handlers/daimoPayHandler.js:4:25)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Module.require (node:internal/modules/cjs/loader:1289:19) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/root/bot 1/src/bot/handlers/daimoPayHandler.js',
+    '/root/bot 1/src/bot/index.js',
+    '/root/bot 1/src/bot/webhook.js'
+  ]
+}
+
+Node.js v20.19.5

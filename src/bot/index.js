@@ -75,11 +75,20 @@ const {
   handleTimezoneCallback
 } = require("./handlers/community");
 const { handleNewMember, handleMediaMessage } = require("./helpers/groupManagement");
+// Daimo Pay temporarily disabled - service module removed
+// const {
+//   showDaimoPlans,
+//   handleDaimoPlanSelection,
+//   handleDaimoHelp,
+// } = require("./handlers/daimoPayHandler");
 const {
-  showDaimoPlans,
-  handleDaimoPlanSelection,
-  handleDaimoHelp,
-} = require("./handlers/daimoPayHandler");
+  sendPromoAnnouncement,
+  executePromoSend,
+  handlePaymentVerification,
+  handleAdminConfirmation,
+  handleAdminRejection,
+  handlePromoCancel
+} = require("./handlers/promoHandler");
 const {
   showCopCardPlans,
   handleCopCardPlanSelection,
@@ -184,6 +193,7 @@ bot.command("profile", async (ctx) => {
 });
 bot.command("subscribe", subscribeHandler);
 bot.command("admin", adminMiddleware(), adminPanel);
+bot.command("sendpromo", adminMiddleware(), sendPromoAnnouncement);
 bot.command("plans", adminMiddleware(), async (ctx) => {
   await showPlanDashboard(ctx);
 });
@@ -280,18 +290,18 @@ bot.action("show_subscription_plans", async (ctx) => {
   await subscribeHandler(ctx);
 });
 
-// ===== DAIMO PAY HANDLERS =====
-bot.action("daimo_show_plans", async (ctx) => {
-  await showDaimoPlans(ctx);
-});
+// ===== DAIMO PAY HANDLERS ===== (Temporarily disabled)
+// bot.action("daimo_show_plans", async (ctx) => {
+//   await showDaimoPlans(ctx);
+// });
 
-bot.action(/^daimo_plan_(.+)$/, async (ctx) => {
-  await handleDaimoPlanSelection(ctx);
-});
+// bot.action(/^daimo_plan_(.+)$/, async (ctx) => {
+//   await handleDaimoPlanSelection(ctx);
+// });
 
-bot.action("daimo_help", async (ctx) => {
-  await handleDaimoHelp(ctx);
-});
+// bot.action("daimo_help", async (ctx) => {
+//   await handleDaimoHelp(ctx);
+// });
 
 // ===== COP CARD PAYMENT HANDLERS =====
 bot.action("cop_card_show_plans", async (ctx) => {
@@ -510,6 +520,30 @@ bot.action("broadcast_multi_text_only", async (ctx) => {
 bot.action("broadcast_formatting_help", async (ctx) => {
   await ctx.answerCbQuery();
   await handleAdminCallback(ctx);
+});
+
+// ===== PROMO CALLBACKS =====
+bot.action(/^promo_send_(en|es|both)$/, async (ctx) => {
+  const lang = ctx.match[1];
+  await executePromoSend(ctx, lang);
+});
+
+bot.action("promo_verify_payment", async (ctx) => {
+  await handlePaymentVerification(ctx);
+});
+
+bot.action(/^promo_confirm_(.+)$/, async (ctx) => {
+  const userId = ctx.match[1];
+  await handleAdminConfirmation(ctx, userId);
+});
+
+bot.action(/^promo_reject_(.+)$/, async (ctx) => {
+  const userId = ctx.match[1];
+  await handleAdminRejection(ctx, userId);
+});
+
+bot.action("promo_cancel", async (ctx) => {
+  await handlePromoCancel(ctx);
 });
 
 // ===== PAYMENT CONFIRMATION CALLBACKS =====

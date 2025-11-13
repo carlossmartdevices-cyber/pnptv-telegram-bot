@@ -21,18 +21,25 @@ app.set("trust proxy", 1);
 // JSON body parser with size limits
 app.use(express.json({ limit: "10mb" }));
 
+// Global raw request logger (runs early to capture originalUrl before mounts)
+app.use((req, res, next) => {
+  try {
+    // Print to stdout so PM2 captures it reliably
+    console.log('[Global Request] ', req.method, req.originalUrl);
+    logger.info('[Global Request]', { method: req.method, originalUrl: req.originalUrl, headers: { host: req.headers.host, 'content-type': req.headers['content-type'] } });
+  } catch (e) {
+    // ignore logging failures
+  }
+  next();
+});
+
 // Serve static files from public directory (for payment page)
 const path = require("path");
+const fs = require('fs');
 
 // Request logging middleware (production optimized)
 app.use((req, res, next) => {
   const start = Date.now();
-  
-  // Debug logging for Daimo routes
-  if (req.path.startsWith('/daimo')) {
-    console.log(`[DEBUG] Daimo route request: ${req.method} ${req.path}`);
-  }
-  
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (req.path !== "/health") {
@@ -85,9 +92,6 @@ app.get("/ready", async (req, res) => {
   }
 });
 
-// Make bot instance available to routes FIRST
-app.set('bot', bot);
-
 // API routes for payment page
 logger.info('Loading API routes from ./api/routes');
 const apiRoutes = require('./api/routes');
@@ -95,97 +99,232 @@ logger.info('API routes loaded', { type: typeof apiRoutes, stackLength: apiRoute
 app.use('/api', apiRoutes);
 logger.info('API routes mounted at /api');
 
-// Daimo Pay webhook routes - MOVED BEFORE STATIC MIDDLEWARE
-logger.info('Loading Daimo Pay routes...');
-const daimoPayRoutes = require('../api/daimo-pay-routes');
-logger.info('Daimo Pay routes loaded', { type: typeof daimoPayRoutes, stackLength: daimoPayRoutes.stack ? daimoPayRoutes.stack.length : 'No stack' });
-app.use('/daimo', daimoPayRoutes);
-logger.info('Daimo Pay routes mounted at /daimo');
+// Mount Kyrrex routes (payments webhooks and admin endpoints)
+try {
+  const kyrrexRoutes = require('../api/kyrrex-routes');
+  app.use('/kyrrex', kyrrexRoutes);
+  logger.info('Kyrrex routes mounted at /kyrrex');
+} catch (e) {
+  logger.warn('Kyrrex routes not mounted (module missing or error):', e.message);
+}
 
-// COP Card payment routes
-const copCardRoutes = require('../api/cop-card-routes');
-app.use('/cop-card', copCardRoutes);
+// Daimo Pay webhook routes (optional - some deployments may not include Daimo integration)
+try {
+  const daimoPayRoutes = require('../api/daimo-pay-routes');
+  app.use('/daimo', daimoPayRoutes);
+  logger.info('Daimo Pay routes mounted at /daimo');
+} catch (e) {
+  logger.warn('Daimo Pay routes not mounted (module missing or error):', e.message);
+}
 
-// Kyrrex cryptocurrency payment routes
-const kyrrexRoutes = require('../api/kyrrex-routes');
-app.use('/kyrrex', kyrrexRoutes);
-logger.info('Kyrrex routes mounted at /kyrrex');
+// Make bot instance available to routes
+app.set('bot', bot);
 
 // Serve static assets for payment page
 app.use("/assets", express.static(path.join(__dirname, "../../public/payment/assets")));
 
-// Serve public directory for static files (guide, etc.) - MOVED AFTER API ROUTES
+// Serve public directory for static files (guide, etc.)
 app.use(express.static(path.join(__dirname, "../../public")));
-
-// Next.js WebApp Integration
-const next = require('next');
-const nextApp = next({ 
-  dev: process.env.NODE_ENV !== 'production',
-  dir: path.join(__dirname, '../webapp'),
-  conf: {
-    // Next.js config will be loaded from next.config.js in webapp directory
-  }
-});
-const handle = nextApp.getRequestHandler();
-
-// Initialize Next.js app
-nextApp.prepare().then(() => {
-  logger.info('Next.js webapp initialized');
-}).catch((err) => {
-  logger.error('Failed to initialize Next.js webapp:', err);
-});
-
-// WebApp routes - serve Next.js app for /app and /webapp paths
-app.get(/^\/app($|\/.*)/, async (req, res) => {
-  try {
-    // Rewrite /app to root for Next.js
-    req.url = req.url.replace(/^\/app/, '') || '/';
-    await handle(req, res);
-  } catch (error) {
-    logger.error('WebApp error:', error);
-    // Fallback to static HTML if Next.js fails
-    const appPath = path.join(__dirname, "../../public/app.html");
-    res.sendFile(appPath);
-  }
-});
-
-app.get(/^\/webapp($|\/.*)/, async (req, res) => {
-  try {
-    // Rewrite /webapp to root for Next.js
-    req.url = req.url.replace(/^\/webapp/, '') || '/';
-    await handle(req, res);
-  } catch (error) {
-    logger.error('WebApp error:', error);
-    res.status(500).json({ error: 'WebApp unavailable' });
-  }
-});
-
-// Mini App API endpoint for user data
-app.get("/api/user/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const userDoc = await db.collection('users').doc(userId).get();
-    
-    if (!userDoc.exists) {
-      return res.json({ tier: 'Free', status: 'new_user' });
-    }
-    
-    const userData = userDoc.data();
-    res.json({
-      tier: userData.tier || 'Free',
-      membershipExpiresAt: userData.membershipExpiresAt,
-      status: 'active'
-    });
-  } catch (error) {
-    logger.error('Error fetching user data for Mini App:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
 
 // Guide/Instructions page
 app.get("/guide", (req, res) => {
   const guidePath = path.join(__dirname, "../../public/guide.html");
   res.sendFile(guidePath);
+});
+
+// Attempt to serve the built Next.js Telegram WebApp (if present)
+// The webapp is built into `src/webapp/.next`. If the deployment places
+// the Node server behind the pnptv.app domain, mounting these routes
+// will make the mini app available at https://pnptv.app/app as expected.
+try {
+  const webappNextStatic = path.join(__dirname, "../webapp/.next/static");
+  const webappServerApp = path.join(__dirname, "../webapp/.next/server/app/index.html");
+
+  if (fs.existsSync(webappNextStatic) && fs.existsSync(webappServerApp)) {
+    // Serve the _next static assets
+    app.use('/_next/static', express.static(webappNextStatic));
+
+    // Serve any other _next assets (best-effort)
+    app.use('/_next', express.static(path.join(__dirname, '../webapp/.next')));
+
+    // Serve manifest and other public files from the webapp public folder if present
+    const webappPublic = path.join(__dirname, '../webapp/public');
+    if (fs.existsSync(webappPublic)) {
+      app.use('/app', express.static(webappPublic));
+    }
+
+    // Serve the webapp entry at /app and any subpath /app/* (client-side routing)
+    // NOTE: Next.js apps require their own server. Serving as fallback for now.
+    app.get('/app', (req, res) => {
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>PNPtv WebApp</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              margin: 0;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              text-align: center;
+              padding: 20px;
+            }
+            .container {
+              max-width: 500px;
+            }
+            h1 {
+              font-size: 2.5em;
+              margin-bottom: 0.5em;
+            }
+            p {
+              font-size: 1.2em;
+              opacity: 0.9;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>🌟 PNPtv WebApp</h1>
+            <p>Telegram mini app coming soon!</p>
+            <p style="font-size: 0.9em; margin-top: 2em;">Use the bot commands to access features for now.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    });
+    app.get('/app/*', (req, res) => {
+      res.redirect('/app');
+    });
+
+    logger.info('Mounted compiled WebApp at /app (serving _next static assets)');
+    console.log('✅ WebApp static mount: /app -> src/webapp/.next/server/app/index.html');
+  } else {
+    logger.warn('WebApp build not found under src/webapp/.next — skipping mount of /app');
+  }
+} catch (e) {
+  logger.warn('Failed to mount WebApp static routes:', e.message);
+}
+
+// Debug endpoint: WebApp diagnostics
+// Returns whether the built webapp exists, key env vars, and mounted routes
+app.get('/debug/webapp', (req, res) => {
+  try {
+    const webappRoot = path.join(__dirname, '../webapp');
+    const nextStatic = path.join(webappRoot, '.next', 'static');
+    const serverIndex = path.join(webappRoot, '.next', 'server', 'app', 'index.html');
+    const webappPublic = path.join(webappRoot, 'public');
+
+    const exists = {
+      webappRoot: fs.existsSync(webappRoot),
+      nextStatic: fs.existsSync(nextStatic),
+      serverIndex: fs.existsSync(serverIndex),
+      webappPublic: fs.existsSync(webappPublic),
+    };
+
+    const env = {
+      WEB_APP_URL: process.env.WEB_APP_URL || null,
+      WEBAPP_URL: process.env.WEBAPP_URL || null,
+      NEXT_PUBLIC_WEBAPP_URL: process.env.NEXT_PUBLIC_WEBAPP_URL || null,
+      NODE_ENV: process.env.NODE_ENV || null,
+      PORT: process.env.PORT || null,
+    };
+
+    // Collect top-level mounted routes (best-effort)
+    const routes = [];
+    if (app && app._router && Array.isArray(app._router.stack)) {
+      app._router.stack.forEach((layer) => {
+        if (layer.route && layer.route.path) {
+          const methods = Object.keys(layer.route.methods || {}).map(m => m.toUpperCase()).join(',');
+          routes.push(`${methods} ${layer.route.path}`);
+        } else if (layer.name === 'router' && layer.handle && layer.handle.stack) {
+          // nested router — summarize
+          routes.push(`<router> ${layer.regexp ? String(layer.regexp) : '<unknown>'}`);
+        } else if (layer.name === 'serveStatic') {
+          // static middleware
+          const staticPath = layer.regexp ? String(layer.regexp) : '<static>';
+          routes.push(`<static> ${staticPath}`);
+        }
+      });
+    }
+
+    // Find a sample asset to test
+    let sampleAsset = null;
+    try {
+      if (exists.nextStatic) {
+        const chunksDir = path.join(nextStatic, 'chunks');
+        if (fs.existsSync(chunksDir)) {
+          const files = fs.readdirSync(chunksDir).filter(f => f.endsWith('.js'));
+          if (files.length > 0) {
+            sampleAsset = `/_next/static/chunks/${files[0]}`;
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    res.json({ ok: true, exists, env, routes, sampleAsset });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// Enhanced diagnostic endpoint: verify _next asset serving
+// Tests that a real _next static asset returns 200 and correct content-type
+app.get('/debug/webapp/verify-assets', async (req, res) => {
+  try {
+    const webappRoot = path.join(__dirname, '../webapp');
+    const nextStatic = path.join(webappRoot, '.next', 'static');
+    
+    const results = {
+      staticExists: fs.existsSync(nextStatic),
+      tests: [],
+    };
+
+    if (results.staticExists) {
+      // Find sample assets
+      const chunksDir = path.join(nextStatic, 'chunks');
+      const cssDir = path.join(nextStatic, 'css');
+
+      const samples = [];
+      
+      if (fs.existsSync(chunksDir)) {
+        const jsFiles = fs.readdirSync(chunksDir).filter(f => f.endsWith('.js')).slice(0, 2);
+        jsFiles.forEach(f => samples.push({ path: `/_next/static/chunks/${f}`, type: 'application/javascript' }));
+      }
+
+      if (fs.existsSync(cssDir)) {
+        const cssFiles = fs.readdirSync(cssDir).filter(f => f.endsWith('.css')).slice(0, 1);
+        cssFiles.forEach(f => samples.push({ path: `/_next/static/css/${f}`, type: 'text/css' }));
+      }
+
+      // Test each sample by reading from filesystem (simulating what Express static does)
+      for (const sample of samples) {
+        const diskPath = path.join(__dirname, '..', 'webapp', '.next', sample.path.replace('/_next/', ''));
+        const fileExists = fs.existsSync(diskPath);
+        const fileSize = fileExists ? fs.statSync(diskPath).size : 0;
+
+        results.tests.push({
+          url: sample.path,
+          expectedType: sample.type,
+          fileExists,
+          fileSize,
+          diskPath: diskPath.replace('/root/bot 1/', ''),
+        });
+      }
+    }
+
+    res.json({ ok: true, ...results });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 // Legal pages - Terms of Service, Privacy Policy, Refund Policy
@@ -224,12 +363,6 @@ app.post(`/bot${process.env.TELEGRAM_TOKEN}`, async (req, res) => {
   try {
     // Respond immediately to avoid timeout
     res.sendStatus(200);
-
-    // Add debug logging for admin user commands
-    const update = req.body;
-    if (update.message?.from?.id === 8365312597 && update.message?.text) {
-      logger.info(`WEBHOOK DEBUG: Admin command received: "${update.message.text}" from user ${update.message.from.id}`);
-    }
 
     // Process update asynchronously
     await bot.handleUpdate(req.body);
@@ -408,6 +541,32 @@ if (require.main === module) {
           console.log(`   - Port: ${PORT}`);
           console.log(`   - Health Check: http://localhost:${PORT}/health`);
           console.log(`   - Bot Username: @${bot.botInfo?.username || "PNPtvbot"}\n`);
+          // Print Express route table for debugging
+          try {
+            const routeList = [];
+            function extractRoutes(stack, prefix = '') {
+              stack.forEach((layer) => {
+                if (layer.route && layer.route.path) {
+                  const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase()).join(',');
+                  routeList.push(`${methods} ${prefix}${layer.route.path}`);
+                } else if (layer.name === 'router' && layer.handle && layer.handle.stack) {
+                  // nested router
+                  const mountPath = layer.regexp && layer.regexp.fast_slash ? '' : (layer.regexp && layer.regexp.source ? '' : '');
+                  extractRoutes(layer.handle.stack, prefix + (layer.regexp && layer.regexp.fast_slash ? '' : ''));
+                }
+              });
+            }
+
+            if (app._router && app._router.stack) {
+              extractRoutes(app._router.stack);
+              console.log('\n=== Mounted Express Routes ===');
+              routeList.slice(0, 200).forEach(r => console.log(r));
+              console.log('=== End Routes ===\n');
+              logger.info('Mounted Express routes printed to stdout for debugging', { count: routeList.length });
+            }
+          } catch (e) {
+            console.warn('Failed to enumerate routes:', e.message);
+          }
         });
 
         // Setup graceful shutdown

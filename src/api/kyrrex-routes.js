@@ -6,6 +6,28 @@ const logger = require('../utils/logger');
 const { db } = require('../config/firebase');
 const { escapeMdV2 } = require('../utils/telegramEscapes');
 
+// Router-level debug: log incoming requests as seen by this router
+router.use((req, res, next) => {
+  try {
+    logger.info('[Kyrrex Router] incoming', {
+      originalUrl: req.originalUrl,
+      baseUrl: req.baseUrl,
+      path: req.path,
+      method: req.method,
+      headers: {
+        host: req.headers.host,
+        'content-type': req.headers['content-type'],
+      },
+    });
+  
+    // Also print to stdout to ensure visibility in pm2 logs
+    console.log('[Kyrrex Router] incoming', req.method, req.originalUrl, '->', req.baseUrl, req.path);
+  } catch (e) {
+    // ignore logging failures
+  }
+  next();
+});
+
 /**
  * Kyrrex API Routes
  * Handles webhooks, payment confirmations, and admin endpoints

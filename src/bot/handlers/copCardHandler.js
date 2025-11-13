@@ -93,8 +93,9 @@ async function handleCopCardPlanSelection(ctx) {
     // Calculate COP price
     const amountCOP = plan.priceInCOP || (plan.price * 4000);
 
-    // Get Wompi payment link or fallback
-    const wompiLink = plan.wompiPaymentLink || process.env.COP_CARD_PAYMENT_LINK || 'https://pnptv.app/cop-card/instructions';
+  // Get Wompi/Nequi payment link or fallback. Prefer `paymentLink` (stored in Firestore)
+  // but fall back to legacy `wompiPaymentLink` in static configs.
+  const wompiLink = plan.paymentLink || plan.wompiPaymentLink || process.env.COP_CARD_PAYMENT_LINK || 'https://pnptv.app/cop-card/instructions';
 
     // Create payment intent
     const paymentIntent = await copCardService.createPaymentIntent({
