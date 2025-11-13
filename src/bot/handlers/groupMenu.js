@@ -107,7 +107,11 @@ async function handleLibraryCallback(ctx) {
 
 /**
  * Handle open room callback
- * Immediately creates a Zoom room for premium users
+ * Immediately creates a Zoom room for all tiers with quotas:
+ * - Free: 1 per month
+ * - Week trial: 1 per month
+ * - Monthly members: 3 per month
+ * - Crystal/Diamond: 5 per month
  */
 async function handleOpenRoomCallback(ctx) {
   try {
@@ -119,30 +123,26 @@ async function handleOpenRoomCallback(ctx) {
       lang === 'es' ? '⏳ Creando sala...' : '⏳ Creating room...'
     );
 
-    // Get user tier to determine if premium
+    // Get user tier to check zoom quota
     const { db } = require('../../config/firebase');
+    const zoomUsageService = require('../../services/zoomUsageService');
+    
     const userDoc = await db.collection('users').doc(userId.toString()).get();
     const userData = userDoc.data();
     const tier = userData?.tier || 'Free';
-    const isPremium = tier === 'Premium';
 
-    if (!isPremium) {
-      // Show upgrade message for non-premium users
+    // Check if user can create zoom room
+    const { canCreate, reason, usage } = await zoomUsageService.canCreateZoomRoom(userId.toString());
+
+    if (!canCreate) {
+      // Show quota exceeded message
       const upgradeText = lang === 'es'
-        ? `💎 *Función Premium*\n\n` +
-          `Las videollamadas están disponibles solo para miembros Premium (Crystal/Diamond).\n\n` +
-          `💎 Los miembros Premium pueden:\n` +
-          `• Crear salas de video instantáneas\n` +
-          `• Transmitir en vivo\n` +
-          `• Acceso VIP\n\n` +
-          `¿Quieres actualizar? Usa /subscribe`
-        : `💎 *Premium Feature*\n\n` +
-          `Video calls are available for Premium members only (Crystal/Diamond).\n\n` +
-          `💎 Premium members can:\n` +
-          `• Create instant video rooms\n` +
-          `• Live stream\n` +
-          `• VIP access\n\n` +
-          `Want to upgrade? Use /subscribe`;
+        ? `⚠️ *Límite de Salas Alcanzado*\n\n` +
+          `${reason}\n\n` +
+          `💡 Tip: Usa el grupo mientras esperas a que se reinicie tu límite mensual.`
+        : `⚠️ *Zoom Room Limit Reached*\n\n` +
+          `${reason}\n\n` +
+          `💡 Tip: Use the group while you wait for your monthly limit to reset.`;
 
       const keyboard = {
         inline_keyboard: [
@@ -222,6 +222,19 @@ async function handleOpenRoomCallback(ctx) {
         reply_markup: keyboard,
         disable_web_page_preview: true
       });
+
+      // Record zoom room creation for quota tracking
+      try {
+        const zoomUsageService = require('../../services/zoomUsageService');
+        const userName = ctx.from.first_name || ctx.from.username || 'PNPtv Member';
+        await zoomUsageService.recordZoomRoomCreation(
+          userId.toString(),
+          result.meetingId,
+          lang === 'es' ? `Sala de ${userName}` : `${userName}'s Room`
+        );
+      } catch (usageError) {
+        logger.warn(`[GroupMenu] Failed to record zoom usage for user ${userId}:`, usageError.message);
+      }
 
       logger.info(`[GroupMenu] Zoom room created for user ${userId}: ${result.meetingId}`);
 

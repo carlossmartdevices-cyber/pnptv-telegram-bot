@@ -142,6 +142,7 @@ const {
   handleBackToRulesMenu,
   handleCloseRules
 } = require("./handlers/rules");
+const { handleZoomStatus } = require("./handlers/zoomStatus");
 
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
@@ -239,6 +240,7 @@ bot.command("addtrack", handleAddTrack);
 bot.command("deletetrack", handleDeleteTrack);
 bot.command("deleteevent", handleDeleteEvent);
 bot.command("settimezone", handleSetTimezone);
+bot.command("zoomstatus", handleZoomStatus);
 
 // ===== MODERATION COMMANDS (Admin Only) =====
 bot.command("blacklist", handleShowBlacklist);

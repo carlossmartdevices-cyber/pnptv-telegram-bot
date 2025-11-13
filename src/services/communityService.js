@@ -438,6 +438,19 @@ async function scheduleVideoCall(userId, callData) {
       return { success: false, error: zoomResult.error };
     }
 
+    // Record zoom usage
+    try {
+      const zoomUsageService = require('./zoomUsageService');
+      await zoomUsageService.recordZoomRoomCreation(
+        userId,
+        zoomResult.meetingId,
+        callData.title || 'Video Call'
+      );
+    } catch (usageError) {
+      logger.warn(`Failed to record zoom usage for user ${userId}:`, usageError.message);
+      // Don't fail the call creation if usage recording fails
+    }
+
     // Save to Firestore with Zoom details
     await db.collection('scheduled_calls').doc(callId).set({
       callId,
@@ -512,6 +525,19 @@ async function scheduleLiveStream(userId, streamData) {
     if (!zoomResult.success) {
       logger.error(`Failed to create Zoom meeting for stream: ${zoomResult.error}`);
       return { success: false, error: zoomResult.error };
+    }
+
+    // Record zoom usage
+    try {
+      const zoomUsageService = require('./zoomUsageService');
+      await zoomUsageService.recordZoomRoomCreation(
+        userId,
+        zoomResult.meetingId,
+        streamData.title || 'Live Stream'
+      );
+    } catch (usageError) {
+      logger.warn(`Failed to record zoom usage for user ${userId}:`, usageError.message);
+      // Don't fail the stream creation if usage recording fails
     }
 
     await db.collection('scheduled_streams').doc(streamId).set({

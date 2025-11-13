@@ -246,24 +246,24 @@ async function handleTopTracks(ctx) {
 }
 
 /**
- * Handle /schedulecall command - Schedule video call (Premium tier only) with Zoom
+ * Handle /schedulecall command - Schedule video call with Zoom
+ * Quota: Free/Week=1/month, Monthly=3/month, Crystal/Diamond=5/month
  */
 async function handleScheduleCall(ctx) {
   try {
     const userId = ctx.from.id.toString();
     const { tier } = await getUserPermissions(userId);
 
-    // Video calls require Premium tier (Crystal/Diamond members)
-    if (tier !== 'Premium') {
+    // Check zoom room quota for all tiers
+    const zoomUsageService = require('../../services/zoomUsageService');
+    const { canCreate, reason, usage } = await zoomUsageService.canCreateZoomRoom(userId);
+
+    if (!canCreate) {
       await ctx.reply(
-        `📹 *Video Calls*\n\n` +
-        `This feature is available for Premium members only (Crystal & Diamond).\n\n` +
-        `💎 Premium members can:\n` +
-        `• Schedule video calls\n` +
-        `• Host live streams\n` +
-        `• Create private rooms\n` +
-        `• And more!\n\n` +
-        `Upgrade to Crystal or Diamond: Send /plans`,
+        `⚠️ *Monthly Zoom Limit Reached*\n\n` +
+        `${reason}\n\n` +
+        `Your tier: *${tier}*\n` +
+        `Monthly quota: ${usage.quota} rooms`,
         { parse_mode: 'Markdown' }
       );
       return;
@@ -286,6 +286,7 @@ async function handleScheduleCall(ctx) {
         `• Title: Name of your meeting\n` +
         `• Date & Time: YYYY-MM-DD HH:MM or "tomorrow 3pm"\n` +
         `• Duration: Minutes (default 60)\n\n` +
+        `📊 Your quota: ${usage.remaining}/${usage.quota} rooms remaining this month\n\n` +
         `💎 Powered by Zoom!`,
         { parse_mode: 'Markdown' }
       );
@@ -446,24 +447,24 @@ async function handleScheduleCall(ctx) {
 }
 
 /**
- * Handle /schedulestream command - Schedule live stream (Premium tier only) with Zoom
+ * Handle /schedulestream command - Schedule live stream with Zoom
+ * Quota: Free/Week=1/month, Monthly=3/month, Crystal/Diamond=5/month
  */
 async function handleScheduleStream(ctx) {
   try {
     const userId = ctx.from.id.toString();
     const { tier } = await getUserPermissions(userId);
 
-    // Live streaming requires Premium tier (Crystal/Diamond members)
-    if (tier !== 'Premium') {
+    // Check zoom room quota for all tiers
+    const zoomUsageService = require('../../services/zoomUsageService');
+    const { canCreate, reason, usage } = await zoomUsageService.canCreateZoomRoom(userId);
+
+    if (!canCreate) {
       await ctx.reply(
-        `📺 *Live Streaming*\n\n` +
-        `This feature is available for Premium members only (Crystal & Diamond).\n\n` +
-        `💎 Premium members can:\n` +
-        `• Schedule live streams\n` +
-        `• Broadcast to the community\n` +
-        `• Host live events\n` +
-        `• And more!\n\n` +
-        `Upgrade to Crystal or Diamond: Send /plans`,
+        `⚠️ *Monthly Zoom Limit Reached*\n\n` +
+        `${reason}\n\n` +
+        `Your tier: *${tier}*\n` +
+        `Monthly quota: ${usage.quota} streams`,
         { parse_mode: 'Markdown' }
       );
       return;
@@ -486,6 +487,7 @@ async function handleScheduleStream(ctx) {
         `• Title: Name of your stream\n` +
         `• Date & Time: YYYY-MM-DD HH:MM\n` +
         `• Duration: Minutes (default 120)\n\n` +
+        `📊 Your quota: ${usage.remaining}/${usage.quota} streams remaining this month\n\n` +
         `💎 Powered by Zoom!`,
         { parse_mode: 'Markdown' }
       );
