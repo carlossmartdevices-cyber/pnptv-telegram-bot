@@ -342,7 +342,7 @@ async function confirmPostsAndSelectChannels(ctx) {
       inline_keyboard: [
         [
           {
-            text: lang === 'es' ? '📱 Canal Principal' : '📱 Main Channel',
+            text: lang === 'es' ? '📱 Grupo Principal' : '📱 Main Group',
             callback_data: 'ptc_channel_main'
           }
         ],
@@ -354,7 +354,7 @@ async function confirmPostsAndSelectChannels(ctx) {
         ],
         [
           {
-            text: lang === 'es' ? '📢 Canal Anuncios' : '📢 Announcements',
+            text: lang === 'es' ? '📢 Contacto PNP' : '📢 Contacto PNP',
             callback_data: 'ptc_channel_announce'
           }
         ],
@@ -394,9 +394,9 @@ async function toggleChannelSelection(ctx, channelType) {
 
     const lang = ctx.session.language || 'en';
     const channelMap = {
-      'main': process.env.CHANNEL_ID,
-      'premium': process.env.PREMIUM_CHANNEL_ID,
-      'announce': process.env.ANNOUNCE_CHANNEL_ID
+      'main': process.env.FREE_GROUP_ID,      // Main Group
+      'premium': process.env.CHANNEL_ID,      // Premium Channel
+      'announce': process.env.FREE_CHANNEL_ID // Contacto PNP
     };
 
     const channelId = channelMap[channelType];
@@ -418,8 +418,54 @@ async function toggleChannelSelection(ctx, channelType) {
 
     await ctx.answerCbQuery(lang === 'es' ? 'Canal actualizado' : 'Channel updated');
 
-    // Show updated menu
-    await showPostSelectionMenu(ctx);
+    // Update channel selection display
+    const message = lang === 'es'
+      ? `📢 **Paso 2: Selecciona Canales**\n\n${ctx.session.ptcWizard.selectedPostIds.length} posts seleccionados\n\nCanales para publicar:\n\n${ctx.session.ptcWizard.selectedChannelIds.includes(process.env.FREE_GROUP_ID) ? '✅' : '☐'} Grupo Principal\n${ctx.session.ptcWizard.selectedChannelIds.includes(process.env.CHANNEL_ID) ? '✅' : '☐'} Canal Premium\n${ctx.session.ptcWizard.selectedChannelIds.includes(process.env.FREE_CHANNEL_ID) ? '✅' : '☐'} Contacto PNP`
+      : `📢 **Step 2: Select Channels**\n\n${ctx.session.ptcWizard.selectedPostIds.length} posts selected\n\nChannels to publish to:\n\n${ctx.session.ptcWizard.selectedChannelIds.includes(process.env.FREE_GROUP_ID) ? '✅' : '☐'} Main Group\n${ctx.session.ptcWizard.selectedChannelIds.includes(process.env.CHANNEL_ID) ? '✅' : '☐'} Premium Channel\n${ctx.session.ptcWizard.selectedChannelIds.includes(process.env.FREE_CHANNEL_ID) ? '✅' : '☐'} Contacto PNP`;
+
+    const keyboard = {
+      inline_keyboard: [
+        [
+          {
+            text: lang === 'es' 
+              ? `📱 Grupo Principal ${ctx.session.ptcWizard.selectedChannelIds.includes(process.env.FREE_GROUP_ID) ? '✅' : ''}` 
+              : `📱 Main Group ${ctx.session.ptcWizard.selectedChannelIds.includes(process.env.FREE_GROUP_ID) ? '✅' : ''}`,
+            callback_data: 'ptc_channel_main'
+          }
+        ],
+        [
+          {
+            text: lang === 'es' 
+              ? `💎 Canal Premium ${ctx.session.ptcWizard.selectedChannelIds.includes(process.env.CHANNEL_ID) ? '✅' : ''}`
+              : `💎 Premium Channel ${ctx.session.ptcWizard.selectedChannelIds.includes(process.env.CHANNEL_ID) ? '✅' : ''}`,
+            callback_data: 'ptc_channel_premium'
+          }
+        ],
+        [
+          {
+            text: lang === 'es' 
+              ? `📢 Contacto PNP ${ctx.session.ptcWizard.selectedChannelIds.includes(process.env.FREE_CHANNEL_ID) ? '✅' : ''}`
+              : `📢 Contacto PNP ${ctx.session.ptcWizard.selectedChannelIds.includes(process.env.FREE_CHANNEL_ID) ? '✅' : ''}`,
+            callback_data: 'ptc_channel_announce'
+          }
+        ],
+        [
+          {
+            text: lang === 'es' ? '✅ Siguiente' : '✅ Next',
+            callback_data: 'ptc_confirm_channels'
+          }
+        ]
+      ]
+    };
+
+    try {
+      await ctx.editMessageText(message, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard
+      });
+    } catch (e) {
+      logger.debug('Could not update message');
+    }
   } catch (error) {
     logger.error('Error toggling channel selection:', error);
     await ctx.answerCbQuery(t(ctx, 'errors.generic'));

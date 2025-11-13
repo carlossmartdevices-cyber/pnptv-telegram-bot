@@ -169,13 +169,13 @@ pm2 logs pnptv-bot | grep ptc
  * Add to your .env file:
  */
 
-# Admin IDs (comma-separated)
-ADMIN_IDS=123456789,987654321
+# Admin IDs
+ADMIN_IDS=8365312597
 
-# Telegram Channel IDs
-CHANNEL_ID=-1001234567890
-PREMIUM_CHANNEL_ID=-1001234567891
-ANNOUNCE_CHANNEL_ID=-1001234567892
+# Telegram Channel/Group IDs
+FREE_GROUP_ID=-1003291737499          # Main Group (public)
+CHANNEL_ID=-1002997324714              # Premium Channel (paid)
+FREE_CHANNEL_ID=-1003159260496         # Announcements (Contacto PNP)
 
 # Firebase (already configured)
 FIREBASE_PROJECT_ID=your-project

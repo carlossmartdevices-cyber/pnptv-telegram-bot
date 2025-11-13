@@ -14,6 +14,9 @@ const bot = require('./src/bot/index');
 // Import scheduler
 const { initializeScheduler } = require('./src/services/scheduler');
 
+// Import PRIME deadline scheduler
+const { initializePrimeScheduler } = require('./src/services/primeDeadlineScheduler');
+
 // Import message auto-delete cleanup
 const { clearAllTimers } = require('./src/utils/messageAutoDelete');
 
@@ -53,6 +56,9 @@ async function startBot() {
     
     // Initialize scheduled tasks (scheduler runs independently)
     initializeScheduler(bot);
+    
+    // Initialize PRIME membership deadline scheduler
+    initializePrimeScheduler(bot);
     
     // Start event reminder cron job
     startReminderCron(bot);

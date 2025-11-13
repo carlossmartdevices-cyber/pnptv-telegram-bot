@@ -143,6 +143,8 @@ const {
   handleCloseRules
 } = require("./handlers/rules");
 const { handleZoomStatus } = require("./handlers/zoomStatus");
+const { handleBroadcastPrime, handleBroadcastConfirmation } = require("./handlers/broadcastPrimeAdmin");
+const { initializePrimeScheduler } = require("../services/primeDeadlineScheduler");
 
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
@@ -241,6 +243,9 @@ bot.command("deletetrack", handleDeleteTrack);
 bot.command("deleteevent", handleDeleteEvent);
 bot.command("settimezone", handleSetTimezone);
 bot.command("zoomstatus", handleZoomStatus);
+
+// ===== PRIME MIGRATION COMMANDS (Admin Only) =====
+bot.command("broadcastprime", adminMiddleware(), handleBroadcastPrime);
 
 // ===== MODERATION COMMANDS (Admin Only) =====
 bot.command("blacklist", handleShowBlacklist);
@@ -620,6 +625,10 @@ bot.action(/^broadcast_segment_/, async (ctx) => {
   await ctx.answerCbQuery();
   await handleAdminCallback(ctx);
 });
+
+// ===== PRIME MIGRATION CALLBACKS =====
+bot.action("confirm_prime_broadcast", handleBroadcastConfirmation);
+bot.action("cancel_prime_broadcast", handleBroadcastConfirmation);
 
 // ===== MAP CALLBACKS =====
 
