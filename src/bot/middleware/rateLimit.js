@@ -1,4 +1,5 @@
 const logger = require("../../utils/logger");
+const { isAdmin } = require("../../config/admin");
 
 // Store user request timestamps
 const userRequests = new Map();
@@ -10,12 +11,18 @@ const MAX_REQUESTS = 30; // 30 requests per minute
 /**
  * Rate limiting middleware
  * Prevents users from spamming the bot
+ * Admins are exempt from rate limiting
  */
 function rateLimitMiddleware() {
   return async (ctx, next) => {
     const userId = ctx.from?.id;
 
     if (!userId) {
+      return next();
+    }
+
+    // Exempt admins from rate limiting
+    if (isAdmin(userId)) {
       return next();
     }
 

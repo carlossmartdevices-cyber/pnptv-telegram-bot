@@ -111,7 +111,7 @@ function isValidBio(bio) {
   return (
     typeof bio === "string" &&
     bio.trim().length > 0 &&
-    bio.length <= 500
+    bio.length <= 1000 // Increased from 500 to 1000 characters
   );
 }
 
@@ -124,7 +124,7 @@ function isValidLocation(location) {
   return (
     typeof location === "string" &&
     location.trim().length > 0 &&
-    location.length <= 100
+    location.length <= 200 // Increased from 100 to 200 characters
   );
 }
 
@@ -135,7 +135,8 @@ function isValidLocation(location) {
  */
 function isValidUsername(username) {
   if (!username) return false;
-  const usernameRegex = /^[a-zA-Z0-9_]{5,32}$/;
+  // Allow alphanumeric, underscores, dots, and hyphens (common in Telegram usernames)
+  const usernameRegex = /^[a-zA-Z0-9._-]{5,32}$/;
   return usernameRegex.test(username);
 }
 
