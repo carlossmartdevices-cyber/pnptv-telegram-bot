@@ -1,0 +1,219 @@
+================================================================================
+PNPTV TELEGRAM BOT - ENVIRONMENT VARIABLES & CONFIGURATION DOCUMENTATION
+================================================================================
+
+This directory now contains comprehensive documentation of all environment 
+variables, configuration constants, and settings used in the PNPtv Telegram 
+bot project.
+
+FILES CREATED:
+================================================================================
+
+1. ENVIRONMENT_CATALOG.md (COMPREHENSIVE)
+   - 12 sections covering all aspects of configuration
+   - Detailed descriptions of each variable
+   - Usage locations and examples
+   - Organized by category (Telegram, Firebase, Payments, Redis, etc.)
+   - Configuration constants with code snippets
+   - Firestore collections documentation
+   - Logging and monitoring configuration
+   - Setup checklist
+
+2. ENV_VARIABLES_REFERENCE.json (STRUCTURED)
+   - Machine-readable JSON format
+   - All variables with type information
+   - Required/optional flags
+   - Default values
+   - Field descriptions for complex objects
+   - Configuration constants in JSON format
+
+3. ENV_QUICK_REFERENCE.md (QUICK START)
+   - Minimum required variables
+   - Highly recommended settings
+   - Organized by feature area
+   - Default values table
+   - Tips and best practices
+   - Quick links to detailed documentation
+
+ENVIRONMENT VARIABLE SUMMARY:
+================================================================================
+
+CRITICAL (2 variables - MUST SET):
+  1. TELEGRAM_TOKEN - Bot authentication token
+  2. FIREBASE_CREDENTIALS - Firebase service account JSON
+
+IMPORTANT (3 variables - SHOULD SET):
+  1. FIREBASE_PROJECT_ID - Firebase project identifier
+  2. NODE_ENV - Environment mode (production/development/test)
+  3. PORT - Server port (default: 3000)
+
+TELEGRAM CHANNELS (3 variables):
+  1. CHANNEL_ID - Premium channel (default: -1002997324714)
+  2. FREE_CHANNEL_ID - Free tier channel (default: -1003159260496)
+  3. FREE_GROUP_ID - Community group (default: -1003291737499)
+
+PAYMENTS (9+ variables):
+  Daimo: DAIMO_WEBHOOK_TOKEN, DAIMO_WEBHOOK_URL, DAIMO_API_KEY, etc.
+  COP Card: COP_CARD_PAYMENT_LINK, COP_CARD_MERCHANT_NAME, etc.
+
+ADMIN & WEBHOOKS (5 variables):
+  ADMIN_IDS, WEBHOOK_URL, BOT_URL, WEBAPP_URL, WEB_APP_URL
+
+REDIS CACHING (5 variables):
+  REDIS_ENABLED, REDIS_URL, REDIS_HOST, REDIS_PORT, REDIS_DB, REDIS_PASSWORD
+
+AI & THIRD-PARTY (8 variables):
+  MISTRAL_API_KEY, MISTRAL_AGENT_ID
+  ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET
+
+MONITORING & LOGGING (3 variables):
+  SENTRY_DSN, SENTRY_ENABLE_IN_DEV, LOG_LEVEL
+
+FRONTEND (5 variables):
+  NEXT_PUBLIC_DAIMO_APP_ID, NEXT_PUBLIC_TREASURY_ADDRESS, 
+  NEXT_PUBLIC_REFUND_ADDRESS, NEXT_PUBLIC_WEBAPP_URL, NEXT_PUBLIC_BOT_URL
+
+FEATURE FLAGS (1 variable):
+  AUTO_ACTIVATE_FREE_USERS
+
+TOTAL ENVIRONMENT VARIABLES USED: 51+
+
+CONFIGURATION CONSTANTS IN CODE:
+================================================================================
+
+Session Management:
+  - ACCESS_TOKEN_EXPIRY: 3600 seconds (1 hour)
+  - REFRESH_TOKEN_EXPIRY: 2592000 seconds (30 days)
+  - MAX_SESSIONS_PER_USER: 5
+  - TOKEN_ROTATION_THRESHOLD: 900 seconds (15 minutes)
+
+Rate Limiting:
+  - RATE_LIMIT_WINDOW: 60000 ms (1 minute)
+  - MAX_REQUESTS: 30 per window
+
+Caching TTLs:
+  - PLANS_LIST: 3600s (1 hour)
+  - PLAN_BY_ID: 7200s (2 hours)
+  - PLAN_STATS: 300s (5 minutes)
+  - LOCALE_DATA: 86400s (24 hours)
+  - MENU_CONFIG: 43200s (12 hours)
+  - USER_SESSION: 1800s (30 minutes)
+
+Subscription Plans (5 tiers):
+  1. TRIAL_WEEK - $14.99 for 7 days (Basic)
+  2. PNP_MEMBER - $24.99 for 30 days (Basic)
+  3. PNP_CRYSTAL - $49.99 for 120 days (Premium)
+  4. PNP_DIAMOND - $99.99 for 365 days (Premium)
+  5. LIFETIME_PASS - $249.99 for 36500 days (Premium)
+
+Firestore Error Codes:
+  16 standard Firestore error codes with HTTP status mappings
+
+Timezone Map:
+  40+ country/region to timezone mappings
+
+SOURCE CODE LOCATIONS:
+================================================================================
+
+Configuration Files:
+  /src/config/env.js - Environment validation & loading
+  /src/config/firebase.js - Firebase initialization
+  /src/config/admin.js - Admin configuration
+  /src/config/sentry.js - Error tracking setup
+  /src/config/plans.js - Subscription plans
+  /src/config/i18n.js - Internationalization
+
+Utilities:
+  /src/utils/sessionManager.js - Session configuration
+  /src/utils/logger.js - Logging setup
+  /src/utils/firestoreErrorHandler.js - Error code mappings
+  /src/utils/timezoneHelper.js - Timezone mappings
+
+Services:
+  /src/services/cacheService.js - Redis cache configuration
+  /src/services/zoomService.js - Zoom integration
+  /src/services/planService.js - Plan management
+
+Middleware:
+  /src/bot/middleware/rateLimit.js - Rate limiting constants
+
+Handlers:
+  /src/bot/handlers/promoHandler.js - Promotion configuration
+
+VALIDATION & SECURITY:
+================================================================================
+
+Validation:
+  - Critical variables: TELEGRAM_TOKEN, FIREBASE_CREDENTIALS
+  - Important variables: NODE_ENV, FIREBASE_PROJECT_ID, PORT
+  - Optional variables: Logged as info only
+
+Security:
+  - Sensitive variable patterns masked in logs:
+    * /token/i, /key/i, /secret/i, /password/i
+    * /credential/i, /private/i
+  - Firebase private keys never logged
+  - Admin tokens sanitized in error reports
+  - Sentry filters sensitive environment variables
+
+Supported Firebase Formats:
+  - Raw JSON string
+  - Base64 encoded JSON
+  - Individual FIREBASE_* environment variables
+  - Local firebase_credentials.json file (for development)
+
+QUICK START:
+================================================================================
+
+Minimum setup for running the bot:
+
+1. Set TELEGRAM_TOKEN
+   Get from @BotFather on Telegram
+
+2. Set FIREBASE_CREDENTIALS
+   Download from Firebase project settings
+   Can be raw JSON or base64 encoded
+
+3. Set FIREBASE_PROJECT_ID
+   From Firebase console
+
+4. Set NODE_ENV (development or production)
+
+5. (Optional but recommended):
+   - CHANNEL_ID for premium features
+   - ADMIN_IDS for management commands
+   - SENTRY_DSN for production monitoring
+
+See ENV_QUICK_REFERENCE.md for quick setup guide.
+
+DOCUMENTATION HIERARCHY:
+================================================================================
+
+For Quick Start Users:
+  Start with: ENV_QUICK_REFERENCE.md
+  
+For Integration/Deployment:
+  Use: ENV_VARIABLES_REFERENCE.json
+
+For Detailed Understanding:
+  Read: ENVIRONMENT_CATALOG.md
+
+For Development:
+  Check: Source files in /src/config/
+
+NOTES:
+================================================================================
+
+- All channel/group IDs must be negative numbers (Telegram format)
+- Admin IDs are parsed as comma-separated integers
+- Redis is optional but recommended for production
+- Sentry DSN is optional but highly recommended for production
+- Payment webhooks require public WEBHOOK_URL
+- Firebase storage bucket defaults to {projectId}.appspot.com
+- Environment variables are validated on application startup
+- Production uses only environment variables, never .env files
+
+For more information, review the source code in /src/config/
+For local development setup, see .env.example files
+
+================================================================================
