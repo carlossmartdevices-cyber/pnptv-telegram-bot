@@ -1,0 +1,407 @@
+================================================================================
+PNPTV BOT - COMMAND FLOW & ARCHITECTURE
+================================================================================
+
+USER ENTRY POINTS
+================================================================================
+
+                                /start
+                                  |
+                    +---YES---Returning User?---NO---+
+                    |                                 |
+                    v                                 v
+            Show Main Menu                   Onboarding Flow
+            (Already Onboarded)              (language, age, terms)
+            
+                    |                                 |
+                    +----------+----------+-----------+
+                               |
+                        Main Menu Options:
+                               |
+        +---------+---------+-------+----------+----------+
+        |         |         |       |          |          |
+       /map     /nearby   /app   /live    /profile    /subscribe
+        |         |        |       |          |          |
+        v         v        v       v          v          v
+      MAP      NEARBY    MINI    LIVE      PROFILE    SUBSCRIBE
+     SEARCH    USERS     APP     STREAMS   MGMT       PLANS
+        |         |        |       |          |          |
+        +----Yes/No Question----> View/Edit---> Payment
+
+
+COMMAND EXECUTION FLOW
+================================================================================
+
+    SLASH COMMAND (/command)
+            |
+            v
+    Handler Function
+            |
+            +---> Check Onboarding
+            |
+            +---> Check Permissions/Tier
+            |
+            +---> Execute Logic
+            |
+            v
+    Send Response / Inline Buttons
+            |
+            v
+    USER CLICKS BUTTON (callback_data)
+            |
+            v
+    Bot.action() Router
+            |
+            +---> Match callback pattern
+            |
+            +---> Call handler function
+            |
+            v
+    Execute Callback Action
+            |
+            v
+    Edit/Send Message or Set waitingFor State
+
+
+MULTI-STEP FORM FLOW EXAMPLE
+================================================================================
+
+User: /profile
+         |
+         v
+Send profile + edit buttons
+         |
+         v
+User clicks: edit_bio
+         |
+         v
+bot.action("edit_bio")
+    - Set: ctx.session.waitingFor = "bio"
+    - Ask: "Enter your bio"
+         |
+         v
+User sends text
+         |
+         v
+bot.on("text") handler
+    - Check: if ctx.session.waitingFor === "bio"
+    - Yes: Save to database
+    - Clear: ctx.session.waitingFor = null
+    - Show: Updated profile
+
+
+ADMIN COMMAND HIERARCHY
+================================================================================
+
+/admin (adminMiddleware required)
+   |
+   +--- Admin Panel
+        |
+        +--- [Stats] admin_stats
+        |     |-> Load user data
+        |     |-> Calculate metrics
+        |     |-> Send dashboard
+        |
+        +--- [Users] admin_users
+        |     |
+        |     +--- [List] admin_list_all
+        |     |     |-> admin_list_page_N (pagination)
+        |     |
+        |     +--- [Search] admin_search_user
+        |     |     |-> "admin_search" state
+        |     |     |-> Get query text
+        |     |     |-> execute_search()
+        |     |
+        |     +--- [Filter] admin_list_premium
+        |     |            admin_list_new
+        |     |
+        |     +--- User Detail admin_user_[userId]
+        |           |
+        |           +--- Edit Tier admin_edit_tier_[userId]
+        |           |    |-> admin_tier:[tier]:[days]:[userId]
+        |           |    |-> setUserTier()
+        |           |
+        |           +--- Message admin_message_[userId]
+        |           |    |-> "admin_message_[userId]" state
+        |           |    |-> Get message text
+        |           |    |-> executeSendMessage()
+        |           |
+        |           +--- Ban admin_ban_[userId]
+        |           |    |-> admin_confirm_ban_[userId]
+        |           |    |-> executeBanUser()
+        |           |
+        |           +--- Unban admin_unban_[userId]
+        |                |-> unbanUser()
+        |
+        +--- [Broadcast] admin_broadcast
+        |     |
+        |     +--- Select Audience bcast_select_audience
+        |     |    |
+        |     |    +--- Subscribers bcast_filter_subscribers
+        |     |    +--- Free users bcast_filter_free
+        |     |    +--- All users bcast_filter_all
+        |     |
+        |     +--- Upload Media
+        |     |    |-> bot.on("photo|video|document")
+        |     |    |-> "broadcast_media" state
+        |     |
+        |     +--- Message Text
+        |     |    |-> "broadcast_text" state
+        |     |    |-> Get message
+        |     |
+        |     +--- Add Buttons (optional)
+        |     |    |-> "broadcast_buttons" state
+        |     |
+        |     +--- Schedule Date (optional)
+        |     |    |-> "broadcast_schedule_date" state
+        |     |
+        |     +--- Preview bcast_schedule_confirm
+        |     |
+        |     +--- Send bcast_send_now
+        |          |-> executeBroadcast()
+        |
+        +--- [Membership] admin_membership
+        |     |
+        |     +--- Activate admin_activate_membership
+        |     |    |-> "admin_activate_userid" state
+        |     |    |-> processActivationUserId()
+        |     |    |-> executeQuickActivation()
+        |     |
+        |     +--- Update admin_update_member_userid
+        |     |    |-> "admin_update_member_userid" state
+        |     |    |-> processUpdateMemberUserId()
+        |     |    |-> admin_change_tier_[userId]
+        |     |
+        |     +--- Extend admin_extend_userid
+        |          |-> "admin_extend_userid" state
+        |          |-> admin_extend_custom_days_[userId]
+        |
+        +--- [Plans] /plans
+              |
+              +--- Create/Edit Plan
+              |    |-> admin_plan_edit_[field]_[planName]
+              |    |-> "admin_plan_edit_[field]_[planName]" state
+              |
+              +--- Delete Plan
+              |
+              +--- Set Pricing/Duration
+
+
+SUBSCRIPTION PAYMENT FLOW
+================================================================================
+
+User: /subscribe
+      |
+      v
+Show Plans
+      |
+      +--- Select plan_select_[planId]
+      |    |
+      |    +--- Regular Payment
+      |    |    |-> handleSubscription()
+      |    |    |-> Payment processing...
+      |    |
+      |    +--- Daimo Pay daimo_show_plans
+      |         |
+      |         v
+      |    Show Daimo Plans
+      |         |
+      |         v
+      |    Select daimo_plan_[planId]
+      |         |
+      |         v
+      |    handleDaimoPlanSelection()
+      |         |
+      |         +--- Check Daimo config
+      |         +--- Get plan details
+      |         +--- Call Daimo API
+      |         +--- Generate payment link
+      |         +--- Show payment link + instructions
+      |         |
+      |         v
+      |    User: Click "Pay Now"
+      |         |
+      |         v
+      |    Daimo Checkout (external)
+      |         |
+      |         v
+      |    Webhook: Payment confirmed
+      |         |
+      |         v
+      |    Activate membership
+      |
+      +--- Help daimo_help
+           |-> Show payment methods
+           |-> Show security info
+
+
+AI CHAT FLOW
+================================================================================
+
+/aichat or start_ai_chat button
+      |
+      v
+startAIChat()
+      |
+      +--- Check Mistral API
+      |
+      +--- Set ctx.session.aiChatActive = true
+      |
+      +--- Send welcome message
+      |
+      v
+User sends message
+      |
+      v
+bot.on("text") handler
+      |
+      +--- Check: ctx.session.aiChatActive === true
+      |
+      +--- handleChatMessage()
+      |    |
+      |    +--- Guard: message exists
+      |    |
+      |    +--- Guard: not a command (no /)
+      |    |
+      |    +--- Rate limiting (3 sec)
+      |    |
+      |    +--- Send "thinking..." message
+      |    |
+      |    +--- Add to chat history
+      |    |
+      |    +--- Call Mistral AI
+      |    |
+      |    +--- Get response
+      |    |
+      |    +--- Add response to history
+      |    |
+      |    +--- Send response (split if >4000 chars)
+      |
+      v
+/endchat
+      |
+      v
+endAIChat()
+      |
+      +--- Clear ctx.session.aiChatActive
+      |
+      +--- Clear ctx.session.aiChatHistory
+      |
+      +--- Send goodbye
+      |
+      v
+Return to Main Menu
+
+
+ONBOARDING STATE MACHINE
+================================================================================
+
+New User: /start
+    |
+    v
+Language Selection (lang_en / lang_es)
+    |
+    v
+Age Verification (confirm_age)
+    |
+    v
+Terms of Service (accept_terms / decline_terms)
+    |
+    v
+Privacy Policy (accept_privacy / decline_privacy)
+    |
+    v
+Email Collection (optional, in message handler)
+    |
+    v
+Profile Creation (bio, location, photo)
+    |
+    v
+onboardingComplete = true
+    |
+    v
+Show Main Menu
+
+
+KEY MIDDLEWARE & EXECUTION ORDER
+================================================================================
+
+1. bot.use(session)
+   -> Firestore session middleware (30 day TTL)
+
+2. bot.use(rateLimitMiddleware())
+   -> Per-user rate limiting
+
+3. bot.use(privateResponseMiddleware())
+   -> Redirect group responses to private chat
+
+4. bot.use((ctx, next) => {...})
+   -> Set Sentry user context
+
+5. bot.catch(error handler)
+   -> Error capture and Sentry integration
+
+6. bot.on(text) - Message handlers
+   -> Check onboarding
+   -> Check waitingFor state
+   -> Route to appropriate handler
+
+7. bot.action() - Callback handlers
+   -> Match callback data patterns
+   -> Execute callbacks
+
+
+FILE STRUCTURE REFERENCE
+================================================================================
+
+src/bot/
+├── index.js (Main bot setup - all commands registered here)
+├── webhook.js
+├── handlers/
+│   ├── start.js          (Onboarding)
+│   ├── help.js           (Help info)
+│   ├── profile.js        (Profile CRUD)
+│   ├── map.js            (Location search)
+│   ├── nearby.js         (Nearby users)
+│   ├── live.js           (Live streams)
+│   ├── app.js            (Web app launcher)
+│   ├── subscribe.js      (Subscription plans)
+│   ├── aiChat.js         (Mistral AI chat)
+│   ├── community.js      (Music, events, calls)
+│   ├── daimoPayHandler.js (Crypto payments)
+│   ├── admin.js          (Admin functions 40+)
+│   └── admin/
+│       └── planManager.js (Plan CRUD)
+├── helpers/
+│   ├── onboardingHelpers.js
+│   ├── subscriptionHelpers.js
+│   └── groupManagement.js
+├── middleware/
+│   ├── session.js
+│   ├── rateLimit.js
+│   └── errorHandler.js
+└── api/
+    └── routes.js
+
+
+STATISTICS & MONITORING
+================================================================================
+
+Bot tracks:
+  - Total users
+  - Active users (today/week)
+  - Tier distribution
+  - Feature adoption rates
+  - Revenue metrics
+  - User journey tracking
+  - Error rates (Sentry)
+
+Admin can view:
+  /admin -> admin_stats
+    - User counts
+    - Activity metrics
+    - Revenue estimates
+    - Onboarding completion
+
+
+================================================================================

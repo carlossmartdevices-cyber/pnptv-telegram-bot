@@ -1,0 +1,12 @@
+{
+  "watch": ["src"],
+  "ignore": [
+    "node_modules",
+    ".git",
+    "*.log",
+    "*.md",
+    ".vscode",
+    ".env"
+  ],
+  "delay": 2000
+}

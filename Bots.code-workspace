@@ -1,0 +1,13 @@
+{
+  "folders": [
+	{
+		"name": "Bots",
+		"path": "."
+	}
+],
+  "settings": {
+    "chatgpt.openOnStartup": true,
+    "claude-code.useTerminal": false,
+    "vscode-ocr-mistral.apiKey": "ag:4adc4099:20250930:untitled-agent:1a37e486"
+  }
+}

@@ -1,0 +1,339 @@
+{
+  "environment_variables": {
+    "critical": {
+      "TELEGRAM_TOKEN": {
+        "description": "Telegram bot API token",
+        "type": "string",
+        "required": true,
+        "examples": ["110201543:AAHdF4aBEtPhonzu_ID..."]
+      },
+      "FIREBASE_CREDENTIALS": {
+        "description": "Firebase service account JSON (raw or base64)",
+        "type": "json",
+        "required": true,
+        "fields": ["type", "project_id", "private_key", "client_email"]
+      }
+    },
+    "important": {
+      "FIREBASE_PROJECT_ID": {
+        "description": "Firebase project ID",
+        "type": "string",
+        "required": true
+      },
+      "NODE_ENV": {
+        "description": "Environment mode",
+        "type": "string",
+        "required": true,
+        "values": ["production", "development", "test"],
+        "default": "development"
+      },
+      "PORT": {
+        "description": "Server port",
+        "type": "number",
+        "required": false,
+        "default": 3000
+      }
+    },
+    "telegram_channels": {
+      "CHANNEL_ID": {
+        "description": "Premium channel ID",
+        "type": "string",
+        "default": "-1002997324714",
+        "usage": "Premium user access"
+      },
+      "FREE_CHANNEL_ID": {
+        "description": "Free tier channel ID",
+        "type": "string",
+        "default": "-1003159260496",
+        "usage": "Trial and free tier users"
+      },
+      "FREE_GROUP_ID": {
+        "description": "Free group ID",
+        "type": "string",
+        "default": "-1003291737499",
+        "usage": "Community broadcasts"
+      }
+    },
+    "payments": {
+      "daimo": {
+        "DAIMO_WEBHOOK_TOKEN": {
+          "description": "Daimo webhook auth token",
+          "type": "string",
+          "required": false
+        },
+        "DAIMO_WEBHOOK_URL": {
+          "description": "Daimo webhook endpoint",
+          "type": "url",
+          "default": "https://pnptv.app/daimo/webhook"
+        },
+        "DAIMO_API_KEY": {
+          "description": "Daimo API key",
+          "type": "string",
+          "required": false
+        },
+        "DAIMO_DESTINATION_ADDRESS": {
+          "description": "Wallet for Daimo payments",
+          "type": "address",
+          "required": false
+        },
+        "DAIMO_REFUND_ADDRESS": {
+          "description": "Refund wallet address",
+          "type": "address",
+          "required": false
+        }
+      },
+      "cop_card": {
+        "COP_CARD_PAYMENT_LINK": {
+          "description": "COP card payment link",
+          "type": "url",
+          "default": "https://pnptv.app/cop-card/instructions"
+        },
+        "COP_CARD_MERCHANT_NAME": {
+          "description": "Merchant name",
+          "type": "string",
+          "default": "PNPtv"
+        },
+        "COP_CARD_ADMIN_NOTIFICATION_CHAT_ID": {
+          "description": "Admin notification chat",
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    "redis_caching": {
+      "REDIS_ENABLED": {
+        "description": "Enable Redis caching",
+        "type": "boolean",
+        "default": "false",
+        "values": ["true", "false"]
+      },
+      "REDIS_URL": {
+        "description": "Redis connection URL",
+        "type": "url",
+        "format": "redis://user:pass@host:port",
+        "required": false
+      },
+      "REDIS_HOST": {
+        "description": "Redis hostname",
+        "type": "string",
+        "default": "127.0.0.1"
+      },
+      "REDIS_PORT": {
+        "description": "Redis port",
+        "type": "number",
+        "default": 6379
+      },
+      "REDIS_PASSWORD": {
+        "description": "Redis password",
+        "type": "string",
+        "required": false
+      },
+      "REDIS_DB": {
+        "description": "Redis database number",
+        "type": "number",
+        "default": 0
+      }
+    },
+    "admin": {
+      "ADMIN_IDS": {
+        "description": "Comma-separated admin user IDs",
+        "type": "string",
+        "format": "123456,789012,345678",
+        "default": "8365312597"
+      }
+    },
+    "ai_services": {
+      "MISTRAL_API_KEY": {
+        "description": "Mistral AI API key",
+        "type": "string",
+        "required": false,
+        "usage": "AI chat responses"
+      },
+      "MISTRAL_AGENT_ID": {
+        "description": "Mistral AI agent ID",
+        "type": "string",
+        "required": false
+      }
+    },
+    "zoom": {
+      "ZOOM_ACCOUNT_ID": {
+        "description": "Zoom account ID",
+        "type": "string",
+        "required": false
+      },
+      "ZOOM_CLIENT_ID": {
+        "description": "Zoom OAuth client ID",
+        "type": "string",
+        "required": false
+      },
+      "ZOOM_CLIENT_SECRET": {
+        "description": "Zoom OAuth secret",
+        "type": "string",
+        "required": false
+      }
+    },
+    "webhooks": {
+      "WEBHOOK_URL": {
+        "description": "Public webhook URL",
+        "type": "url",
+        "default": "https://pnptv.app"
+      },
+      "BOT_URL": {
+        "description": "Bot API endpoint",
+        "type": "url",
+        "required": false
+      },
+      "WEBAPP_URL": {
+        "description": "Web app/mini app URL",
+        "type": "url",
+        "default": "https://pnptv.app/app"
+      },
+      "WEB_APP_URL": {
+        "description": "Web app URL (alternative)",
+        "type": "url",
+        "required": false
+      }
+    },
+    "monitoring": {
+      "SENTRY_DSN": {
+        "description": "Sentry error tracking DSN",
+        "type": "url",
+        "required": false,
+        "environment": "production"
+      },
+      "SENTRY_ENABLE_IN_DEV": {
+        "description": "Enable Sentry in dev",
+        "type": "boolean",
+        "default": "false"
+      },
+      "LOG_LEVEL": {
+        "description": "Logger level",
+        "type": "string",
+        "values": ["error", "warn", "info", "debug"],
+        "default": "info"
+      }
+    },
+    "frontend": {
+      "TELEGRAM_BOT_USERNAME": {
+        "description": "Bot username",
+        "type": "string",
+        "default": "PNPtvBot"
+      },
+      "NEXT_PUBLIC_DAIMO_APP_ID": {
+        "description": "Public Daimo app ID",
+        "type": "string",
+        "required": false
+      },
+      "NEXT_PUBLIC_TREASURY_ADDRESS": {
+        "description": "Public treasury address",
+        "type": "address",
+        "required": false
+      },
+      "NEXT_PUBLIC_REFUND_ADDRESS": {
+        "description": "Public refund address",
+        "type": "address",
+        "required": false
+      },
+      "NEXT_PUBLIC_WEBAPP_URL": {
+        "description": "Public webapp URL",
+        "type": "url",
+        "default": "https://pnptv.app/app"
+      },
+      "NEXT_PUBLIC_BOT_URL": {
+        "description": "Public bot URL",
+        "type": "url",
+        "required": false
+      }
+    },
+    "feature_flags": {
+      "AUTO_ACTIVATE_FREE_USERS": {
+        "description": "Auto-activate free tier users",
+        "type": "boolean",
+        "default": "false"
+      }
+    }
+  },
+  "configuration_constants": {
+    "session": {
+      "ACCESS_TOKEN_EXPIRY": "3600 seconds (1 hour)",
+      "REFRESH_TOKEN_EXPIRY": "2592000 seconds (30 days)",
+      "MAX_SESSIONS_PER_USER": 5,
+      "TOKEN_ROTATION_THRESHOLD": "900 seconds (15 minutes)"
+    },
+    "rate_limiting": {
+      "RATE_LIMIT_WINDOW": "60000 ms (1 minute)",
+      "MAX_REQUESTS": 30
+    },
+    "cache_ttl": {
+      "PLANS_LIST": "3600 seconds (1 hour)",
+      "PLAN_BY_ID": "7200 seconds (2 hours)",
+      "PLAN_STATS": "300 seconds (5 minutes)",
+      "LOCALE_DATA": "86400 seconds (24 hours)",
+      "MENU_CONFIG": "43200 seconds (12 hours)",
+      "USER_SESSION": "1800 seconds (30 minutes)"
+    },
+    "promotion": {
+      "PROMO_AMOUNT": "$10 USD",
+      "PROMO_CURRENCY": "USD",
+      "PROMO_LINK": "https://checkout.nequi.wompi.co/l/xo2XHx"
+    },
+    "plans": {
+      "TRIAL_WEEK": {
+        "price": "$14.99",
+        "duration": "7 days",
+        "tier": "Basic"
+      },
+      "PNP_MEMBER": {
+        "price": "$24.99",
+        "duration": "30 days",
+        "tier": "Basic"
+      },
+      "PNP_CRYSTAL": {
+        "price": "$49.99",
+        "duration": "120 days",
+        "tier": "Premium"
+      },
+      "PNP_DIAMOND": {
+        "price": "$99.99",
+        "duration": "365 days",
+        "tier": "Premium"
+      },
+      "LIFETIME_PASS": {
+        "price": "$249.99",
+        "duration": "36500 days",
+        "tier": "Premium"
+      }
+    }
+  },
+  "firestore_collections": {
+    "users": "User profiles and data",
+    "plans": "Subscription plans",
+    "sessions": "User sessions with tokens",
+    "payments": "Payment records",
+    "bot_sessions": "Bot conversation sessions",
+    "menus": "Menu configurations",
+    "locales": "i18n strings"
+  },
+  "required_setup": {
+    "minimum": [
+      "TELEGRAM_TOKEN",
+      "FIREBASE_CREDENTIALS",
+      "FIREBASE_PROJECT_ID",
+      "NODE_ENV"
+    ],
+    "recommended": [
+      "CHANNEL_ID",
+      "FREE_CHANNEL_ID",
+      "ADMIN_IDS",
+      "WEBHOOK_URL",
+      "SENTRY_DSN"
+    ],
+    "optional": [
+      "REDIS_URL",
+      "MISTRAL_API_KEY",
+      "ZOOM_*",
+      "DAIMO_*",
+      "COP_CARD_*"
+    ]
+  }
+}

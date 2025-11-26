@@ -1,0 +1,220 @@
+================================================================================
+PNPTV BOT - QUICK COMMAND REFERENCE
+================================================================================
+
+USER COMMANDS (17 Total)
+================================================================================
+
+SLASH COMMANDS (/command)
+  /start         - Welcome & Onboarding
+  /help          - Help Information  
+  /profile       - View/Edit Profile
+  /map           - Search Nearby (5/10/25/50km)
+  /nearby        - Nearby Users Mini App (3 searches/week free)
+  /live          - Live Streams [Coming Soon]
+  /app           - Open PNPtv Web App
+  /subscribe     - View Subscription Plans
+  /aichat        - Start AI Support Chat
+  /endchat       - End AI Chat Session
+  /library       - Music Library [Premium]
+  /toptracks     - Show Top Tracks
+  /schedulecall  - Schedule Video Call [Premium, Coming Soon]
+  /schedulestream - Schedule Live Stream [Premium, Coming Soon]
+  /upcoming      - View Upcoming Events
+  /admin         - Admin Panel [Admin Only]
+  /plans         - Manage Plans [Admin Only]
+
+INLINE BUTTONS / CALLBACKS
+  back_to_main              - Return to main menu
+  show_my_profile           - View your profile
+  show_nearby               - Open nearby feature
+  show_help                 - Show help
+  show_subscription_plans   - View subscription options
+
+PROFILE ACTIONS
+  edit_bio                  - Edit biography
+  edit_location             - Share/edit location
+  edit_photo                - Upload profile photo
+  profile_settings          - Open settings
+  settings_toggle_ads       - Toggle ads on/off
+
+ONBOARDING FLOW
+  lang_en / lang_es         - Language selection
+  confirm_age               - Confirm age (18+)
+  accept_terms              - Accept ToS
+  accept_privacy            - Accept privacy
+  decline_terms             - Decline ToS
+  decline_privacy           - Decline privacy
+
+SUBSCRIPTION
+  plan_select_[planId]      - Select payment plan
+  daimo_show_plans          - Show Daimo Pay plans
+  daimo_plan_[planId]       - Select Daimo Pay plan
+  daimo_help                - Daimo Pay info
+
+MAPPING & LOCATION
+  share_location            - Share location
+  search_nearby_5/10/25/50  - Search at radius
+  profile_view_map          - View map
+
+ADMIN COMMANDS (40+ Admin Actions)
+================================================================================
+
+PANEL & MANAGEMENT
+  /admin                    - Admin panel
+  /plans                    - Plan management
+  admin_stats               - View statistics
+  admin_list_all            - List all users
+  admin_list_premium        - Premium users
+  admin_list_new            - New users (7d)
+  admin_list_page_[n]       - User pagination
+  admin_search_user         - Search user
+  
+USER MANAGEMENT
+  admin_edit_tier_[userId]  - Edit subscription tier
+  admin_message_[userId]    - Send message to user
+  admin_ban_[userId]        - Ban user
+  admin_unban_[userId]      - Unban user
+  admin_change_tier_[userId] - Change tier
+  admin_modify_expiration_[userId] - Extend subscription
+  admin_quick_activate_[userId]_[tier]_[days] - Quick activation
+  admin_tier:[tier]:[days]:[userId] - Set tier
+  admin_activate_membership - Membership activation flow
+  admin_update_member_userid - Update member flow
+  admin_extend_userid       - Extend membership flow
+
+BROADCAST SYSTEM
+  bcast_lang_[en|es]        - Broadcast language
+  bcast_select_audience     - Select broadcast audience
+  bcast_filter_*            - Audience filters
+  bcast_schedule_confirm    - Schedule confirmation
+  bcast_send_now            - Send immediately
+
+PLAN MANAGEMENT
+  plan:[action]             - Plan callbacks
+
+FORM INPUT STATES (ctx.session.waitingFor)
+================================================================================
+
+PROFILE
+  "bio"                     - Waiting for bio text
+  "location_text"           - Waiting for location
+  "profile_photo"           - Waiting for photo
+
+ADMIN
+  "admin_search"            - Waiting for search query
+  "admin_message_[userId]"  - Waiting for message
+  "admin_activate_userid"   - Waiting for user ID
+  "admin_update_member_userid" - Waiting for user ID
+  "admin_extend_userid"     - Waiting for user ID
+  "admin_extend_custom_days_[userId]" - Waiting for days
+  "admin_modify_expiration_[userId]" - Waiting for date
+  "admin_plan_edit_[field]_[planName]" - Waiting for field value
+
+BROADCAST
+  "broadcast_media"         - Waiting for media file
+  "broadcast_text"          - Waiting for message text
+  "broadcast_buttons"       - Waiting for button config
+  "broadcast_schedule_date" - Waiting for date
+
+HANDLERS & FEATURES
+================================================================================
+
+USER HANDLERS (src/bot/handlers/)
+  start.js         - Onboarding & main menu
+  help.js          - Help information
+  profile.js       - Profile management (photo, bio, location, settings)
+  map.js           - Geolocation search
+  nearby.js        - Nearby users mini app
+  live.js          - Live streams [Coming Soon]
+  app.js           - Web app launcher
+  subscribe.js     - Subscription plans
+  aiChat.js        - AI support (Mistral)
+
+ADMIN HANDLERS
+  admin.js         - Admin panel & user management (40+ functions)
+  daimoPayHandler.js - Daimo Pay integration
+  admin/planManager.js - Plan management
+
+COMMUNITY HANDLERS
+  community.js     - Music library, events, calls, streams
+
+MEDIA HANDLING
+  photo            - Profile photos, broadcast media
+  video            - Videos, broadcast media
+  document         - Documents, broadcast media
+  audio            - Music library
+  voice/sticker/animation - Group restrictions
+
+GROUP FEATURES
+  new_chat_members - Welcome new members
+  Media enforcement - Based on user permissions
+
+INTEGRATION POINTS
+================================================================================
+
+MISTRAL AI
+  - Endpoint: mistral-small-latest
+  - Features: Customer support, sales promotion
+  - Languages: EN, ES (auto-detect)
+  - Rate limit: 3 seconds between messages
+  - History: Last 20 messages
+
+DAIMO PAY (USDC Stablecoin)
+  - Payment method for subscriptions
+  - Supported chains: Base Network (lowest fees)
+  - Instant automatic activation
+  - Payment sources: Cash App, Venmo, Zelle, Coinbase, Binance, etc.
+
+FIREBASE
+  - User profiles and authentication
+  - Subscription management
+  - Session storage (30 days TTL)
+  - Activity tracking
+
+TELEGRAM MINI APPS
+  - PNPtv Community App (full features)
+  - Nearby Users Mini App (location-based discovery)
+  - Music Library (playlists)
+
+STATISTICS & MONITORING
+================================================================================
+  - Total users
+  - Active users (today/week)
+  - Premium vs Free breakdown
+  - Profile completion rates (photo, location)
+  - Revenue estimates
+  - Tier distribution
+
+SUBSCRIPTION PLANS
+================================================================================
+  Free              - Basic access, 3 nearby searches/week
+  Trial Week        - $14.99, 1 week
+  PNP Member        - $24.99/month
+  Crystal Member    - $49.99/4 months
+  Diamond Member    - $99.99/year
+
+SESSION VARIABLES
+================================================================================
+  onboardingComplete  - User completed onboarding
+  language            - en or es
+  tier                - Subscription tier
+  aiChatActive        - In AI chat mode
+  aiChatHistory       - Chat messages array
+  waitingFor          - Form input state
+  awaitingEmail       - Email collection state
+
+MIDDLEWARE & SECURITY
+================================================================================
+  Session Middleware    - Firestore-based (30 day TTL)
+  Rate Limiting         - Per-user request limiting
+  Private Response      - Redirects group responses to DM
+  Error Handling        - Sentry integration
+  Admin Middleware      - Requires admin authorization
+
+================================================================================
+Last Updated: November 2025
+Total Commands: 17 slash commands + 60+ callback actions
+Total Handlers: 14 handler files
+Total Functions: 80+ handler functions
+================================================================================

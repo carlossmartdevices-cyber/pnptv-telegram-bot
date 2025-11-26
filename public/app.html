@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNPtv Community</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            line-height: 1.6;
+        }
+
+        /* Desktop Version Styles */
+        .desktop-version {
+            display: none;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .desktop-header {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .desktop-header h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .desktop-header p {
+            font-size: 1.5rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .desktop-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .desktop-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 40px 0;
+        }
+
+        .desktop-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .desktop-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .desktop-card .icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .desktop-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .desktop-card p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .desktop-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .desktop-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .desktop-cta {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .desktop-cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .desktop-cta .cta-btn {
+            font-size: 1.2rem;
+            padding: 15px 40px;
+            margin: 20px 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .desktop-cta .cta-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Mobile Version Styles */
+        .mobile-version {
+            display: none;
+            padding: 16px;
+            min-height: 100vh;
+        }
+
+        .mobile-header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding: 20px 0;
+        }
+
+        .mobile-logo {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            color: var(--tg-theme-link-color, #007aff);
+        }
+
+        .mobile-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .mobile-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .mobile-menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .mobile-menu-item {
+            background: var(--tg-theme-secondary-bg-color, #f1f1f1);
+            border: none;
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100px;
+        }
+
+        .mobile-menu-item:active {
+            transform: scale(0.95);
+            background: var(--tg-theme-section-bg-color, #e8e8e8);
+        }
+
+        .mobile-menu-item .icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .mobile-menu-item .label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        .mobile-user-info {
+            background: var(--tg-theme-secondary-bg-color, #f1f1f1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .mobile-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--tg-theme-link-color, #007aff);
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .mobile-premium-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin: 24px 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .status-free {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-premium {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .cta-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cta-button:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Responsive Detection */
+        @media (max-width: 768px) {
+            .mobile-version {
+                display: block;
+            }
+            .desktop-version {
+                display: none !important;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .desktop-version {
+                display: block;
+            }
+            .mobile-version {
+                display: none !important;
+            }
+        }
+
+        /* Single column on very small mobile */
+        @media (max-width: 380px) {
+            .mobile-menu-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Desktop Version -->
+    <div class="desktop-version">
+        <div class="desktop-header">
+            <h1>📺 PNPtv Community</h1>
+            <p>Tu plataforma premium de entretenimiento y comunidad</p>
+        </div>
+
+        <div class="desktop-container">
+            <div class="desktop-features">
+                <div class="desktop-card">
+                    <span class="icon">�</span>
+                    <h3>Suscripciones Premium</h3>
+                    <p>Acceso completo a contenido exclusivo, canales premium y beneficios VIP</p>
+                    <button class="desktop-btn" onclick="openSubscriptions()">Ver Planes</button>
+                </div>
+
+                <div class="desktop-card">
+                    <span class="icon">📍</span>
+                    <h3>Usuarios Cercanos</h3>
+                    <p>Conecta con otros miembros en tu área y descubre eventos locales</p>
+                    <button class="desktop-btn" onclick="openNearby()">Explorar</button>
+                </div>
+
+                <div class="desktop-card">
+                    <span class="icon">🤖</span>
+                    <h3>Asistente AI Cristina</h3>
+                    <p>Chat inteligente 24/7 para soporte, recomendaciones y asistencia personalizada</p>
+                    <button class="desktop-btn" onclick="openSupport()">Chatear</button>
+                </div>
+
+                <div class="desktop-card">
+                    <span class="icon">👤</span>
+                    <h3>Perfil Personalizado</h3>
+                    <p>Gestiona tu cuenta, preferencias y configuración de privacidad</p>
+                    <button class="desktop-btn" onclick="openProfile()">Mi Perfil</button>
+                </div>
+
+                <div class="desktop-card">
+                    <span class="icon">📚</span>
+                    <h3>Biblioteca de Contenido</h3>
+                    <p>Accede a tu colección personal de contenido guardado y favoritos</p>
+                    <button class="desktop-btn" onclick="openLibrary()">Ver Biblioteca</button>
+                </div>
+
+                <div class="desktop-card">
+                    <span class="icon">📞</span>
+                    <h3>Videollamadas HD</h3>
+                    <p>Conecta con otros usuarios mediante videollamadas de alta calidad</p>
+                    <button class="desktop-btn" onclick="openVideoCalls()">Iniciar Call</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="desktop-cta">
+            <h2>¡Únete a la Comunidad PNPtv!</h2>
+            <p style="font-size: 1.2rem; margin-bottom: 30px;">
+                Más de 10,000 usuarios activos disfrutando contenido premium
+            </p>
+            <button class="cta-btn" onclick="openTelegramBot()">🚀 Abrir en Telegram</button>
+            <button class="cta-btn" onclick="openSubscriptions()">💎 Ver Planes Premium</button>
+        </div>
+    </div>
+
+    <!-- Mobile Version -->
+    <div class="mobile-version">
+        <div class="mobile-header">
+            <div class="mobile-logo">📺</div>
+            <div class="mobile-title">PNPtv Community</div>
+            <div class="mobile-subtitle">Tu plataforma premium</div>
+        </div>
+
+        <div class="mobile-user-info" id="mobileUserInfo">
+            <div class="mobile-avatar" id="mobileUserAvatar">?</div>
+            <div id="mobileUserName">Cargando...</div>
+            <div class="status-badge status-free" id="mobileUserStatus">Free User</div>
+        </div>
+
+        <div class="mobile-menu-grid">
+            <button class="mobile-menu-item" onclick="openSubscriptions()">
+                <div class="icon">💎</div>
+                <div class="label">Suscripciones</div>
+            </button>
+
+            <button class="mobile-menu-item" onclick="openProfile()">
+                <div class="icon">👤</div>
+                <div class="label">Mi Perfil</div>
+            </button>
+
+            <button class="mobile-menu-item" onclick="openNearby()">
+                <div class="icon">📍</div>
+                <div class="label">Cerca de Ti</div>
+            </button>
+
+            <button class="mobile-menu-item" onclick="openSupport()">
+                <div class="icon">🤖</div>
+                <div class="label">AI Cristina</div>
+            </button>
+
+            <button class="mobile-menu-item" onclick="openLibrary()">
+                <div class="icon">📚</div>
+                <div class="label">Biblioteca</div>
+            </button>
+
+            <button class="mobile-menu-item" onclick="openHelp()">
+                <div class="icon">❓</div>
+                <div class="label">Ayuda</div>
+            </button>
+        </div>
+
+        <div class="mobile-premium-banner">
+            <h3>🚀 Upgrade Premium</h3>
+            <p>Contenido ilimitado y beneficios exclusivos</p>
+            <button class="cta-button" onclick="openSubscriptions()">Ver Planes</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Telegram Web App
+        const tg = window.Telegram?.WebApp;
+        const isMobile = window.innerWidth <= 768;
+        const isTelegramApp = !!tg;
+
+        // Configure the app if in Telegram
+        if (isTelegramApp) {
+            tg.ready();
+            tg.expand();
+            
+            // Set theme colors for mobile version
+            if (tg.themeParams && isMobile) {
+                document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
+                document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000');
+                document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#999999');
+                document.documentElement.style.setProperty('--tg-theme-link-color', tg.themeParams.link_color || '#007aff');
+                document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f1f1f1');
+            }
+        }
+
+        // Initialize user info for mobile
+        function initMobileUserInfo() {
+            if (!isTelegramApp || !isMobile) return;
+            
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                const userName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+                const userInitials = (user.first_name?.[0] || '') + (user.last_name?.[0] || '');
+                
+                const nameEl = document.getElementById('mobileUserName');
+                const avatarEl = document.getElementById('mobileUserAvatar');
+                
+                if (nameEl) nameEl.textContent = userName;
+                if (avatarEl) avatarEl.textContent = userInitials || '?';
+                
+                // Load user data from bot
+                loadUserData(user.id);
+            } else {
+                // Demo mode
+                const nameEl = document.getElementById('mobileUserName');
+                const avatarEl = document.getElementById('mobileUserAvatar');
+                
+                if (nameEl) nameEl.textContent = 'Demo User';
+                if (avatarEl) avatarEl.textContent = 'DU';
+            }
+        }
+
+        // Load user data from bot API
+        async function loadUserData(userId) {
+            try {
+                const response = await fetch(`/api/user/${userId}`);
+                if (response.ok) {
+                    const userData = await response.json();
+                    updateUserStatus(userData);
+                }
+            } catch (error) {
+                console.log('Could not load user data:', error);
+            }
+        }
+
+        // Update user status display
+        function updateUserStatus(userData) {
+            const statusElement = document.getElementById('mobileUserStatus');
+            if (statusElement && userData.tier && userData.tier !== 'Free') {
+                statusElement.textContent = `${userData.tier} Member`;
+                statusElement.className = 'status-badge status-premium';
+            }
+        }
+
+        // Menu actions
+        function openSubscriptions() {
+            if (isTelegramApp) {
+                tg.sendData(JSON.stringify({ action: 'show_subscriptions' }));
+            } else {
+                // Desktop fallback - could open a modal or redirect
+                alert('Feature available in Telegram app. Please open @PNPtvbot');
+            }
+        }
+
+        function openProfile() {
+            if (isTelegramApp) {
+                tg.sendData(JSON.stringify({ action: 'show_profile' }));
+            } else {
+                alert('Feature available in Telegram app. Please open @PNPtvbot');
+            }
+        }
+
+        function openNearby() {
+            if (isTelegramApp) {
+                tg.sendData(JSON.stringify({ action: 'show_nearby' }));
+            } else {
+                alert('Feature available in Telegram app. Please open @PNPtvbot');
+            }
+        }
+
+        function openSupport() {
+            if (isTelegramApp) {
+                tg.sendData(JSON.stringify({ action: 'ai_chat' }));
+            } else {
+                alert('AI Chat available in Telegram app. Please open @PNPtvbot');
+            }
+        }
+
+        function openLibrary() {
+            if (isTelegramApp) {
+                tg.sendData(JSON.stringify({ action: 'show_library' }));
+            } else {
+                alert('Feature available in Telegram app. Please open @PNPtvbot');
+            }
+        }
+
+        function openHelp() {
+            if (isTelegramApp) {
+                tg.sendData(JSON.stringify({ action: 'show_help' }));
+            } else {
+                alert('Feature available in Telegram app. Please open @PNPtvbot');
+            }
+        }
+
+        function openVideoCalls() {
+            if (isTelegramApp) {
+                tg.sendData(JSON.stringify({ action: 'video_call' }));
+            } else {
+                alert('Video calls available in Telegram app. Please open @PNPtvbot');
+            }
+        }
+
+        function openTelegramBot() {
+            window.open('https://t.me/PNPtvbot', '_blank');
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            if (isMobile && isTelegramApp) {
+                initMobileUserInfo();
+                
+                // Set main button for mobile
+                tg.MainButton.setText('🚀 Get Premium');
+                tg.MainButton.onClick(openSubscriptions);
+                tg.MainButton.show();
+            }
+            
+            // Show appropriate version based on screen size
+            console.log('Device:', isMobile ? 'Mobile' : 'Desktop', 'Telegram:', isTelegramApp ? 'Yes' : 'No');
+        });
+
+        // Handle back button (mobile only)
+        if (isTelegramApp) {
+            tg.onEvent('backButtonClicked', function() {
+                tg.close();
+            });
+        }
+
+        // Handle window resize (for testing)
+        window.addEventListener('resize', function() {
+            const newIsMobile = window.innerWidth <= 768;
+            if (newIsMobile !== isMobile) {
+                location.reload(); // Reload to apply correct layout
+            }
+        });
+    </script>
+</body>
+</html>

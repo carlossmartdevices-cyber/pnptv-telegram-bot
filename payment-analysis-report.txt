@@ -1,0 +1,27 @@
+=== PAYMENT SYSTEM ANALYSIS REPORT ===
+Generated: 11/13/2025, 11:57:08 AM
+
+=== PAYMENT STATUS BREAKDOWN ===
+payment_completed: 153
+
+=== PAYMENTS BY PLAN ===
+trial-pass: 52
+test-1usd: 52
+pnp-member: 34
+diamond-member: 10
+crystal-member: 3
+trial-week: 2
+
+=== PAYMENT METHODS ===
+daimo: 153
+
+=== REVENUE SUMMARY ===
+Total Revenue (all): $2831.01
+Completed Revenue: $2831.01
+Pending/Failed: $0.00
+Success Rate: 100.0%
+
+=== SUBSCRIPTION SUMMARY ===
+Active Subscriptions: 92
+  - Premium: 88
+  - Basic: 4

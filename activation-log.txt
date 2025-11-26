@@ -1,0 +1,1098 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+✅ Environment loaded from /root/bot 1/.env
+✅ Environment variables validated successfully
+✓ Sentry initialized (environment: auto)
+Iniciando Firebase...
+FIREBASE_CREDENTIALS length: 2327 chars
+First 200 chars: {"type":"service_account","project_id":"pnptv-b8af8","private_key_id":"1ccc8fb4b1ec59dffbbc53d0c50cea631c4e40ce","private_key":"-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgE...
+✅ Using Firebase credentials from environment variable
+   Project ID: pnptv-b8af8
+   Client Email: firebase-adminsdk-fbsvc@pnptv-b8af8.iam.gserviceaccount.com
+Firebase ha sido inicializado correctamente.
+
+=== Starting Mass Membership Activation ===
+
+Found 83 users to activate
+
+
+--- Processing User 1071160931 ---
+Name: @Fedorius
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 1071160931: Premium until 2025-12-03T22:55:00.702Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:00"}
+[32minfo[39m: Generated invite link for user 1071160931: https://t.me/+h4WQmjAtOFcwMTk5 {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:01"}
+[32minfo[39m: Membership notification sent to user 1071160931 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:01"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:00.702Z
+   Invite Link: https://t.me/+h4WQmjAtOFcwMTk5
+   Notification Sent: Yes
+
+--- Processing User 1090072883 ---
+Name: Growl Time
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 1090072883: Premium until 2025-12-03T22:55:02.196Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:02"}
+[32minfo[39m: Generated invite link for user 1090072883: https://t.me/+NsUhcaR1nOE1YjAx {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:02"}
+[32minfo[39m: Membership notification sent to user 1090072883 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:03"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:02.196Z
+   Invite Link: https://t.me/+NsUhcaR1nOE1YjAx
+   Notification Sent: Yes
+
+--- Processing User 1100099683 ---
+Name: Joseph
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 1100099683: Premium until 2025-12-03T22:55:03.581Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:03"}
+[32minfo[39m: Generated invite link for user 1100099683: https://t.me/+b-mT7-lLN_YwNTBh {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:04"}
+[33mwarn[39m: Failed to send membership notification to user 1100099683: {"0":"4","1":"0","10":"e","11":"q","12":"u","13":"e","14":"s","15":"t","16":":","17":" ","18":"c","19":"a","2":"0","20":"n","21":"'","22":"t","23":" ","24":"p","25":"a","26":"r","27":"s","28":"e","29":" ","3":":","30":"e","31":"n","32":"t","33":"i","34":"t","35":"i","36":"e","37":"s","38":":","39":" ","4":" ","40":"C","41":"a","42":"n","43":"'","44":"t","45":" ","46":"f","47":"i","48":"n","49":"d","5":"B","50":" ","51":"e","52":"n","53":"d","54":" ","55":"o","56":"f","57":" ","58":"t","59":"h","6":"a","60":"e","61":" ","62":"e","63":"n","64":"t","65":"i","66":"t","67":"y","68":" ","69":"s","7":"d","70":"t","71":"a","72":"r","73":"t","74":"i","75":"n","76":"g","77":" ","78":"a","79":"t","8":" ","80":" ","81":"b","82":"y","83":"t","84":"e","85":" ","86":"o","87":"f","88":"f","89":"s","9":"R","90":"e","91":"t","92":" ","93":"4","94":"6","95":"8","service":"pnptv-bot","timestamp":"2025-11-03 22:55:04"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:03.581Z
+   Invite Link: https://t.me/+b-mT7-lLN_YwNTBh
+   Notification Sent: No
+
+--- Processing User 1234213234 ---
+Name: Ichiro Elias
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 1234213234: Premium until 2025-12-03T22:55:04.684Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:04"}
+[32minfo[39m: Generated invite link for user 1234213234: https://t.me/+_D8J4ga5Ft40YjRh {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:05"}
+[33mwarn[39m: Failed to send membership notification to user 1234213234: {"0":"4","1":"0","10":"e","11":"q","12":"u","13":"e","14":"s","15":"t","16":":","17":" ","18":"c","19":"a","2":"0","20":"n","21":"'","22":"t","23":" ","24":"p","25":"a","26":"r","27":"s","28":"e","29":" ","3":":","30":"e","31":"n","32":"t","33":"i","34":"t","35":"i","36":"e","37":"s","38":":","39":" ","4":" ","40":"C","41":"a","42":"n","43":"'","44":"t","45":" ","46":"f","47":"i","48":"n","49":"d","5":"B","50":" ","51":"e","52":"n","53":"d","54":" ","55":"o","56":"f","57":" ","58":"t","59":"h","6":"a","60":"e","61":" ","62":"e","63":"n","64":"t","65":"i","66":"t","67":"y","68":" ","69":"s","7":"d","70":"t","71":"a","72":"r","73":"t","74":"i","75":"n","76":"g","77":" ","78":"a","79":"t","8":" ","80":" ","81":"b","82":"y","83":"t","84":"e","85":" ","86":"o","87":"f","88":"f","89":"s","9":"R","90":"e","91":"t","92":" ","93":"4","94":"9","95":"0","service":"pnptv-bot","timestamp":"2025-11-03 22:55:05"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:04.684Z
+   Invite Link: https://t.me/+_D8J4ga5Ft40YjRh
+   Notification Sent: No
+
+--- Processing User 1268661883 ---
+Name: LP
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 1268661883: Premium until 2025-12-03T22:55:05.839Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:06"}
+[32minfo[39m: Generated invite link for user 1268661883: https://t.me/+bXh3Yv8c5ro4MTlh {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:06"}
+[32minfo[39m: Membership notification sent to user 1268661883 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:06"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:05.839Z
+   Invite Link: https://t.me/+bXh3Yv8c5ro4MTlh
+   Notification Sent: Yes
+
+--- Processing User 1368640424 ---
+Name: Juan 🇨🇴
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 1368640424: Premium until 2025-12-03T22:55:07.073Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:07"}
+[32minfo[39m: Generated invite link for user 1368640424: https://t.me/+lXL3cCb-oI8zMjYx {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:07"}
+[32minfo[39m: Membership notification sent to user 1368640424 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:07"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:07.073Z
+   Invite Link: https://t.me/+lXL3cCb-oI8zMjYx
+   Notification Sent: Yes
+
+--- Processing User 1475485409 ---
+Name: Jo
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 1475485409: Premium until 2025-12-03T22:55:08.334Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:08"}
+[32minfo[39m: Generated invite link for user 1475485409: https://t.me/+-tQmOYHQsEpmODBh {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:08"}
+[32minfo[39m: Membership notification sent to user 1475485409 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:09"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:08.334Z
+   Invite Link: https://t.me/+-tQmOYHQsEpmODBh
+   Notification Sent: Yes
+
+--- Processing User 1555839860 ---
+Name: JD
+Current Tier: Golden
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 1555839860: Premium until 2025-12-03T22:55:09.564Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:09"}
+[32minfo[39m: Generated invite link for user 1555839860: https://t.me/+MqI1PYh3b_EyYzkx {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:10"}
+[33mwarn[39m: Failed to send membership notification to user 1555839860: {"0":"4","1":"0","10":"e","11":"q","12":"u","13":"e","14":"s","15":"t","16":":","17":" ","18":"c","19":"a","2":"0","20":"n","21":"'","22":"t","23":" ","24":"p","25":"a","26":"r","27":"s","28":"e","29":" ","3":":","30":"e","31":"n","32":"t","33":"i","34":"t","35":"i","36":"e","37":"s","38":":","39":" ","4":" ","40":"C","41":"a","42":"n","43":"'","44":"t","45":" ","46":"f","47":"i","48":"n","49":"d","5":"B","50":" ","51":"e","52":"n","53":"d","54":" ","55":"o","56":"f","57":" ","58":"t","59":"h","6":"a","60":"e","61":" ","62":"e","63":"n","64":"t","65":"i","66":"t","67":"y","68":" ","69":"s","7":"d","70":"t","71":"a","72":"r","73":"t","74":"i","75":"n","76":"g","77":" ","78":"a","79":"t","8":" ","80":" ","81":"b","82":"y","83":"t","84":"e","85":" ","86":"o","87":"f","88":"f","89":"s","9":"R","90":"e","91":"t","92":" ","93":"4","94":"6","95":"4","service":"pnptv-bot","timestamp":"2025-11-03 22:55:10"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:09.564Z
+   Invite Link: https://t.me/+MqI1PYh3b_EyYzkx
+   Notification Sent: No
+
+--- Processing User 1684976172 ---
+Name: JuanMa Ruiz
+Current Tier: diamond-member
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 1684976172: Premium until 2025-12-03T22:55:10.666Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:10"}
+[32minfo[39m: Generated invite link for user 1684976172: https://t.me/+rAaxDJayIBA2MzQx {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:11"}
+[32minfo[39m: Membership notification sent to user 1684976172 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:11"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:10.666Z
+   Invite Link: https://t.me/+rAaxDJayIBA2MzQx
+   Notification Sent: Yes
+
+--- Processing User 1771672066 ---
+Name: Carlos
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 1771672066: Premium until 2025-12-03T22:55:11.925Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:12"}
+[32minfo[39m: Generated invite link for user 1771672066: https://t.me/+f98OLZxY64liYzgx {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:12"}
+[32minfo[39m: Membership notification sent to user 1771672066 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:12"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:11.925Z
+   Invite Link: https://t.me/+f98OLZxY64liYzgx
+   Notification Sent: Yes
+
+--- Processing User 1853540313 ---
+Name: A
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 1853540313: Premium until 2025-12-03T22:55:13.211Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:13"}
+[32minfo[39m: Generated invite link for user 1853540313: https://t.me/+2shwv3WfjuYwZTEx {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:13"}
+[32minfo[39m: Membership notification sent to user 1853540313 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:14"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:13.211Z
+   Invite Link: https://t.me/+2shwv3WfjuYwZTEx
+   Notification Sent: Yes
+
+--- Processing User 2077767307 ---
+Name: brix_33
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 2077767307: Premium until 2025-12-03T22:55:14.642Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:14"}
+[32minfo[39m: Generated invite link for user 2077767307: https://t.me/+uIEnDJqYuuY5ZTNh {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:15"}
+[33mwarn[39m: Failed to send membership notification to user 2077767307: {"0":"4","1":"0","10":"e","11":"q","12":"u","13":"e","14":"s","15":"t","16":":","17":" ","18":"c","19":"a","2":"0","20":"n","21":"'","22":"t","23":" ","24":"p","25":"a","26":"r","27":"s","28":"e","29":" ","3":":","30":"e","31":"n","32":"t","33":"i","34":"t","35":"i","36":"e","37":"s","38":":","39":" ","4":" ","40":"C","41":"a","42":"n","43":"'","44":"t","45":" ","46":"f","47":"i","48":"n","49":"d","5":"B","50":" ","51":"e","52":"n","53":"d","54":" ","55":"o","56":"f","57":" ","58":"t","59":"h","6":"a","60":"e","61":" ","62":"e","63":"n","64":"t","65":"i","66":"t","67":"y","68":" ","69":"s","7":"d","70":"t","71":"a","72":"r","73":"t","74":"i","75":"n","76":"g","77":" ","78":"a","79":"t","8":" ","80":" ","81":"b","82":"y","83":"t","84":"e","85":" ","86":"o","87":"f","88":"f","89":"s","9":"R","90":"e","91":"t","92":" ","93":"3","94":"6","service":"pnptv-bot","timestamp":"2025-11-03 22:55:15"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:14.642Z
+   Invite Link: https://t.me/+uIEnDJqYuuY5ZTNh
+   Notification Sent: No
+
+--- Processing User 2120179967 ---
+Name: Tat
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 2120179967: Premium until 2025-12-03T22:55:15.770Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:16"}
+[32minfo[39m: Generated invite link for user 2120179967: https://t.me/+WevzvQa0wPs3YzEx {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:16"}
+[32minfo[39m: Membership notification sent to user 2120179967 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:16"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:15.770Z
+   Invite Link: https://t.me/+WevzvQa0wPs3YzEx
+   Notification Sent: Yes
+
+--- Processing User 5034174384 ---
+Name: T
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5034174384: Premium until 2025-12-03T22:55:17.116Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:17"}
+[32minfo[39m: Generated invite link for user 5034174384: https://t.me/+88zxQWW1RD4xMGMx {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:17"}
+[32minfo[39m: Membership notification sent to user 5034174384 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:17"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:17.116Z
+   Invite Link: https://t.me/+88zxQWW1RD4xMGMx
+   Notification Sent: Yes
+
+--- Processing User 521921359 ---
+Name: Max
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 521921359: Premium until 2025-12-03T22:55:18.406Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:18"}
+[32minfo[39m: Generated invite link for user 521921359: https://t.me/+hf2Hl8bhYRQxMWRh {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:18"}
+[32minfo[39m: Membership notification sent to user 521921359 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:19"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:18.406Z
+   Invite Link: https://t.me/+hf2Hl8bhYRQxMWRh
+   Notification Sent: Yes
+
+--- Processing User 5272134668 ---
+Name: CKCK
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5272134668: Premium until 2025-12-03T22:55:19.659Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:19"}
+[32minfo[39m: Generated invite link for user 5272134668: https://t.me/+BZuBGfobNKU2Zjkx {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:20"}
+[32minfo[39m: Membership notification sent to user 5272134668 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:20"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:19.659Z
+   Invite Link: https://t.me/+BZuBGfobNKU2Zjkx
+   Notification Sent: Yes
+
+--- Processing User 5346270416 ---
+Name: XXLatinBoy
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5346270416: Premium until 2025-12-03T22:55:20.930Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:21"}
+[32minfo[39m: Generated invite link for user 5346270416: https://t.me/+Fi4B7spF4ShjZmRh {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:21"}
+[32minfo[39m: Membership notification sent to user 5346270416 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:21"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:20.930Z
+   Invite Link: https://t.me/+Fi4B7spF4ShjZmRh
+   Notification Sent: Yes
+
+--- Processing User 5373548942 ---
+Name: Naughty
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5373548942: Premium until 2025-12-03T22:55:22.202Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:22"}
+[32minfo[39m: Generated invite link for user 5373548942: https://t.me/+SJqjHRRzXZMwYzY5 {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:22"}
+[32minfo[39m: Membership notification sent to user 5373548942 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:22"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:22.202Z
+   Invite Link: https://t.me/+SJqjHRRzXZMwYzY5
+   Notification Sent: Yes
+
+--- Processing User 540482380 ---
+Name: Yuekiu
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 540482380: Premium until 2025-12-03T22:55:23.462Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:23"}
+[32minfo[39m: Generated invite link for user 540482380: https://t.me/+QqTy-SMvLP9iZWI5 {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:23"}
+[32minfo[39m: Membership notification sent to user 540482380 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:24"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:23.462Z
+   Invite Link: https://t.me/+QqTy-SMvLP9iZWI5
+   Notification Sent: Yes
+
+--- Processing User 5463213541 ---
+Name: José R
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5463213541: Premium until 2025-12-03T22:55:24.724Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:24"}
+[32minfo[39m: Generated invite link for user 5463213541: https://t.me/+iAguY1tFyfo3M2Ex {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:25"}
+[32minfo[39m: Membership notification sent to user 5463213541 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:25"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:24.724Z
+   Invite Link: https://t.me/+iAguY1tFyfo3M2Ex
+   Notification Sent: Yes
+
+--- Processing User 5475643506 ---
+Name: Corey
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5475643506: Premium until 2025-12-03T22:55:25.986Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:26"}
+[33mwarn[39m: Failed to generate invite link for user 5475643506: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"3","37":"5","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:26"}
+[32minfo[39m: Membership notification sent to user 5475643506 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:26"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:25.986Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 5519461158 ---
+Name: Shima
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5519461158: Premium until 2025-12-03T22:55:27.199Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:27"}
+[33mwarn[39m: Failed to generate invite link for user 5519461158: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"3","37":"4","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:27"}
+[32minfo[39m: Membership notification sent to user 5519461158 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:27"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:27.199Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 5556393716 ---
+Name: stl
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5556393716: Premium until 2025-12-03T22:55:28.488Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:28"}
+[33mwarn[39m: Failed to generate invite link for user 5556393716: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"3","37":"3","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:28"}
+[32minfo[39m: Membership notification sent to user 5556393716 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:29"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:28.488Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 5575449547 ---
+Name: C
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5575449547: Premium until 2025-12-03T22:55:29.765Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:30"}
+[33mwarn[39m: Failed to generate invite link for user 5575449547: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"3","37":"1","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:30"}
+[32minfo[39m: Membership notification sent to user 5575449547 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:30"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:29.765Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 579971848 ---
+Name: Deku
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 579971848: Premium until 2025-12-03T22:55:31.098Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:31"}
+[33mwarn[39m: Failed to generate invite link for user 579971848: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"3","37":"0","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:31"}
+[32minfo[39m: Membership notification sent to user 579971848 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:31"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:31.098Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 5830119032 ---
+Name: Je2786
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5830119032: Premium until 2025-12-03T22:55:32.318Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:32"}
+[33mwarn[39m: Failed to generate invite link for user 5830119032: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"9","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:32"}
+[32minfo[39m: Membership notification sent to user 5830119032 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:33"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:32.318Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 5836948764 ---
+Name: edward
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5836948764: Premium until 2025-12-03T22:55:33.623Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:33"}
+[33mwarn[39m: Failed to generate invite link for user 5836948764: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"8","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:34"}
+[32minfo[39m: Membership notification sent to user 5836948764 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:34"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:33.623Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 5849505145 ---
+Name: FireFX
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5849505145: Premium until 2025-12-03T22:55:34.839Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:35"}
+[33mwarn[39m: Failed to generate invite link for user 5849505145: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"6","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:35"}
+[32minfo[39m: Membership notification sent to user 5849505145 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:35"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:34.839Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 5869566424 ---
+Name: Tony
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5869566424: Premium until 2025-12-03T22:55:36.187Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:36"}
+[33mwarn[39m: Failed to generate invite link for user 5869566424: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"5","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:36"}
+[32minfo[39m: Membership notification sent to user 5869566424 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:36"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:36.187Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 5990112447 ---
+Name: 12216
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 5990112447: Premium until 2025-12-03T22:55:37.408Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:37"}
+[33mwarn[39m: Failed to generate invite link for user 5990112447: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"4","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:37"}
+[32minfo[39m: Membership notification sent to user 5990112447 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:38"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:37.408Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 6025431055 ---
+Name: aarolu10
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 6025431055: Premium until 2025-12-03T22:55:38.566Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:38"}
+[33mwarn[39m: Failed to generate invite link for user 6025431055: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"3","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:38"}
+[32minfo[39m: Membership notification sent to user 6025431055 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:39"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:38.566Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 6091427813 ---
+Name: Raccone3
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 6091427813: Premium until 2025-12-03T22:55:39.846Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:40"}
+[33mwarn[39m: Failed to generate invite link for user 6091427813: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"1","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:40"}
+[32minfo[39m: Membership notification sent to user 6091427813 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:40"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:39.846Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 6218516061 ---
+Name: brkfre
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 6218516061: Premium until 2025-12-03T22:55:41.126Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:41"}
+[33mwarn[39m: Failed to generate invite link for user 6218516061: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"0","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:41"}
+[32minfo[39m: Membership notification sent to user 6218516061 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:41"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:41.126Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 6381844084 ---
+Name: mafercm
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 6381844084: Premium until 2025-12-03T22:55:42.383Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:42"}
+[33mwarn[39m: Failed to generate invite link for user 6381844084: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"1","37":"9","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:42"}
+[32minfo[39m: Membership notification sent to user 6381844084 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:43"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:42.383Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 6426453759 ---
+Name: Mr. R.
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 6426453759: Premium until 2025-12-03T22:55:43.619Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:43"}
+[33mwarn[39m: Failed to generate invite link for user 6426453759: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"1","37":"8","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:43"}
+[32minfo[39m: Membership notification sent to user 6426453759 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:44"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:43.619Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 6496516609 ---
+Name: PartyTime!
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 6496516609: Premium until 2025-12-03T22:55:44.804Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:44"}
+[33mwarn[39m: Failed to generate invite link for user 6496516609: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"1","37":"6","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:45"}
+[32minfo[39m: Membership notification sent to user 6496516609 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:45"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:44.804Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 6512908422 ---
+Name: Fratboy101
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 6512908422: Premium until 2025-12-03T22:55:45.958Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:46"}
+[33mwarn[39m: Failed to generate invite link for user 6512908422: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"1","37":"5","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:46"}
+[32minfo[39m: Membership notification sent to user 6512908422 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:46"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:45.958Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 6557776792 ---
+Name: José
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 6557776792: Premium until 2025-12-03T22:55:47.268Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:47"}
+[33mwarn[39m: Failed to generate invite link for user 6557776792: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"1","37":"4","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:47"}
+[32minfo[39m: Membership notification sent to user 6557776792 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:47"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:47.268Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 6785135243 ---
+Name: Cesar
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 6785135243: Premium until 2025-12-03T22:55:48.450Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:48"}
+[33mwarn[39m: Failed to generate invite link for user 6785135243: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"1","37":"3","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:48"}
+[32minfo[39m: Membership notification sent to user 6785135243 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:49"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:48.450Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 6798050167 ---
+Name: Simon
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 6798050167: Premium until 2025-12-03T22:55:49.646Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:49"}
+[33mwarn[39m: Failed to generate invite link for user 6798050167: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"1","37":"2","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:50"}
+[32minfo[39m: Membership notification sent to user 6798050167 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:50"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:49.646Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 6890340367 ---
+Name: Local
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 6890340367: Premium until 2025-12-03T22:55:50.837Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:51"}
+[33mwarn[39m: Failed to generate invite link for user 6890340367: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"1","37":"0","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:51"}
+[32minfo[39m: Membership notification sent to user 6890340367 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:51"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:50.837Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 6965613313 ---
+Name: Thesedarkhours
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 6965613313: Premium until 2025-12-03T22:55:52.108Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:52"}
+[33mwarn[39m: Failed to generate invite link for user 6965613313: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"9","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:55:52"}
+[32minfo[39m: Membership notification sent to user 6965613313 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:55:52"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:52.108Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 6984257203 ---
+Name: Nico
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 6984257203: Premium until 2025-12-03T22:55:53.221Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:55:53"}
+[32minfo[39m: Generated invite link for user 6984257203: https://t.me/+BF83jIbGv3E5OGUx {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:01"}
+[32minfo[39m: Membership notification sent to user 6984257203 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:02"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:55:53.221Z
+   Invite Link: https://t.me/+BF83jIbGv3E5OGUx
+   Notification Sent: Yes
+
+--- Processing User 7004233882 ---
+Name: g
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7004233882: Premium until 2025-12-03T22:56:02.636Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:02"}
+[32minfo[39m: Generated invite link for user 7004233882: https://t.me/+WLYBZTwaztY4ZTdh {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:02"}
+[32minfo[39m: Membership notification sent to user 7004233882 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:03"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:02.636Z
+   Invite Link: https://t.me/+WLYBZTwaztY4ZTdh
+   Notification Sent: Yes
+
+--- Processing User 7018573427 ---
+Name: Juicy Pork Bunz
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7018573427: Premium until 2025-12-03T22:56:03.778Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:03"}
+[32minfo[39m: Generated invite link for user 7018573427: https://t.me/+AwlmT6IXNkIxNTYx {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:04"}
+[33mwarn[39m: Failed to send membership notification to user 7018573427: {"0":"4","1":"0","10":"e","11":"q","12":"u","13":"e","14":"s","15":"t","16":":","17":" ","18":"c","19":"h","2":"0","20":"a","21":"t","22":" ","23":"n","24":"o","25":"t","26":" ","27":"f","28":"o","29":"u","3":":","30":"n","31":"d","4":" ","5":"B","6":"a","7":"d","8":" ","9":"R","service":"pnptv-bot","timestamp":"2025-11-03 22:56:04"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:03.778Z
+   Invite Link: https://t.me/+AwlmT6IXNkIxNTYx
+   Notification Sent: No
+
+--- Processing User 7071683657 ---
+Name: lukel02
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7071683657: Premium until 2025-12-03T22:56:05.150Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:05"}
+[32minfo[39m: Generated invite link for user 7071683657: https://t.me/+QHH3Sw8UCSEzZWNh {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:05"}
+[32minfo[39m: Membership notification sent to user 7071683657 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:05"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:05.150Z
+   Invite Link: https://t.me/+QHH3Sw8UCSEzZWNh
+   Notification Sent: Yes
+
+--- Processing User 7088487175 ---
+Name: Twink
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7088487175: Premium until 2025-12-03T22:56:06.421Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:06"}
+[32minfo[39m: Generated invite link for user 7088487175: https://t.me/+WF-u50PGk3JjMWMx {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:06"}
+[32minfo[39m: Membership notification sent to user 7088487175 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:07"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:06.421Z
+   Invite Link: https://t.me/+WF-u50PGk3JjMWMx
+   Notification Sent: Yes
+
+--- Processing User 7105094968 ---
+Name: Spun⬇️Sub
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7105094968: Premium until 2025-12-03T22:56:07.549Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:07"}
+[32minfo[39m: Generated invite link for user 7105094968: https://t.me/+-HcHUs-37P0wMGMx {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:07"}
+[32minfo[39m: Membership notification sent to user 7105094968 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:08"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:07.549Z
+   Invite Link: https://t.me/+-HcHUs-37P0wMGMx
+   Notification Sent: Yes
+
+--- Processing User 7166356500 ---
+Name: D
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7166356500: Premium until 2025-12-03T22:56:08.806Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:08"}
+[32minfo[39m: Generated invite link for user 7166356500: https://t.me/+wZ4YWX2YkP5jZmNh {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:09"}
+[32minfo[39m: Membership notification sent to user 7166356500 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:09"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:08.806Z
+   Invite Link: https://t.me/+wZ4YWX2YkP5jZmNh
+   Notification Sent: Yes
+
+--- Processing User 7178374095 ---
+Name: German
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7178374095: Premium until 2025-12-03T22:56:09.954Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:10"}
+[32minfo[39m: Generated invite link for user 7178374095: https://t.me/+IX2OOl8XaN9hNWMx {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:10"}
+[32minfo[39m: Membership notification sent to user 7178374095 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:10"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:09.954Z
+   Invite Link: https://t.me/+IX2OOl8XaN9hNWMx
+   Notification Sent: Yes
+
+--- Processing User 7216485226 ---
+Name: Lygnios
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7216485226: Premium until 2025-12-03T22:56:11.087Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:11"}
+[32minfo[39m: Generated invite link for user 7216485226: https://t.me/+e77w6Vf-XlhmZTQx {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:11"}
+[32minfo[39m: Membership notification sent to user 7216485226 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:12"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:11.087Z
+   Invite Link: https://t.me/+e77w6Vf-XlhmZTQx
+   Notification Sent: Yes
+
+--- Processing User 7246621722 ---
+Name: PNP
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7246621722: Premium until 2025-12-03T22:56:12.502Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:12"}
+[32minfo[39m: Generated invite link for user 7246621722: https://t.me/+ONJN0BRN1S85Mjdh {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:12"}
+[32minfo[39m: Membership notification sent to user 7246621722 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:13"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:12.502Z
+   Invite Link: https://t.me/+ONJN0BRN1S85Mjdh
+   Notification Sent: Yes
+
+--- Processing User 7373917106 ---
+Name: ShortyJ
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7373917106: Premium until 2025-12-03T22:56:13.686Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:13"}
+[32minfo[39m: Generated invite link for user 7373917106: https://t.me/+YqQioxxINjRiZjYx {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:14"}
+[32minfo[39m: Membership notification sent to user 7373917106 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:14"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:13.686Z
+   Invite Link: https://t.me/+YqQioxxINjRiZjYx
+   Notification Sent: Yes
+
+--- Processing User 7409962596 ---
+Name: VSTRAY
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7409962596: Premium until 2025-12-03T22:56:14.848Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:15"}
+[32minfo[39m: Generated invite link for user 7409962596: https://t.me/+FyDiZvZYSI5lMzc5 {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:15"}
+[32minfo[39m: Membership notification sent to user 7409962596 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:15"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:14.848Z
+   Invite Link: https://t.me/+FyDiZvZYSI5lMzc5
+   Notification Sent: Yes
+
+--- Processing User 7432041476 ---
+Name: ANT
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7432041476: Premium until 2025-12-03T22:56:16.012Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:16"}
+[32minfo[39m: Generated invite link for user 7432041476: https://t.me/+WysQIjTKxug1MjQx {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:16"}
+[32minfo[39m: Membership notification sent to user 7432041476 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:16"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:16.012Z
+   Invite Link: https://t.me/+WysQIjTKxug1MjQx
+   Notification Sent: Yes
+
+--- Processing User 7488115788 ---
+Name: D
+Current Tier: Silver
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7488115788: Premium until 2025-12-03T22:56:17.262Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:17"}
+[32minfo[39m: Generated invite link for user 7488115788: https://t.me/+FYxC9pLIaSNhZTI5 {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:17"}
+[32minfo[39m: Membership notification sent to user 7488115788 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:17"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:17.262Z
+   Invite Link: https://t.me/+FYxC9pLIaSNhZTI5
+   Notification Sent: Yes
+
+--- Processing User 7501013439 ---
+Name: Aries
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7501013439: Premium until 2025-12-03T22:56:18.394Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:18"}
+[32minfo[39m: Generated invite link for user 7501013439: https://t.me/+_fFuj2w_zrA5NWFh {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:18"}
+[32minfo[39m: Membership notification sent to user 7501013439 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:19"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:18.394Z
+   Invite Link: https://t.me/+_fFuj2w_zrA5NWFh
+   Notification Sent: Yes
+
+--- Processing User 7529460726 ---
+Name: Castor
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7529460726: Premium until 2025-12-03T22:56:19.532Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:19"}
+[32minfo[39m: Generated invite link for user 7529460726: https://t.me/+62OmMx2FhtozOTdh {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:19"}
+[32minfo[39m: Membership notification sent to user 7529460726 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:20"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:19.532Z
+   Invite Link: https://t.me/+62OmMx2FhtozOTdh
+   Notification Sent: Yes
+
+--- Processing User 7535820309 ---
+Name: x_x
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7535820309: Premium until 2025-12-03T22:56:20.633Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:20"}
+[32minfo[39m: Generated invite link for user 7535820309: https://t.me/+oWQsQ1tUrRo5YTEx {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:20"}
+[33mwarn[39m: Failed to send membership notification to user 7535820309: {"0":"4","1":"0","10":"e","11":"q","12":"u","13":"e","14":"s","15":"t","16":":","17":" ","18":"c","19":"a","2":"0","20":"n","21":"'","22":"t","23":" ","24":"p","25":"a","26":"r","27":"s","28":"e","29":" ","3":":","30":"e","31":"n","32":"t","33":"i","34":"t","35":"i","36":"e","37":"s","38":":","39":" ","4":" ","40":"C","41":"a","42":"n","43":"'","44":"t","45":" ","46":"f","47":"i","48":"n","49":"d","5":"B","50":" ","51":"e","52":"n","53":"d","54":" ","55":"o","56":"f","57":" ","58":"t","59":"h","6":"a","60":"e","61":" ","62":"e","63":"n","64":"t","65":"i","66":"t","67":"y","68":" ","69":"s","7":"d","70":"t","71":"a","72":"r","73":"t","74":"i","75":"n","76":"g","77":" ","78":"a","79":"t","8":" ","80":" ","81":"b","82":"y","83":"t","84":"e","85":" ","86":"o","87":"f","88":"f","89":"s","9":"R","90":"e","91":"t","92":" ","93":"3","94":"3","service":"pnptv-bot","timestamp":"2025-11-03 22:56:21"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:20.633Z
+   Invite Link: https://t.me/+oWQsQ1tUrRo5YTEx
+   Notification Sent: No
+
+--- Processing User 7577911928 ---
+Name: Guo
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7577911928: Premium until 2025-12-03T22:56:21.620Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:21"}
+[32minfo[39m: Generated invite link for user 7577911928: https://t.me/+lq6alT5KE6A1OWEx {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:21"}
+[32minfo[39m: Membership notification sent to user 7577911928 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:22"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:21.620Z
+   Invite Link: https://t.me/+lq6alT5KE6A1OWEx
+   Notification Sent: Yes
+
+--- Processing User 7616323085 ---
+Name: Alphonso
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7616323085: Premium until 2025-12-03T22:56:22.814Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:22"}
+[32minfo[39m: Generated invite link for user 7616323085: https://t.me/+1Qum2P6hTOA3NGQx {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:23"}
+[32minfo[39m: Membership notification sent to user 7616323085 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:23"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:22.814Z
+   Invite Link: https://t.me/+1Qum2P6hTOA3NGQx
+   Notification Sent: Yes
+
+--- Processing User 7643943412 ---
+Name: Mauricio
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7643943412: Premium until 2025-12-03T22:56:23.921Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:24"}
+[32minfo[39m: Generated invite link for user 7643943412: https://t.me/+lXQKhAHnG7QxNzEx {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:24"}
+[32minfo[39m: Membership notification sent to user 7643943412 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:24"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:23.921Z
+   Invite Link: https://t.me/+lXQKhAHnG7QxNzEx
+   Notification Sent: Yes
+
+--- Processing User 7664471211 ---
+Name: Mul
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7664471211: Premium until 2025-12-03T22:56:25.037Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:25"}
+[33mwarn[39m: Failed to generate invite link for user 7664471211: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"3","37":"6","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:25"}
+[32minfo[39m: Membership notification sent to user 7664471211 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:25"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:25.037Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 7679106398 ---
+Name: Maks
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7679106398: Premium until 2025-12-03T22:56:26.194Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:26"}
+[33mwarn[39m: Failed to generate invite link for user 7679106398: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"3","37":"5","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:26"}
+[32minfo[39m: Membership notification sent to user 7679106398 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:26"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:26.194Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 7857923659 ---
+Name: Max DK
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7857923659: Premium until 2025-12-03T22:56:27.307Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:27"}
+[33mwarn[39m: Failed to generate invite link for user 7857923659: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"3","37":"4","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:27"}
+[32minfo[39m: Membership notification sent to user 7857923659 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:27"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:27.307Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 7888824789 ---
+Name: Donnie
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7888824789: Premium until 2025-12-03T22:56:28.391Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:28"}
+[33mwarn[39m: Failed to generate invite link for user 7888824789: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"3","37":"3","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:28"}
+[32minfo[39m: Membership notification sent to user 7888824789 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:29"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:28.391Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 7927157390 ---
+Name: Boy
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 7927157390: Premium until 2025-12-03T22:56:29.510Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:29"}
+[33mwarn[39m: Failed to generate invite link for user 7927157390: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"3","37":"2","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:29"}
+[32minfo[39m: Membership notification sent to user 7927157390 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:30"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:29.510Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 8020802390 ---
+Name: D
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 8020802390: Premium until 2025-12-03T22:56:30.748Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:30"}
+[33mwarn[39m: Failed to generate invite link for user 8020802390: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"3","37":"1","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:31"}
+[32minfo[39m: Membership notification sent to user 8020802390 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:31"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:30.748Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 8081698947 ---
+Name: Bar
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 8081698947: Premium until 2025-12-03T22:56:31.837Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:31"}
+[33mwarn[39m: Failed to generate invite link for user 8081698947: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"9","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:32"}
+[33mwarn[39m: Failed to send membership notification to user 8081698947: {"0":"4","1":"0","10":"d","11":"d","12":"e","13":"n","14":":","15":" ","16":"b","17":"o","18":"t","19":" ","2":"3","20":"w","21":"a","22":"s","23":" ","24":"b","25":"l","26":"o","27":"c","28":"k","29":"e","3":":","30":"d","31":" ","32":"b","33":"y","34":" ","35":"t","36":"h","37":"e","38":" ","39":"u","4":" ","40":"s","41":"e","42":"r","5":"F","6":"o","7":"r","8":"b","9":"i","service":"pnptv-bot","timestamp":"2025-11-03 22:56:32"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:31.837Z
+   Invite Link: N/A
+   Notification Sent: No
+
+--- Processing User 8109409476 ---
+Name: Angel
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 8109409476: Premium until 2025-12-03T22:56:32.933Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:33"}
+[33mwarn[39m: Failed to generate invite link for user 8109409476: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"8","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:33"}
+[32minfo[39m: Membership notification sent to user 8109409476 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:33"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:32.933Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 8109691903 ---
+Name: ToGee*OrNotToGee
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 8109691903: Premium until 2025-12-03T22:56:34.056Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:34"}
+[33mwarn[39m: Failed to generate invite link for user 8109691903: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"7","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:34"}
+[33mwarn[39m: Failed to send membership notification to user 8109691903: {"0":"4","1":"0","10":"e","11":"q","12":"u","13":"e","14":"s","15":"t","16":":","17":" ","18":"c","19":"a","2":"0","20":"n","21":"'","22":"t","23":" ","24":"p","25":"a","26":"r","27":"s","28":"e","29":" ","3":":","30":"e","31":"n","32":"t","33":"i","34":"t","35":"i","36":"e","37":"s","38":":","39":" ","4":" ","40":"C","41":"a","42":"n","43":"'","44":"t","45":" ","46":"f","47":"i","48":"n","49":"d","5":"B","50":" ","51":"e","52":"n","53":"d","54":" ","55":"o","56":"f","57":" ","58":"t","59":"h","6":"a","60":"e","61":" ","62":"e","63":"n","64":"t","65":"i","66":"t","67":"y","68":" ","69":"s","7":"d","70":"t","71":"a","72":"r","73":"t","74":"i","75":"n","76":"g","77":" ","78":"a","79":"t","8":" ","80":" ","81":"b","82":"y","83":"t","84":"e","85":" ","86":"o","87":"f","88":"f","89":"s","9":"R","90":"e","91":"t","92":" ","93":"1","94":"2","95":"6","service":"pnptv-bot","timestamp":"2025-11-03 22:56:34"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:34.056Z
+   Invite Link: N/A
+   Notification Sent: No
+
+--- Processing User 8195464838 ---
+Name: Nick
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 8195464838: Premium until 2025-12-03T22:56:35.045Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:35"}
+[33mwarn[39m: Failed to generate invite link for user 8195464838: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"6","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:35"}
+[32minfo[39m: Membership notification sent to user 8195464838 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:35"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:35.045Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 8246996879 ---
+Name: Nicholas
+Current Tier: Free
+⚠️  Skipped: User has not completed onboarding
+
+--- Processing User 8247049923 ---
+Name: J
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 8247049923: Premium until 2025-12-03T22:56:36.156Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:36"}
+[33mwarn[39m: Failed to generate invite link for user 8247049923: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"5","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:36"}
+[32minfo[39m: Membership notification sent to user 8247049923 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:36"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:36.156Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 8261515347 ---
+Name: Mafer
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 8261515347: Premium until 2025-12-03T22:56:37.251Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:37"}
+[33mwarn[39m: Failed to generate invite link for user 8261515347: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"4","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:37"}
+[32minfo[39m: Membership notification sent to user 8261515347 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:37"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:37.251Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 8330392894 ---
+Name: M
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 8330392894: Premium until 2025-12-03T22:56:38.361Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:38"}
+[33mwarn[39m: Failed to generate invite link for user 8330392894: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"3","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:38"}
+[32minfo[39m: Membership notification sent to user 8330392894 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:38"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:38.361Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 8365312597 ---
+Name: Admin
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 8365312597: Premium until 2025-12-03T22:56:39.475Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:39"}
+[33mwarn[39m: Failed to generate invite link for user 8365312597: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"2","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:39"}
+[32minfo[39m: Membership notification sent to user 8365312597 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:40"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:39.475Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 8482272306 ---
+Name: dacis23
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 8482272306: Premium until 2025-12-03T22:56:40.583Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:40"}
+[33mwarn[39m: Failed to generate invite link for user 8482272306: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"2","37":"1","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:40"}
+[33mwarn[39m: Failed to send membership notification to user 8482272306: {"0":"4","1":"0","10":"d","11":"d","12":"e","13":"n","14":":","15":" ","16":"b","17":"o","18":"t","19":" ","2":"3","20":"w","21":"a","22":"s","23":" ","24":"b","25":"l","26":"o","27":"c","28":"k","29":"e","3":":","30":"d","31":" ","32":"b","33":"y","34":" ","35":"t","36":"h","37":"e","38":" ","39":"u","4":" ","40":"s","41":"e","42":"r","5":"F","6":"o","7":"r","8":"b","9":"i","service":"pnptv-bot","timestamp":"2025-11-03 22:56:41"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:40.583Z
+   Invite Link: N/A
+   Notification Sent: No
+
+--- Processing User 8493551723 ---
+Name: Jay
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 8493551723: Premium until 2025-12-03T22:56:41.829Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:41"}
+[33mwarn[39m: Failed to generate invite link for user 8493551723: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"1","37":"9","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:42"}
+[32minfo[39m: Membership notification sent to user 8493551723 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:42"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:41.829Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 8552451957 ---
+Name: Test P P
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 8552451957: Premium until 2025-12-03T22:56:42.930Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:43"}
+[33mwarn[39m: Failed to generate invite link for user 8552451957: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"1","37":"8","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:43"}
+[32minfo[39m: Membership notification sent to user 8552451957 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:43"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:42.930Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 8569798104 ---
+Name: Dina
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 8569798104: Premium until 2025-12-03T22:56:44.060Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:44"}
+[33mwarn[39m: Failed to generate invite link for user 8569798104: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"1","37":"7","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:44"}
+[32minfo[39m: Membership notification sent to user 8569798104 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:44"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:44.060Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User 996678036 ---
+Name: Azrie
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user 996678036: Premium until 2025-12-03T22:56:45.236Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:45"}
+[33mwarn[39m: Failed to generate invite link for user 996678036: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"1","37":"6","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:45"}
+[32minfo[39m: Membership notification sent to user 996678036 for tier Premium {"service":"pnptv-bot","timestamp":"2025-11-03 22:56:45"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:45.236Z
+   Invite Link: N/A
+   Notification Sent: Yes
+
+--- Processing User W1Jl2z3IhdXqeSRuvW51 ---
+Name: Anonymous
+Current Tier: Free
+Activating Premium membership for 30 days...
+[32minfo[39m: Membership activated for user W1Jl2z3IhdXqeSRuvW51: Premium until 2025-12-03T22:56:46.345Z {"activatedBy":"admin","durationDays":30,"service":"pnptv-bot","timestamp":"2025-11-03 22:56:46"}
+[33mwarn[39m: Failed to generate invite link for user W1Jl2z3IhdXqeSRuvW51: {"0":"4","1":"2","10":"a","11":"n","12":"y","13":" ","14":"R","15":"e","16":"q","17":"u","18":"e","19":"s","2":"9","20":"t","21":"s","22":":","23":" ","24":"r","25":"e","26":"t","27":"r","28":"y","29":" ","3":":","30":"a","31":"f","32":"t","33":"e","34":"r","35":" ","36":"1","37":"5","4":" ","5":"T","6":"o","7":"o","8":" ","9":"M","service":"pnptv-bot","timestamp":"2025-11-03 22:56:46"}
+[33mwarn[39m: Failed to send membership notification to user W1Jl2z3IhdXqeSRuvW51: {"0":"4","1":"0","10":"e","11":"q","12":"u","13":"e","14":"s","15":"t","16":":","17":" ","18":"c","19":"h","2":"0","20":"a","21":"t","22":" ","23":"n","24":"o","25":"t","26":" ","27":"f","28":"o","29":"u","3":":","30":"n","31":"d","4":" ","5":"B","6":"a","7":"d","8":" ","9":"R","service":"pnptv-bot","timestamp":"2025-11-03 22:56:46"}
+✅ Success!
+   Tier: Premium
+   Expires: 2025-12-03T22:56:46.345Z
+   Invite Link: N/A
+   Notification Sent: No
+
+
+=== Activation Complete ===
+
+Total Users: 83
+✅ Successfully Activated: 82
+⚠️  Skipped (No Onboarding): 1
+❌ Failed: 0
+
+=== Done ===
+

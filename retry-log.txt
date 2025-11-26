@@ -1,0 +1,529 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+✅ Environment loaded from /root/bot 1/.env
+✅ Environment variables validated successfully
+✓ Sentry initialized (environment: auto)
+Iniciando Firebase...
+FIREBASE_CREDENTIALS length: 2327 chars
+First 200 chars: {"type":"service_account","project_id":"pnptv-b8af8","private_key_id":"1ccc8fb4b1ec59dffbbc53d0c50cea631c4e40ce","private_key":"-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgE...
+✅ Using Firebase credentials from environment variable
+   Project ID: pnptv-b8af8
+   Client Email: firebase-adminsdk-fbsvc@pnptv-b8af8.iam.gserviceaccount.com
+Firebase ha sido inicializado correctamente.
+
+=== Retrying Premium Channel Invite Links ===
+
+Found 82 Premium members
+
+⏳ Using 3-second delay between requests to avoid rate limiting
+
+
+--- Processing User 1071160931 ---
+Name: @Fedorius
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 1090072883 ---
+Name: Growl Time
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 1100099683 ---
+Name: Joseph
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 1234213234 ---
+Name: Ichiro Elias
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 1268661883 ---
+Name: LP
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 1368640424 ---
+Name: Juan 🇨🇴
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 1475485409 ---
+Name: Jo
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 1555839860 ---
+Name: JD
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 1684976172 ---
+Name: JuanMa Ruiz
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 1771672066 ---
+Name: Carlos
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 1853540313 ---
+Name: A
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 2077767307 ---
+Name: brix_33
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 2120179967 ---
+Name: Tat
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 5034174384 ---
+Name: T
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 521921359 ---
+Name: Max
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 5272134668 ---
+Name: CKCK
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 5346270416 ---
+Name: XXLatinBoy
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 5373548942 ---
+Name: Naughty
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 540482380 ---
+Name: Yuekiu
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 5463213541 ---
+Name: José R
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 14
+⏳ Waiting 19 seconds due to rate limiting...
+❌ Retry failed: expireDate is not defined
+
+--- Processing User 5475643506 ---
+Name: Corey
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 5519461158 ---
+Name: Shima
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 5556393716 ---
+Name: stl
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 5575449547 ---
+Name: C
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 579971848 ---
+Name: Deku
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 5830119032 ---
+Name: Je2786
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 5836948764 ---
+Name: edward
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 5849505145 ---
+Name: FireFX
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 5869566424 ---
+Name: Tony
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 5990112447 ---
+Name: 12216
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 6025431055 ---
+Name: aarolu10
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 27
+⏳ Waiting 32 seconds due to rate limiting...
+❌ Retry failed: expireDate is not defined
+
+--- Processing User 6091427813 ---
+Name: Raccone3
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 6218516061 ---
+Name: brkfre
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 6381844084 ---
+Name: mafercm
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 6426453759 ---
+Name: Mr. R.
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 6496516609 ---
+Name: PartyTime!
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 6512908422 ---
+Name: Fratboy101
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 6557776792 ---
+Name: José
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 6785135243 ---
+Name: Cesar
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 6798050167 ---
+Name: Simon
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 6890340367 ---
+Name: Local
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 6965613313 ---
+Name: Thesedarkhours
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 27
+⏳ Waiting 32 seconds due to rate limiting...
+❌ Retry failed: expireDate is not defined
+
+--- Processing User 6984257203 ---
+Name: Nico
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7004233882 ---
+Name: g
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7018573427 ---
+Name: Juicy Pork Bunz
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7071683657 ---
+Name: lukel02
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7088487175 ---
+Name: Twink
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7105094968 ---
+Name: Spun⬇️Sub
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7166356500 ---
+Name: D
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7178374095 ---
+Name: German
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7216485226 ---
+Name: Lygnios
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7246621722 ---
+Name: PNP
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7373917106 ---
+Name: ShortyJ
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 27
+⏳ Waiting 32 seconds due to rate limiting...
+❌ Retry failed: expireDate is not defined
+
+--- Processing User 7409962596 ---
+Name: VSTRAY
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7432041476 ---
+Name: ANT
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7488115788 ---
+Name: D
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7501013439 ---
+Name: Aries
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7529460726 ---
+Name: Castor
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7535820309 ---
+Name: x_x
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7577911928 ---
+Name: Guo
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7616323085 ---
+Name: Alphonso
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7643943412 ---
+Name: Mauricio
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7664471211 ---
+Name: Mul
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7679106398 ---
+Name: Maks
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 27
+⏳ Waiting 32 seconds due to rate limiting...
+❌ Retry failed: expireDate is not defined
+
+--- Processing User 7857923659 ---
+Name: Max DK
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7888824789 ---
+Name: Donnie
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 7927157390 ---
+Name: Boy
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 8020802390 ---
+Name: D
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 8081698947 ---
+Name: Bar
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 8109409476 ---
+Name: Angel
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 8109691903 ---
+Name: ToGee*OrNotToGee
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 8195464838 ---
+Name: Nick
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 8247049923 ---
+Name: J
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 8261515347 ---
+Name: Mafer
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 8330392894 ---
+Name: M
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 8365312597 ---
+Name: Admin
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 8482272306 ---
+Name: dacis23
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 8493551723 ---
+Name: Jay
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 8552451957 ---
+Name: Test P P
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 14
+⏳ Waiting 19 seconds due to rate limiting...
+❌ Retry failed: expireDate is not defined
+
+--- Processing User 8569798104 ---
+Name: Dina
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User 996678036 ---
+Name: Azrie
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+--- Processing User W1Jl2z3IhdXqeSRuvW51 ---
+Name: Anonymous
+✓ Generated invite link
+❌ Failed to send message: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+
+=== Retry Complete ===
+
+Total Premium Members: 82
+✅ Successfully Sent: 0
+⚠️ Skipped (Chat Unavailable): 0
+❌ Failed: 82
+
+--- Remaining Errors ---
+User 1071160931 (@Fedorius): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 1090072883 (Growl Time): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 1100099683 (Joseph): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 1234213234 (Ichiro Elias): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 1268661883 (LP): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 1368640424 (Juan 🇨🇴): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 1475485409 (Jo): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 1555839860 (JD): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 1684976172 (JuanMa Ruiz): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 1771672066 (Carlos): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 1853540313 (A): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 2077767307 (brix_33): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 2120179967 (Tat): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 5034174384 (T): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 521921359 (Max): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 5272134668 (CKCK): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 5346270416 (XXLatinBoy): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 5373548942 (Naughty): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 540482380 (Yuekiu): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 5463213541 (José R): Invite link: expireDate is not defined
+User 5475643506 (Corey): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 5519461158 (Shima): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 5556393716 (stl): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 5575449547 (C): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 579971848 (Deku): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 5830119032 (Je2786): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 5836948764 (edward): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 5849505145 (FireFX): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 5869566424 (Tony): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 5990112447 (12216): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 6025431055 (aarolu10): Invite link: expireDate is not defined
+User 6091427813 (Raccone3): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 6218516061 (brkfre): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 6381844084 (mafercm): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 6426453759 (Mr. R.): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 6496516609 (PartyTime!): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 6512908422 (Fratboy101): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 6557776792 (José): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 6785135243 (Cesar): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 6798050167 (Simon): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 6890340367 (Local): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 6965613313 (Thesedarkhours): Invite link: expireDate is not defined
+User 6984257203 (Nico): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7004233882 (g): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7018573427 (Juicy Pork Bunz): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7071683657 (lukel02): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7088487175 (Twink): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7105094968 (Spun⬇️Sub): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7166356500 (D): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7178374095 (German): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7216485226 (Lygnios): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7246621722 (PNP): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7373917106 (ShortyJ): Invite link: expireDate is not defined
+User 7409962596 (VSTRAY): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7432041476 (ANT): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7488115788 (D): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7501013439 (Aries): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7529460726 (Castor): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7535820309 (x_x): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7577911928 (Guo): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7616323085 (Alphonso): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7643943412 (Mauricio): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7664471211 (Mul): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7679106398 (Maks): Invite link: expireDate is not defined
+User 7857923659 (Max DK): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7888824789 (Donnie): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 7927157390 (Boy): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 8020802390 (D): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 8081698947 (Bar): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 8109409476 (Angel): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 8109691903 (ToGee*OrNotToGee): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 8195464838 (Nick): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 8247049923 (J): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 8261515347 (Mafer): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 8330392894 (M): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 8365312597 (Admin): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 8482272306 (dacis23): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 8493551723 (Jay): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 8552451957 (Test P P): Invite link: expireDate is not defined
+User 8569798104 (Dina): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User 996678036 (Azrie): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+User W1Jl2z3IhdXqeSRuvW51 (Anonymous): Message send: 400: Bad Request: can't parse entities: Character '.' is reserved and must be escaped with the preceding '\'
+
+=== Done ===
+

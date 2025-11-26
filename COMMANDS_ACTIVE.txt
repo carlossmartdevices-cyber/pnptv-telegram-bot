@@ -1,0 +1,16 @@
+/start          # Begin onboarding & setup profile
+/help           # Show help menu with available features
+/profile        # View & edit your profile
+/menu           # Show main menu with quick actions
+/subscribe      # Browse & purchase subscription plans
+/nearby         # Find members near location (Premium only)
+/aichat         # Start AI chat conversation
+/endchat        # End current AI chat session
+/toptracks      # View top played tracks in group
+/zoomroom       # Schedule a group video call
+/upcoming       # View upcoming events & calls
+/settimezone    # Set your timezone for events
+/rules          # View community rules & guidelines
+/library        # Access music library
+/optout         # Stop receiving broadcast messages
+/optin          # Resume receiving broadcast messages

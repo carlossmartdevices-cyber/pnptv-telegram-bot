@@ -1,0 +1,451 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+✅ Environment loaded from /root/bot 1/.env
+✅ Environment variables validated successfully
+✓ Sentry initialized (environment: auto)
+Iniciando Firebase...
+FIREBASE_CREDENTIALS length: 2327 chars
+First 200 chars: {"type":"service_account","project_id":"pnptv-b8af8","private_key_id":"1ccc8fb4b1ec59dffbbc53d0c50cea631c4e40ce","private_key":"-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgE...
+✅ Using Firebase credentials from environment variable
+   Project ID: pnptv-b8af8
+   Client Email: firebase-adminsdk-fbsvc@pnptv-b8af8.iam.gserviceaccount.com
+Firebase ha sido inicializado correctamente.
+
+=== Sending Premium Channel Invite Links ===
+
+Found 82 Premium members
+
+
+--- Processing User 1071160931 ---
+Name: @Fedorius
+✓ Generated invite link: https://t.me/+hUE7IEopn_IzNmY5
+❌ Failed to send message: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 155
+
+--- Processing User 1090072883 ---
+Name: Growl Time
+✓ Generated invite link: https://t.me/+iH6o2PycEcUxMDJh
+✓ Invite link sent successfully
+
+--- Processing User 1100099683 ---
+Name: Joseph
+✓ Generated invite link: https://t.me/+znp0hetx_IA1NmYx
+❌ Failed to send message: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 151
+
+--- Processing User 1234213234 ---
+Name: Ichiro Elias
+✓ Generated invite link: https://t.me/+tIIGKZjvKvM3MTYx
+✓ Invite link sent successfully
+
+--- Processing User 1268661883 ---
+Name: LP
+✓ Generated invite link: https://t.me/+1j3cYllW_ts0NmEx
+❌ Failed to send message: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 156
+
+--- Processing User 1368640424 ---
+Name: Juan 🇨🇴
+✓ Generated invite link: https://t.me/+wkAppWtlcvljZmZh
+✓ Invite link sent successfully
+
+--- Processing User 1475485409 ---
+Name: Jo
+✓ Generated invite link: https://t.me/+hgxDRhac8Ag5YzVh
+✓ Invite link sent successfully
+
+--- Processing User 1555839860 ---
+Name: JD
+✓ Generated invite link: https://t.me/+CbsQn5DlfDcwNDYx
+✓ Invite link sent successfully
+
+--- Processing User 1684976172 ---
+Name: JuanMa Ruiz
+✓ Generated invite link: https://t.me/+lll0UFT0KmdkYzEx
+✓ Invite link sent successfully
+
+--- Processing User 1771672066 ---
+Name: Carlos
+✓ Generated invite link: https://t.me/+ATsUgFcfF9U2MWNh
+✓ Invite link sent successfully
+
+--- Processing User 1853540313 ---
+Name: A
+✓ Generated invite link: https://t.me/+2m5m2JpyyF8yNmYx
+✓ Invite link sent successfully
+
+--- Processing User 2077767307 ---
+Name: brix_33
+✓ Generated invite link: https://t.me/+qWwyYixj2n4wMTVh
+❌ Failed to send message: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 52
+
+--- Processing User 2120179967 ---
+Name: Tat
+✓ Generated invite link: https://t.me/+0OpW_gLQg20yODdh
+❌ Failed to send message: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 144
+
+--- Processing User 5034174384 ---
+Name: T
+✓ Generated invite link: https://t.me/+_EsRRV86KQQ3ZjYx
+❌ Failed to send message: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 138
+
+--- Processing User 521921359 ---
+Name: Max
+✓ Generated invite link: https://t.me/+hi0x2foF7lJjOThh
+✓ Invite link sent successfully
+
+--- Processing User 5272134668 ---
+Name: CKCK
+✓ Generated invite link: https://t.me/+4EjEgo68DFhmOGM5
+✓ Invite link sent successfully
+
+--- Processing User 5346270416 ---
+Name: XXLatinBoy
+✓ Generated invite link: https://t.me/+ycwC097lhLVmMjlh
+✓ Invite link sent successfully
+
+--- Processing User 5373548942 ---
+Name: Naughty
+✓ Generated invite link: https://t.me/+5UJMBLCxk-o0MzIx
+✓ Invite link sent successfully
+
+--- Processing User 540482380 ---
+Name: Yuekiu
+✓ Generated invite link: https://t.me/+FShwySBS8Q1jZTBh
+✓ Invite link sent successfully
+
+--- Processing User 5463213541 ---
+Name: José R
+✓ Generated invite link: https://t.me/+Q4fhLBn-Nt9jZDQx
+✓ Invite link sent successfully
+
+--- Processing User 5475643506 ---
+Name: Corey
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 22
+
+--- Processing User 5519461158 ---
+Name: Shima
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 20
+
+--- Processing User 5556393716 ---
+Name: stl
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 17
+
+--- Processing User 5575449547 ---
+Name: C
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 15
+
+--- Processing User 579971848 ---
+Name: Deku
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 13
+
+--- Processing User 5830119032 ---
+Name: Je2786
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 11
+
+--- Processing User 5836948764 ---
+Name: edward
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 9
+
+--- Processing User 5849505145 ---
+Name: FireFX
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 3
+
+--- Processing User 5869566424 ---
+Name: Tony
+✓ Generated invite link: https://t.me/+cCZc30c5Yxc4M2Yx
+✓ Invite link sent successfully
+
+--- Processing User 5990112447 ---
+Name: 12216
+✓ Generated invite link: https://t.me/+InBFZ0pku7EwNTMx
+✓ Invite link sent successfully
+
+--- Processing User 6025431055 ---
+Name: aarolu10
+✓ Generated invite link: https://t.me/+Xq7zUr8ukwViYmJh
+✓ Invite link sent successfully
+
+--- Processing User 6091427813 ---
+Name: Raccone3
+✓ Generated invite link: https://t.me/+8xbsH2YXw3VlNmQx
+✓ Invite link sent successfully
+
+--- Processing User 6218516061 ---
+Name: brkfre
+✓ Generated invite link: https://t.me/+3_WFQ23pTt5mOWFh
+❌ Failed to send message: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 144
+
+--- Processing User 6381844084 ---
+Name: mafercm
+✓ Generated invite link: https://t.me/+C79Dp8yHnN4wZTBh
+✓ Invite link sent successfully
+
+--- Processing User 6426453759 ---
+Name: Mr. R.
+✓ Generated invite link: https://t.me/+nyKrA1gh9rc0OGRh
+✓ Invite link sent successfully
+
+--- Processing User 6496516609 ---
+Name: PartyTime!
+✓ Generated invite link: https://t.me/+8EMemkMb1WFhYzQx
+✓ Invite link sent successfully
+
+--- Processing User 6512908422 ---
+Name: Fratboy101
+✓ Generated invite link: https://t.me/+DxJiPlrzG0A5MGNh
+✓ Invite link sent successfully
+
+--- Processing User 6557776792 ---
+Name: José
+✓ Generated invite link: https://t.me/+sg6bM3ywFXQxNzIx
+✓ Invite link sent successfully
+
+--- Processing User 6785135243 ---
+Name: Cesar
+✓ Generated invite link: https://t.me/+-oabhZ9JSldkOGU5
+✓ Invite link sent successfully
+
+--- Processing User 6798050167 ---
+Name: Simon
+✓ Generated invite link: https://t.me/+ABSAdU6q1w45MDAx
+✓ Invite link sent successfully
+
+--- Processing User 6890340367 ---
+Name: Local
+✓ Generated invite link: https://t.me/+RzDbC3N8iUExMjIx
+✓ Invite link sent successfully
+
+--- Processing User 6965613313 ---
+Name: Thesedarkhours
+✓ Generated invite link: https://t.me/+ZwrY0ADUdiNkZDMx
+✓ Invite link sent successfully
+
+--- Processing User 6984257203 ---
+Name: Nico
+✓ Generated invite link: https://t.me/+Rwo64TInjdc0ZmVh
+✓ Invite link sent successfully
+
+--- Processing User 7004233882 ---
+Name: g
+✓ Generated invite link: https://t.me/+g1inpxLOP8gxZGMx
+✓ Invite link sent successfully
+
+--- Processing User 7018573427 ---
+Name: Juicy Pork Bunz
+✓ Generated invite link: https://t.me/+5rA4x5rktvM0ZDU5
+❌ Failed to send message: 400: Bad Request: chat not found
+
+--- Processing User 7071683657 ---
+Name: lukel02
+✓ Generated invite link: https://t.me/+slswsoaaFQtmZDMx
+✓ Invite link sent successfully
+
+--- Processing User 7088487175 ---
+Name: Twink
+✓ Generated invite link: https://t.me/+vl7GqvJp9-kyNmUx
+✓ Invite link sent successfully
+
+--- Processing User 7105094968 ---
+Name: Spun⬇️Sub
+✓ Generated invite link: https://t.me/+BLCt-ncUWJo3MmJh
+✓ Invite link sent successfully
+
+--- Processing User 7166356500 ---
+Name: D
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 21
+
+--- Processing User 7178374095 ---
+Name: German
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 18
+
+--- Processing User 7216485226 ---
+Name: Lygnios
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 16
+
+--- Processing User 7246621722 ---
+Name: PNP
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 14
+
+--- Processing User 7373917106 ---
+Name: ShortyJ
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 12
+
+--- Processing User 7409962596 ---
+Name: VSTRAY
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 10
+
+--- Processing User 7432041476 ---
+Name: ANT
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 3
+
+--- Processing User 7488115788 ---
+Name: D
+✓ Generated invite link: https://t.me/+X0ZkOXwRlwQyY2Ex
+✓ Invite link sent successfully
+
+--- Processing User 7501013439 ---
+Name: Aries
+✓ Generated invite link: https://t.me/+8Zyf4G8ZJO81MzYx
+✓ Invite link sent successfully
+
+--- Processing User 7529460726 ---
+Name: Castor
+✓ Generated invite link: https://t.me/+udZgCPi5z81kZjJh
+✓ Invite link sent successfully
+
+--- Processing User 7535820309 ---
+Name: x_x
+✓ Generated invite link: https://t.me/+wXbknkLYvmg5NDUx
+❌ Failed to send message: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 49
+
+--- Processing User 7577911928 ---
+Name: Guo
+✓ Generated invite link: https://t.me/+k59LOsmpJzo1Njcx
+✓ Invite link sent successfully
+
+--- Processing User 7616323085 ---
+Name: Alphonso
+✓ Generated invite link: https://t.me/+g7weG3OOivlmYTE5
+✓ Invite link sent successfully
+
+--- Processing User 7643943412 ---
+Name: Mauricio
+✓ Generated invite link: https://t.me/+vF55ieGh1PEzMmIx
+✓ Invite link sent successfully
+
+--- Processing User 7664471211 ---
+Name: Mul
+✓ Generated invite link: https://t.me/+_DToXCH_Cd05NTYx
+✓ Invite link sent successfully
+
+--- Processing User 7679106398 ---
+Name: Maks
+✓ Generated invite link: https://t.me/+RD2LUaacP142MmVh
+✓ Invite link sent successfully
+
+--- Processing User 7857923659 ---
+Name: Max DK
+✓ Generated invite link: https://t.me/+DZuDHhv50R4wNjRh
+✓ Invite link sent successfully
+
+--- Processing User 7888824789 ---
+Name: Donnie
+✓ Generated invite link: https://t.me/+z2Kn1w_JAz1hMDVh
+❌ Failed to send message: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 149
+
+--- Processing User 7927157390 ---
+Name: Boy
+✓ Generated invite link: https://t.me/+WLSMfon-wQliYjRh
+✓ Invite link sent successfully
+
+--- Processing User 8020802390 ---
+Name: D
+✓ Generated invite link: https://t.me/+C1tzOq0DmC1lNWY5
+✓ Invite link sent successfully
+
+--- Processing User 8081698947 ---
+Name: Bar
+✓ Generated invite link: https://t.me/+-bLyttma2SY3NzU5
+❌ Failed to send message: 403: Forbidden: bot was blocked by the user
+
+--- Processing User 8109409476 ---
+Name: Angel
+✓ Generated invite link: https://t.me/+94h4WsskL0Y2ODYx
+✓ Invite link sent successfully
+
+--- Processing User 8109691903 ---
+Name: ToGee*OrNotToGee
+✓ Generated invite link: https://t.me/+ftqnewz_-4EwMDhh
+❌ Failed to send message: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 189
+
+--- Processing User 8195464838 ---
+Name: Nick
+✓ Generated invite link: https://t.me/+EREHhmmmUnthNmM5
+✓ Invite link sent successfully
+
+--- Processing User 8247049923 ---
+Name: J
+✓ Generated invite link: https://t.me/+rN16cWspCbJjYzMx
+✓ Invite link sent successfully
+
+--- Processing User 8261515347 ---
+Name: Mafer
+✓ Generated invite link: https://t.me/+GQpp0tU4Wcw5ODAx
+✓ Invite link sent successfully
+
+--- Processing User 8330392894 ---
+Name: M
+✓ Generated invite link: https://t.me/+rlEwvECIeo00NzM5
+✓ Invite link sent successfully
+
+--- Processing User 8365312597 ---
+Name: Admin
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 21
+
+--- Processing User 8482272306 ---
+Name: dacis23
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 19
+
+--- Processing User 8493551723 ---
+Name: Jay
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 17
+
+--- Processing User 8552451957 ---
+Name: Test P P
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 15
+
+--- Processing User 8569798104 ---
+Name: Dina
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 12
+
+--- Processing User 996678036 ---
+Name: Azrie
+❌ Failed to generate invite link: 429: Too Many Requests: retry after 10
+
+--- Processing User W1Jl2z3IhdXqeSRuvW51 ---
+Name: Anonymous
+✓ Generated invite link: https://t.me/+nyzaUzHjdKUxMGUx
+❌ Failed to send message: 400: Bad Request: chat not found
+
+
+=== Invite Links Sent ===
+
+Total Premium Members: 82
+✅ Successfully Sent: 48
+❌ Failed: 34
+
+--- Errors ---
+User 1071160931 (@Fedorius): Message send: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 155
+User 1100099683 (Joseph): Message send: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 151
+User 1268661883 (LP): Message send: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 156
+User 2077767307 (brix_33): Message send: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 52
+User 2120179967 (Tat): Message send: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 144
+User 5034174384 (T): Message send: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 138
+User 5475643506 (Corey): Invite link generation: 429: Too Many Requests: retry after 22
+User 5519461158 (Shima): Invite link generation: 429: Too Many Requests: retry after 20
+User 5556393716 (stl): Invite link generation: 429: Too Many Requests: retry after 17
+User 5575449547 (C): Invite link generation: 429: Too Many Requests: retry after 15
+User 579971848 (Deku): Invite link generation: 429: Too Many Requests: retry after 13
+User 5830119032 (Je2786): Invite link generation: 429: Too Many Requests: retry after 11
+User 5836948764 (edward): Invite link generation: 429: Too Many Requests: retry after 9
+User 5849505145 (FireFX): Invite link generation: 429: Too Many Requests: retry after 3
+User 6218516061 (brkfre): Message send: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 144
+User 7018573427 (Juicy Pork Bunz): Message send: 400: Bad Request: chat not found
+User 7166356500 (D): Invite link generation: 429: Too Many Requests: retry after 21
+User 7178374095 (German): Invite link generation: 429: Too Many Requests: retry after 18
+User 7216485226 (Lygnios): Invite link generation: 429: Too Many Requests: retry after 16
+User 7246621722 (PNP): Invite link generation: 429: Too Many Requests: retry after 14
+User 7373917106 (ShortyJ): Invite link generation: 429: Too Many Requests: retry after 12
+User 7409962596 (VSTRAY): Invite link generation: 429: Too Many Requests: retry after 10
+User 7432041476 (ANT): Invite link generation: 429: Too Many Requests: retry after 3
+User 7535820309 (x_x): Message send: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 49
+User 7888824789 (Donnie): Message send: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 149
+User 8081698947 (Bar): Message send: 403: Forbidden: bot was blocked by the user
+User 8109691903 (ToGee*OrNotToGee): Message send: 400: Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 189
+User 8365312597 (Admin): Invite link generation: 429: Too Many Requests: retry after 21
+User 8482272306 (dacis23): Invite link generation: 429: Too Many Requests: retry after 19
+User 8493551723 (Jay): Invite link generation: 429: Too Many Requests: retry after 17
+User 8552451957 (Test P P): Invite link generation: 429: Too Many Requests: retry after 15
+User 8569798104 (Dina): Invite link generation: 429: Too Many Requests: retry after 12
+User 996678036 (Azrie): Invite link generation: 429: Too Many Requests: retry after 10
+User W1Jl2z3IhdXqeSRuvW51 (Anonymous): Message send: 400: Bad Request: chat not found
+
+=== Done ===
+
