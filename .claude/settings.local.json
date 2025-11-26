@@ -42,7 +42,14 @@
       "Bash(npm install:*)",
       "Bash(curl:*)",
       "Bash(curl:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(sudo cat:*)",
+      "Bash(sudo sed:*)",
+      "Bash(sudo nginx:*)",
+      "Bash(sudo systemctl reload:*)",
+      "Bash(xargs -I {} curl -s https://api.telegram.org/bot{}/getWebhookInfo)",
+      "Bash(npm run build:*)",
+      "Bash(NODE_ENV=development pm2 start:*)"
     ],
     "deny": [],
     "ask": []

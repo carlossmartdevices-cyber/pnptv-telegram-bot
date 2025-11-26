@@ -97,14 +97,6 @@ const {
   handleCopCardHelp,
 } = require("./handlers/copCardHandler");
 const {
-  showKyrrexPlans,
-  handleKyrrexPlanSelection,
-  handleKyrrexCryptoSelection,
-  handleKyrrexPaymentCheck,
-  handleKyrrexCopyAddress,
-  handleKyrrexHelp,
-} = require("./handlers/kyrrexPayHandler");
-const {
   adminPanel,
   handleAdminCallback,
   sendBroadcast,
@@ -116,11 +108,22 @@ const {
   executeCustomExtension,
   executeModifyExpiration,
   executePlanEdit,
+  sendReactivationBroadcast,
 } = require("./handlers/admin");
 const { handleMapCallback, handleLocation } = require("./handlers/map");
 const { handleNearbyCallback } = require("./handlers/nearby");
 const { handleLiveCallback } = require("./handlers/live");
 const { startAIChat, endAIChat, handleChatMessage, handleAIChatCallback } = require("./handlers/aiChat");
+const { 
+  showSupportTickets,
+  handleSupportCallback,
+  handleWaitingMessage
+} = require("./handlers/admin/supportTickets");
+const {
+  showReactivationIntro,
+  handleReactivationCallback,
+  handleReactivationProofUpload,
+} = require("./handlers/reactivation");
 const {
   handleShowBlacklist,
   handleAddWord,
@@ -139,6 +142,16 @@ const {
   handleBackToRulesMenu,
   handleCloseRules
 } = require("./handlers/rules");
+const { handleZoomStatus } = require("./handlers/zoomStatus");
+const { handleBroadcastPrime, handleBroadcastConfirmation } = require("./handlers/broadcastPrimeAdmin");
+const { initializePrimeScheduler } = require("../services/primeDeadlineScheduler");
+const { registerPostToChannelHandlers } = require("./handlers/admin/postToChannelIntegration");
+const {
+  showChannelBroadcasterMenu,
+  handleChannelBroadcasterCallback,
+  handleMediaUpload,
+  handleWizardTextInput
+} = require("./handlers/admin/channelBroadcaster");
 
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
@@ -194,11 +207,14 @@ bot.command("profile", async (ctx) => {
 bot.command("subscribe", subscribeHandler);
 bot.command("admin", adminMiddleware(), adminPanel);
 bot.command("sendpromo", adminMiddleware(), sendPromoAnnouncement);
+bot.command("reactivateprime", adminMiddleware(), sendReactivationBroadcast);
 bot.command("plans", adminMiddleware(), async (ctx) => {
   await showPlanDashboard(ctx);
 });
+bot.command("support_tickets", adminMiddleware(), showSupportTickets);
 bot.command("aichat", startAIChat);
 bot.command("endchat", endAIChat);
+bot.command("reactivate", showReactivationIntro);
 
 // ===== HIDDEN ADMIN COMMANDS =====
 bot.command("sendpaymentbutton", adminMiddleware(), async (ctx) => {
@@ -225,14 +241,23 @@ bot.command("menu", async (ctx) => {
 bot.command("rules", handleRules);
 bot.command("library", handleLibrary);
 bot.command("toptracks", handleTopTracks);
-bot.command("schedulecall", handleScheduleCall);
-bot.command("schedulestream", handleScheduleStream);
+bot.command("zoomroom", handleScheduleCall);
+bot.command("schedulecall", handleScheduleCall); // Legacy alias
+// DISABLED: schedulestream, playlist, addtrack, deletetrack, deleteevent, zoomstatus
 bot.command("upcoming", handleUpcoming);
-bot.command("playlist", handlePlaylist);
-bot.command("addtrack", handleAddTrack);
-bot.command("deletetrack", handleDeleteTrack);
-bot.command("deleteevent", handleDeleteEvent);
 bot.command("settimezone", handleSetTimezone);
+// bot.command("schedulestream", handleScheduleStream);
+// bot.command("playlist", handlePlaylist);
+// bot.command("addtrack", handleAddTrack);
+// bot.command("deletetrack", handleDeleteTrack);
+// bot.command("deleteevent", handleDeleteEvent);
+// bot.command("zoomstatus", handleZoomStatus);
+
+// ===== PRIME MIGRATION COMMANDS (Admin Only) =====
+bot.command("broadcastprime", adminMiddleware(), handleBroadcastPrime);
+
+// ===== CHANNEL BROADCASTER (Admin Only) =====
+bot.command("broadcaster", adminMiddleware(), showChannelBroadcasterMenu);
 
 // ===== MODERATION COMMANDS (Admin Only) =====
 bot.command("blacklist", handleShowBlacklist);
@@ -364,6 +389,13 @@ bot.action("show_help", async (ctx) => {
 
 // AI Chat callback handler
 bot.action("start_ai_chat", handleAIChatCallback);
+bot.action("request_human_support", handleAIChatCallback);
+bot.action("continue_ai_chat", handleAIChatCallback);
+
+// Support ticket callbacks
+bot.action(/^(view_ticket_|claim_ticket_|respond_ticket_|resolve_ticket_|close_ticket_|priority_ticket_|set_priority_).+/, handleSupportCallback);
+bot.action(/(refresh_tickets|back_to_tickets|all_tickets|my_tickets)/, handleSupportCallback);
+bot.action(/^(reactivate_.+|approve_reactivation_.+|deny_reactivation_.+)$/, handleReactivationCallback);
 
 // Payment method selection handlers removed (Daimo & ePayco)
 
@@ -451,24 +483,59 @@ bot.action("group_menu_library", async (ctx) => {
   await handleLibraryCallback(ctx);
 });
 
+bot.action("group_menu_profile", async (ctx) => {
+  const { handleProfileCallback } = require("./handlers/groupMenu");
+  await handleProfileCallback(ctx);
+});
+
+bot.action("group_menu_prime", async (ctx) => {
+  const { handlePrimeMemberCallback } = require("./handlers/groupMenu");
+  await handlePrimeMemberCallback(ctx);
+});
+
+bot.action("group_menu_toptracks", async (ctx) => {
+  const { handleTopTracksCallback } = require("./handlers/groupMenu");
+  await handleTopTracksCallback(ctx);
+});
+
 bot.action("group_menu_openroom", async (ctx) => {
   const { handleOpenRoomCallback } = require("./handlers/groupMenu");
   await handleOpenRoomCallback(ctx);
 });
 
-bot.action("group_menu_rules", async (ctx) => {
-  const { handleRulesCallback } = require("./handlers/groupMenu");
-  await handleRulesCallback(ctx);
+bot.action("group_menu_nearby", async (ctx) => {
+  const { handleNearbyCallback } = require("./handlers/groupMenu");
+  await handleNearbyCallback(ctx);
 });
 
-bot.action("group_menu_help", async (ctx) => {
-  const { handleHelpCallback } = require("./handlers/groupMenu");
-  await handleHelpCallback(ctx);
+bot.action("group_menu_music_events", async (ctx) => {
+  const { handleMusicEventsCallback } = require("./handlers/groupMenu");
+  await handleMusicEventsCallback(ctx);
 });
 
-bot.action("group_menu_subscribe", async (ctx) => {
-  const { handleSubscribeCallback } = require("./handlers/groupMenu");
-  await handleSubscribeCallback(ctx);
+bot.action("group_menu_upcoming", async (ctx) => {
+  const { handleUpcomingCallback } = require("./handlers/groupMenu");
+  await handleUpcomingCallback(ctx);
+});
+
+bot.action("group_menu_settings", async (ctx) => {
+  const { handleSettingsCallback } = require("./handlers/groupMenu");
+  await handleSettingsCallback(ctx);
+});
+
+bot.action("group_menu_help_ai", async (ctx) => {
+  const { handleHelpAICallback } = require("./handlers/groupMenu");
+  await handleHelpAICallback(ctx);
+});
+
+bot.action("group_menu_admin_case", async (ctx) => {
+  const { handleAdminCaseCallback } = require("./handlers/groupMenu");
+  await handleAdminCaseCallback(ctx);
+});
+
+bot.action("group_menu_settimezone", async (ctx) => {
+  const { handleSetTimezoneCallback } = require("./handlers/groupMenu");
+  await handleSetTimezoneCallback(ctx);
 });
 
 bot.action("group_menu_back", async (ctx) => {
@@ -479,6 +546,34 @@ bot.action("group_menu_back", async (ctx) => {
 bot.action("group_menu_close", async (ctx) => {
   const { handleCloseMenu } = require("./handlers/groupMenu");
   await handleCloseMenu(ctx);
+});
+
+// Zoom room timezone selection
+bot.action(/^set_zoom_tz_(.+)$/, async (ctx) => {
+  const { handleSetZoomTimezone } = require("./handlers/groupMenu");
+  await handleSetZoomTimezone(ctx);
+});
+
+// Menu show button from private responses
+bot.action("group_menu_show", async (ctx) => {
+  const { showGroupMenu } = require("./handlers/groupMenu");
+  await showGroupMenu(ctx);
+});
+
+// Help submenu callbacks
+bot.action("help_start_ai_chat", async (ctx) => {
+  const { handleHelpStartAIChat } = require("./handlers/groupMenu");
+  await handleHelpStartAIChat(ctx);
+});
+
+bot.action("help_open_cases", async (ctx) => {
+  const { handleHelpOpenCases } = require("./handlers/groupMenu");
+  await handleHelpOpenCases(ctx);
+});
+
+bot.action("help_back", async (ctx) => {
+  const { handleHelpBack } = require("./handlers/groupMenu");
+  await handleHelpBack(ctx);
 });
 
 // ===== ADMIN CALLBACKS =====
@@ -521,6 +616,9 @@ bot.action("broadcast_formatting_help", async (ctx) => {
   await ctx.answerCbQuery();
   await handleAdminCallback(ctx);
 });
+
+// ===== POST-TO-CHANNEL HANDLERS =====
+registerPostToChannelHandlers(bot);
 
 // ===== PROMO CALLBACKS =====
 bot.action(/^promo_send_(en|es|both)$/, async (ctx) => {
@@ -605,6 +703,11 @@ bot.action(/^broadcast_segment_/, async (ctx) => {
   await ctx.answerCbQuery();
   await handleAdminCallback(ctx);
 });
+
+// ===== PRIME MIGRATION CALLBACKS =====
+bot.action(/^broadcast_prime_(es|en|both)$/, handleBroadcastConfirmation);
+bot.action(/^confirm_broadcast_(es|en)$/, handleBroadcastConfirmation);
+bot.action("cancel_prime_broadcast", handleBroadcastConfirmation);
 
 // ===== MAP CALLBACKS =====
 
@@ -724,6 +827,19 @@ bot.on("photo", async (ctx, next) => {
     // Handle payment receipt upload
     const { handlePaymentProofUpload } = require("./handlers/admin");
     await handlePaymentProofUpload(ctx, "photo");
+  } else if (ctx.session.waitingFor === "reactivation_proof") {
+    const photos = ctx.message.photo || [];
+    const highestRes = photos[photos.length - 1];
+    if (highestRes) {
+      const handled = await handleReactivationProofUpload(ctx, {
+        type: "photo",
+        fileId: highestRes.file_id,
+        fileUniqueId: highestRes.file_unique_id,
+      });
+      if (handled) {
+        return;
+      }
+    }
   } else {
     await handlePhotoMessage(ctx);
   }
@@ -746,6 +862,18 @@ bot.on("document", async (ctx) => {
     // Handle payment receipt upload
     const { handlePaymentProofUpload } = require("./handlers/admin");
     await handlePaymentProofUpload(ctx, "document");
+  } else if (ctx.session.waitingFor === "reactivation_proof") {
+    const document = ctx.message.document;
+    if (document) {
+      const handled = await handleReactivationProofUpload(ctx, {
+        type: "document",
+        fileId: document.file_id,
+        fileUniqueId: document.file_unique_id,
+      });
+      if (handled) {
+        return;
+      }
+    }
   }
 });
 
@@ -938,6 +1066,9 @@ bot.on("text", async (ctx) => {
         const planName = parts[1];
         await executePlanEdit(ctx, planName, field, ctx.message.text);
       }
+    } else if (await handleWaitingMessage(ctx)) {
+      // Support ticket response handled
+      return;
     } else if (ctx.session.aiChatActive) {
       // Handle AI chat messages when in chat mode
       await handleChatMessage(ctx);
@@ -988,6 +1119,32 @@ bot.on("text", async (ctx) => {
 
 bot.on("location", handleLocation);
 
+// ===== CHANNEL BROADCASTER MEDIA/TEXT HANDLERS =====
+// Handle media uploads for channel broadcaster
+bot.on(['photo', 'video', 'document', 'audio'], async (ctx, next) => {
+  if (ctx.session?.cbWizard?.step?.startsWith('awaiting_')) {
+    // In channel broadcaster wizard mode
+    await handleMediaUpload(ctx);
+  } else if (ctx.chat.type === 'group' || ctx.chat.type === 'supergroup') {
+    // In group chats - handle media message for permissions
+    await handleMediaMessage(ctx);
+  } else {
+    // Normal handling
+    return next();
+  }
+});
+
+// Handle text input in channel broadcaster wizard
+bot.on('text', async (ctx, next) => {
+  if (ctx.session?.cbWizard?.step === 'awaiting_text') {
+    // In channel broadcaster text composition
+    await handleWizardTextInput(ctx);
+  } else {
+    // Normal text handling
+    return next();
+  }
+});
+
 // ===== GROUP MANAGEMENT =====
 // Handle new members joining groups
 bot.on('new_chat_members', handleNewMember);
@@ -1007,6 +1164,9 @@ bot.on(['photo', 'video', 'document', 'audio', 'voice', 'video_note', 'sticker',
 bot.action("cancel_delete", (ctx) =>
   ctx.editMessageText("Operation cancelled")
 );
+
+// ===== CHANNEL BROADCASTER CALLBACKS =====
+bot.action(/^cbc_/, handleChannelBroadcasterCallback);
 
 bot.action("show_map", async (ctx) => {
   try {

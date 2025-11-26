@@ -1,0 +1,60 @@
+# PNPtv Bot - Complete Commands List
+# All commands registered in the bot (Active + Disabled + Admin)
+
+# ===== USER COMMANDS - ACTIVE =====
+/start          # Begin onboarding & setup profile
+/help           # Show help menu with available features
+/profile        # View & edit your profile
+/menu           # Show main menu with quick actions
+/subscribe      # Browse & purchase subscription plans
+/nearby         # Find members near location (Premium only)
+/aichat         # Start AI chat conversation
+/endchat        # End current AI chat session
+/toptracks      # View top played tracks in group
+/zoomroom       # Schedule a group video call
+/rules          # View community rules & guidelines
+/library        # Access music library
+/optout         # Stop receiving broadcast messages
+/optin          # Resume receiving broadcast messages
+
+# ===== USER COMMANDS - ADDITIONAL =====
+/map            # Open interactive map (Premium only)
+/live           # Access live streaming features
+/app            # Launch PNPtv web app
+/reactivate     # Reactivate expired membership
+
+# ===== USER COMMANDS - DISABLED =====
+# /schedulestream # Schedule a live stream event
+# /upcoming       # View upcoming events & calls
+# /playlist       # Browse or manage playlists
+# /addtrack       # Add a new song to playlist
+# /deletetrack    # Remove song from playlist
+# /deleteevent    # Cancel a scheduled event
+# /settimezone    # Set your timezone for events
+# /zoomstatus     # Check Zoom meeting status
+# /schedulecall   # Alias for /zoomroom (legacy)
+
+# ===== ADMIN COMMANDS =====
+/admin          # Open admin control panel
+/plans          # View plan management dashboard
+/support_tickets # View support ticket queue
+/sendpromo      # Send promotional announcement
+/reactivateprime # Send PRIME membership reactivation
+/sendpaymentbutton # Send payment button to user
+/broadcastprime # Broadcast to PRIME channel
+/broadcaster    # Channel broadcaster interface
+
+# ===== MODERATION COMMANDS (Admin) =====
+/blacklist      # View content filtering rules
+/addword        # Add word to blacklist filter
+/removeword     # Remove word from filter
+/addlink        # Add URL to link filter
+/removelink     # Remove URL from filter
+/violations     # Check user violations
+/clearviolations # Clear user violations
+
+# ===== STATS =====
+# Total Active Commands: 18
+# Total Disabled: 9
+# Total Admin/Moderation: 15
+# TOTAL ALL COMMANDS: 42

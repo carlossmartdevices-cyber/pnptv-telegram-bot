@@ -20,6 +20,7 @@ const menus = {
     ],
   },
 
+  // Admin menu - Full admin features
   admin: {
     inline_keyboard: [
       [
@@ -42,6 +43,10 @@ const menus = {
         { text: "🗓 Scheduled", callback_data: "admin_scheduled_broadcasts" },
       ],
       [
+        { text: "📤 Post-to-Channel", callback_data: "ptc_menu" },
+        { text: "📢 Channel Broadcaster", callback_data: "cbc_new_post" },
+      ],
+      [
         { text: "💰 Payment Broadcast", callback_data: "admin_payment_broadcast" },
       ],
       [
@@ -52,6 +57,14 @@ const menus = {
         { text: "🪙 Kyrrex Crypto", callback_data: "admin_kyrrex_dashboard" },
       ],
       [{ text: "📋 Menu Config", callback_data: "admin_menus" }],
+      [{ text: "🔐 Switch to User Mode", callback_data: "toggle_admin_mode" }],
+    ],
+  },
+
+  // Admin mode toggle menu - For switching modes
+  adminToggle: {
+    inline_keyboard: [
+      [{ text: "⚙️ Switch to Admin Mode", callback_data: "toggle_admin_mode" }],
     ],
   },
 

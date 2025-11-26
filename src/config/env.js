@@ -13,7 +13,7 @@ let envLoaded = false;
  */
 const REQUIRED_ENV_VARS = {
   critical: [
-    'TELEGRAM_BOT_TOKEN',
+    'TELEGRAM_TOKEN',
     'FIREBASE_CREDENTIALS',  // Contains all Firebase config including client_email
   ],
   important: [

@@ -94,15 +94,42 @@ function privateResponseMiddleware() {
         
         // Send a brief notification in the group (only for commands, not automatic responses)
         if (ctx.message?.text?.startsWith('/') || ctx.callbackQuery) {
+          // Get user username or mention with first name
+          const userMention = ctx.from.username 
+            ? `@${ctx.from.username}`
+            : `${ctx.from.first_name || 'User'}`;
+
           // Use ctx.telegram.sendMessage to ensure auto-delete middleware handles it
+          const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'PNPtvbot';
+          
           await ctx.telegram.sendMessage(
             ctx.chat.id,
             lang === "es" 
-              ? "✉️ Te he enviado la respuesta por mensaje privado." 
-              : "✉️ I've sent you the response via private message.",
+              ? `✉️ ${userMention}, te he enviado la respuesta por mensaje privado.` 
+              : `✉️ ${userMention}, I've sent you the response via private message.`,
             { 
               parse_mode: "Markdown",
-              reply_to_message_id: ctx.message?.message_id 
+              reply_to_message_id: ctx.message?.message_id,
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text: lang === "es" ? "💬 Ver Mensaje Privado" : "💬 Check Private Message",
+                      url: `https://t.me/${botUsername}`
+                    },
+                    {
+                      text: lang === "es" ? "🤖 Abrir Bot" : "🤖 Open Bot",
+                      url: `https://t.me/${botUsername}`
+                    }
+                  ],
+                  [
+                    {
+                      text: lang === "es" ? "🎯 Menú" : "🎯 Menu",
+                      callback_data: "group_menu_show"
+                    }
+                  ]
+                ]
+              }
             }
           );
         }
@@ -118,22 +145,31 @@ function privateResponseMiddleware() {
 
         if (isPrivateMessageFail) {
           logger.warn(`Private message failed for user ${userId}: ${errorDesc}`);
-          // Use user's first name to avoid Markdown parsing issues with @ and underscores
-          const userName = ctx.from.first_name || ctx.from.username || "User";
-          const safeUserName = escapeMdV2(String(userName));
+          // Get user username or mention with first name
+          const userMention = ctx.from.username 
+            ? `@${ctx.from.username}`
+            : `${ctx.from.first_name || 'User'}`;
+          const safeUserName = escapeMdV2(String(userMention));
+          const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'PNPtvbot';
+          
           await ctx.telegram.sendMessage(
             ctx.chat.id,
             lang === "es"
-              ? `⚠️ ${safeUserName}, necesitas iniciar una conversación conmigo primero.\n\n👆 Haz clic en mi nombre y presiona "Iniciar" para recibir respuestas privadas.`
-              : `⚠️ ${safeUserName}, you need to start a conversation with me first.\n\n👆 Click on my name and press "Start" to receive private responses.`,
+              ? `⚠️ ${safeUserName}, necesitas iniciar una conversación conmigo primero.\n\n👆 Presiona el botón de abajo para iniciar y recibir respuestas privadas.`
+              : `⚠️ ${safeUserName}, you need to start a conversation with me first.\n\n👆 Press the button below to start and receive private responses.`,
             {
               reply_to_message_id: ctx.message?.message_id,
+              parse_mode: "MarkdownV2",
               reply_markup: {
                 inline_keyboard: [
                   [
                     {
                       text: lang === "es" ? "🤖 Iniciar Bot" : "🤖 Start Bot",
-                      url: `https://t.me/PNPtvbot?start=group_redirect`
+                      url: `https://t.me/${botUsername}?start=group_redirect`
+                    },
+                    {
+                      text: lang === "es" ? "🎯 Menú" : "🎯 Menu",
+                      callback_data: "group_menu_show"
                     }
                   ]
                 ]

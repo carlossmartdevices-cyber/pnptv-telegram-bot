@@ -1,0 +1,69 @@
+#!/bin/bash
+# PNPtv Bot Commands - Copy & Paste Reference
+# Updated: November 13, 2025
+
+# ===== USER COMMANDS =====
+
+# Core Navigation
+/start          # Begin onboarding & setup profile
+/help           # Show help menu with available features
+/profile        # View & edit your profile
+/menu           # Show main menu with quick actions
+
+# Subscription & Payments
+/subscribe      # Browse & purchase subscription plans
+/plans          # View all available membership plans (Members only)
+/reactivate     # Reactivate expired membership
+
+# Location & Discovery
+/map            # Open interactive map (Premium only)
+/nearby         # Find members near location (Premium only)
+/app            # Launch PNPtv web app
+
+# Communication & AI
+/aichat         # Start AI chat conversation
+/endchat        # End current AI chat session
+
+# Music & Events
+/toptracks      # View top played tracks in group
+/playlist       # Browse or manage playlists
+/addtrack       # Add a new song to playlist
+/deletetrack    # Remove song from playlist
+/schedulecall   # Schedule a group video call
+/schedulestream # Schedule a live stream event
+/upcoming       # View upcoming events & calls
+/deleteevent    # Cancel a scheduled event
+/zoomstatus     # Check Zoom meeting status
+
+# Community Features
+/rules          # View community rules & guidelines
+/library        # Access content library
+/settimezone    # Set your timezone for events
+/live           # Access live streaming features
+
+# Notifications
+/optout         # Stop receiving broadcast messages
+/optin          # Resume receiving broadcast messages
+
+# ===== ADMIN COMMANDS =====
+
+# Admin Panel & Dashboard
+/admin          # Open admin control panel
+/plans          # Plan management dashboard
+/support_tickets # View support ticket queue
+/broadcaster    # Channel broadcaster interface
+
+# Broadcasting & Announcements
+/sendpromo              # Send promotional announcement
+/reactivateprime        # Send PRIME membership reactivation
+/broadcastprime         # Broadcast to PRIME channel
+/sendpaymentbutton      # Send payment button to user
+
+# Moderation & Filtering
+/blacklist      # View content filtering rules
+/addword        # Add word to blacklist filter
+/removeword     # Remove word from filter
+/addlink        # Add URL to link filter
+/removelink     # Remove URL from filter
+/violations     # Check user violations
+/clearviolations # Clear user violations

@@ -100,6 +100,11 @@ async function applyUserPermissions(ctx, userId, tier) {
     logger.info(`Applied ${tier} permissions to user ${userId}`);
     return true;
   } catch (error) {
+    // Silently handle "not enough rights" errors - bot may not have admin rights
+    if (error.code === 400 && error.message && error.message.includes('not enough rights')) {
+      logger.warn(`Bot doesn't have permission rights in this group: ${error.message}`);
+      return false;
+    }
     logger.error(`Failed to apply permissions to user ${userId}:`, error);
     return false;
   }
@@ -226,6 +231,14 @@ async function handleMediaMessage(ctx) {
  */
 async function logUserActivity(userId, action) {
   try {
+    // First check if user document exists
+    const userDoc = await db.collection('users').doc(userId).get();
+    
+    if (!userDoc.exists) {
+      logger.info(`User ${userId} document doesn't exist yet, skipping activity log`);
+      return false;
+    }
+
     const userRef = db.collection('users').doc(userId);
     const now = new Date();
 

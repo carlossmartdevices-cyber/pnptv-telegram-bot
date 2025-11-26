@@ -17,7 +17,8 @@
 		"vscode": {
 			"extensions": [
 				"GitHub.copilot-chat",
-				"buildwithlayer.railway-integration-expert-x3O0C"
+				"buildwithlayer.railway-integration-expert-x3O0C",
+				"Anthropic.claude-code"
 			]
 		}
 	}
